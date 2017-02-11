@@ -105,8 +105,6 @@ void	normalcone(t_env *e, t_obj *obj)
 	vectornormalize(&e->n);
 }
 
-
-
 t_quadric initquad(double param[10])
 {
 	t_quadric quad;
@@ -179,7 +177,7 @@ double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 		//	e->t = t;
 			light *= cursor->material.transparency; // is it accurate?
 		}
-		cursor = cursor->next;
+		cursor = cursor->nextitem;
 	}
 	return (light);
 	// if an intersection was found
@@ -198,7 +196,7 @@ t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
 	{
 		if (cursor->id == id_ignore)
 		{
-		//	cursor = cursor->next;
+		//	cursor = cursor->nextitem;
 		//	continue;
 		}
 		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &t)) ||
@@ -210,7 +208,7 @@ t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
 			e->t = t;
 			res = cursor;
 		}
-		cursor = cursor->next;
+		cursor = cursor->nextitem;
 	}
 	return (res);
 	// if an intersection was found

@@ -28,6 +28,8 @@
 # include <get_next_line.h>
 # include <pthread.h>
 # include <time.h>
+# include <SDL2/SDL.h>
+# include <stdbool.h>
 
 # define TRUE					1
 # define FALSE					0
@@ -160,11 +162,17 @@ typedef struct		s_mat
 	double			bump;
 }					t_mat;
 
+//parent is an object containing only a position, orientation, and child objects
+//orientation and position of child objects become local
 typedef struct		s_obj
 {
 	int				id;
+	int 			parent;
+
 	int				type;
-	struct s_obj	*next;
+	struct s_obj	*nextitem;
+	struct s_obj	*nextchild;
+	//struct s_obj	*nextnegative;
 	t_mat			material;
 	t_vec			pos;
 	t_vec			dir;
@@ -172,6 +180,7 @@ typedef struct		s_obj
 	double			height;
 	double			alpha;
 	t_quadric		quad;
+	bool			negative;
 }					t_obj;
 
 typedef struct 		s_cam
@@ -186,7 +195,6 @@ typedef struct 		s_cam
 
 typedef struct		s_env
 {
-	void			*mlx;
 	void			*win;
 	void			*ima;
 
@@ -209,7 +217,7 @@ typedef struct		s_env
 	t_vec			scaled; //temporary
 	t_vec			newstart; //intersection point with an object
 	t_vec			n; //vector normal
-	t_obj			*obj;
+	t_obj			*obj; //start of object list
 	t_vec			vdir;
 	int				id; //new object id
 	double			lambert;
@@ -240,6 +248,8 @@ void				init_light(t_env *e, char **buffer);
 void				init_plane(t_env *e, char **buffer);
 void				init_sphere(t_env *e, char **buffer);
 void				init_quadric(t_env *e, char **buffer);
+void				init_compose(t_env *e, char **buffer);
+void				init_object(t_env *e, char **buffer);
 t_obj				*intersection(t_env *e, t_ray *r, int id_ignore);
 int					iraycone(t_ray *r, t_obj *co, double *t0);
 int					iraycone2(double abcd[4], double t[2], double *t0);
@@ -249,6 +259,7 @@ int					iraysphere(t_ray *r, t_obj *s, double *t0);
 void				print_img(unsigned char img[3 * WIDTH * HEIGHT]);
 void				reset(t_env *e, int x, int y);
 unsigned char		*update_img(t_env *e, int x, int y);
+
 t_vec				vectoradd(t_vec v1, t_vec v2);
 double				vectordot(t_vec v1, t_vec v2);
 t_vec				vectorinit(double x, double y, double z);
@@ -260,10 +271,16 @@ t_vec				vectorsub(t_vec v1, t_vec v2);
 t_vec				vectordiv(t_vec u, t_vec v);
 double				vectormagnitude(t_vec v);
 t_vec				vectorrotate(t_vec v, t_vec axis, double angle);
+
 double				computeshadow(t_env *e, t_ray *r, double light, double dist);
 int					irayquadric(t_ray *r, t_obj *obj, double *t0, t_vec eyepoint);
 
 double				noise(double x, double y, double z);
 t_quadric			quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos);
+
+void				lstaddobj(t_obj **alst, t_obj *new);
+void				lstaddlight(t_light **alst, t_light *new);
+t_obj				*lstremoveoneobj(t_obj **alst, int id);
+
 
 #endif

@@ -444,6 +444,14 @@ t_env			*readConfig(int fd)
 			{
 				init_cam(e, buffer_line);
 			}
+			else if (!(ft_strcmp(buffer_line[0], "COMPOSE")))
+			{
+				init_compose(e, buffer_line);
+			}
+			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
+			{
+				init_object(e, buffer_line);
+			}
 		}
 		free(buffer_gnl);
 		ft_doubletabfree(&buffer_line);

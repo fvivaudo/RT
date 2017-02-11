@@ -16,17 +16,6 @@
 #include <stdio.h>
 #include <math.h>
 
-void				ft_lstaddobj(t_obj **alst, t_obj *new)
-{
-	if (alst && *alst && new)
-	{
-		new->next = *alst;
-		*alst = new;
-	}
-	else if (alst)
-		*alst = new;
-}
-
 void				init_cyl(t_env *e, char **buffer)
 {
 	int			y;
@@ -34,14 +23,26 @@ void				init_cyl(t_env *e, char **buffer)
 	t_mat		material;
 
 	obj = (t_obj*)malloc(sizeof(t_obj));
+	obj->id = 0;
 	y = 4;
+
 	if (buffer[1] && buffer[2] && buffer[3])
 		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
 		return;
 	while (buffer[y] != NULL)
 	{
-		if (!ft_strcmp("MATERIAL", buffer[y]))
+		if (!ft_strcmp("ID", buffer[y]))
+		{
+			if (buffer[y + 1])
+			{
+				obj->id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+				return;
+		}
+		else if (!ft_strcmp("MATERIAL", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8])
 			{
@@ -101,9 +102,9 @@ void				init_cyl(t_env *e, char **buffer)
 	obj->type = TYPE_CYLINDER;
 	obj->material = material;
 	obj->pos = obj->pos;
-	obj->next = NULL;
-	obj->id = e->id;
-	ft_lstaddobj(&e->obj, obj);
+	obj->nextitem = NULL;
+	//obj->id = e->id;
+	lstaddobj(&e->obj, obj);
 }
 
 void	init_cone(t_env *e, char **buffer)
@@ -113,6 +114,8 @@ void	init_cone(t_env *e, char **buffer)
 	t_mat		material;
 
 	obj = (t_obj*)malloc(sizeof(t_obj));
+	obj->id = 0;
+
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
 		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
@@ -120,7 +123,17 @@ void	init_cone(t_env *e, char **buffer)
 		return;
 	while (buffer[y] != NULL)
 	{
-		if (!ft_strcmp("MATERIAL", buffer[y]))
+		if (!ft_strcmp("ID", buffer[y]))
+		{
+			if (buffer[y + 1])
+			{
+				obj->id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+				return;
+		}
+		else if (!ft_strcmp("MATERIAL", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8])
 			{
@@ -164,9 +177,8 @@ void	init_cone(t_env *e, char **buffer)
 	}
 	obj->type = TYPE_CONE;
 	obj->material = material;
-	obj->next = NULL;
-	obj->id = e->id;
-	ft_lstaddobj(&e->obj, obj);
+	obj->nextitem = NULL;
+	lstaddobj(&e->obj, obj);
 }
 
 void		init_sphere(t_env *e, char **buffer)
@@ -176,6 +188,7 @@ void		init_sphere(t_env *e, char **buffer)
 	t_mat		material;
 
 	obj = (t_obj*)malloc(sizeof(t_obj));
+	obj->id = 0;
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
 		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
@@ -183,7 +196,17 @@ void		init_sphere(t_env *e, char **buffer)
 		return;
 	while (buffer[y] != NULL)
 	{
-		if (!ft_strcmp("MATERIAL", buffer[y]))
+		if (!ft_strcmp("ID", buffer[y]))
+		{
+			if (buffer[y + 1])
+			{
+				obj->id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+				return;
+		}
+		else if (!ft_strcmp("MATERIAL", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8])
 			{
@@ -215,9 +238,8 @@ void		init_sphere(t_env *e, char **buffer)
 	obj->type = TYPE_SPHERE;
 	obj->material = material;
 	obj->pos = obj->pos;
-	obj->next = NULL;
-	obj->id = e->id;
-	ft_lstaddobj(&e->obj, obj);
+	obj->nextitem = NULL;
+	lstaddobj(&e->obj, obj);
 }
 
 void		init_plane(t_env *e, char **buffer)
@@ -228,6 +250,7 @@ void		init_plane(t_env *e, char **buffer)
 
 
 	obj = (t_obj*)malloc(sizeof(t_obj));
+	obj->id = 0;
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
 		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
@@ -237,7 +260,17 @@ void		init_plane(t_env *e, char **buffer)
 	}
 	while (buffer[y] != NULL)
 	{
-		if (!ft_strcmp("MATERIAL", buffer[y]))
+		if (!ft_strcmp("ID", buffer[y]))
+		{
+			if (buffer[y + 1])
+			{
+				obj->id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+				return;
+		}
+		else if (!ft_strcmp("MATERIAL", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8])
 			{
@@ -277,9 +310,8 @@ void		init_plane(t_env *e, char **buffer)
 	obj->type = TYPE_PLANE;
 	obj->material = material;
 	obj->pos = obj->pos;
-	obj->next = NULL;
-	obj->id = e->id;
-	ft_lstaddobj(&e->obj, obj);
+	obj->nextitem = NULL;
+	lstaddobj(&e->obj, obj);
 }
 
 void		init_quadric(t_env *e, char **buffer)
@@ -291,6 +323,7 @@ void		init_quadric(t_env *e, char **buffer)
 
 	obj = (t_obj*)malloc(sizeof(t_obj));
 	y = 4;
+	obj->id = 0;
 	if (buffer[1] && buffer[2] && buffer[3])
 		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
@@ -299,7 +332,17 @@ void		init_quadric(t_env *e, char **buffer)
 	}
 	while (buffer[y] != NULL)
 	{
-		if (!ft_strcmp("MATERIAL", buffer[y]))
+		if (!ft_strcmp("ID", buffer[y]))
+		{
+			if (buffer[y + 1])
+			{
+				obj->id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+				return;
+		}
+		else if (!ft_strcmp("MATERIAL", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8])
 			{
@@ -382,20 +425,158 @@ void		init_quadric(t_env *e, char **buffer)
 	obj->type = TYPE_QUADRIC;
 	obj->material = material;
 	//obj->pos = obj->pos;
-	obj->next = NULL;
-	obj->id = e->id;
-	ft_lstaddobj(&e->obj, obj);
+	obj->nextitem = NULL;
+	lstaddobj(&e->obj, obj);
 }
 
-void	ft_lstaddlight(t_light **alst, t_light *new)
+//init compose only sets up components and remove them from the scene, making it and invisible object
+void		init_compose(t_env *e, char **buffer)
 {
-	if (alst && *alst && new)
+	int 		y;
+	t_obj		*obj;
+
+	y = 1;
+	obj = (t_obj*)malloc(sizeof(t_obj));
+	obj->id = 0;
+
+	while (buffer[y] != NULL)
 	{
-		new->next = *alst;
-		*alst = new;
+		//ft_putendl("ok1");
+		if (!ft_strcmp("ID", buffer[y]))
+		{
+			//ft_putendl("typestart1");
+			if (buffer[y + 1])
+			{
+				obj->id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+			{
+				return;
+			}
+		}
+		else
+		{
+			//ft_putendl("typestart4");
+			lstaddobj(&obj->nextchild, lstremoveoneobj(&e->obj, ft_atoi(buffer[y])));
+			++y;
+		}
+		//ft_putendl("ok2");
 	}
-	else if (alst)
-		*alst = new;
+	lstaddobj(&e->obj, obj);
+}
+
+t_obj	*copyobj(t_obj obj)
+{
+	t_obj *copy;
+
+	copy = (t_obj*)malloc(sizeof(t_obj));
+	copy->id = 0;
+	//copy->id = obj->id;
+	//copy->parent = obj->parent;
+	copy->type = obj.type;
+	copy->material = obj.material;
+	copy->pos = obj.pos;
+	copy->dir = obj.dir;
+	copy->rad = obj.rad;
+	copy->height = obj.height;
+	copy->alpha = obj.alpha;
+	copy->quad = obj.quad;
+	copy->negative = obj.negative;
+	return (copy);
+}
+
+
+void		extractobj(t_env *e, t_obj *obj)
+{
+	t_obj *tmp;
+	t_obj *cursor;
+
+	cursor = obj->nextchild;
+	while (cursor)
+	{
+		if (cursor->nextchild)
+		{
+			extractobj(e, cursor->nextchild);
+		}
+		else
+		{
+
+			tmp = copyobj(*cursor);
+			tmp->pos = vectoradd(tmp->pos, obj->pos);
+	//		printf("obj->pos.x = %g, obj->pos.y = %g, obj->pos.z = %g\n", obj->pos.x, obj->pos.y, obj->pos.z);
+	//		printf("tmp->pos.x = %g, tmp->pos.y = %g, tmp->pos.z = %g\n", tmp->pos.x, tmp->pos.y, tmp->pos.z);
+			lstaddobj(&e->obj, tmp);
+		}
+		cursor = cursor->nextitem;
+	}
+}
+
+//init object will set up the composed object rotation and position and allow it to be rendered
+// by copying its component into the scene
+void		init_object(t_env *e, char **buffer)
+{
+	int 		y;
+	t_obj		*obj;
+	t_obj		*cursor;
+
+	obj = NULL;
+	y = 2;
+	//obj = (t_obj*)malloc(sizeof(t_obj));
+
+	if (buffer[1])
+	{
+		cursor = e->obj;
+		while (cursor)
+		{
+			if (cursor->id == ft_atoi(buffer[1]))
+			{
+				obj = cursor;
+			}
+			cursor = cursor->nextitem;
+		}
+	}
+	if (buffer == NULL)
+	{
+		return;
+	}
+	while (buffer[y] != NULL)
+	{
+		if (!ft_strcmp("POSITION", buffer[y]))
+		{
+			//ft_putendl("typestart2");
+			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3])
+			{
+				obj->pos = vectorinit(ft_datoi(buffer[y + 1]), ft_datoi(buffer[y + 2]), ft_datoi(buffer[y + 3]));
+				y += 4;
+			}
+			else
+			{
+				return;
+			}
+		}
+		else if (!ft_strcmp("ORIENTATION", buffer[y]))
+		{
+			//ft_putendl("typestart3");
+			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3])
+			{
+				obj->dir = vectorinit(ft_datoi(buffer[y + 1]),
+				ft_datoi(buffer[y + 2]), ft_datoi(buffer[y + 3]));
+				vectornormalize(&obj->dir);
+				y += 4;
+			}
+			else
+			{
+				return;
+			}
+		}
+		else
+		{
+			++y;
+		}
+	}
+	//ft_putendl("ok2");
+	extractobj(e, obj);
 }
 
 void	init_light(t_env *e, char **buffer)
@@ -432,5 +613,5 @@ void	init_light(t_env *e, char **buffer)
 		}
 	}
 	light->next = NULL;
-	ft_lstaddlight(&e->lights, light);
+	lstaddlight(&e->lights, light);
 }
