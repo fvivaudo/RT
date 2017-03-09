@@ -28,6 +28,8 @@
 # include <get_next_line.h>
 # include <pthread.h>
 # include <time.h>
+# include <SDL2/SDL.h>
+# include <stdbool.h>
 
 # define TRUE					1
 # define FALSE					0
@@ -57,6 +59,11 @@
 //cosinus and sinus sometimes give back very small values instead of 0
 //so i'm using this to convert them to 0
 # define ROUNDING_LIMIT			0.000001
+
+// if there is only one soluction to an intersection
+# define DOESNOTEXIST			-2147483648.0
+
+struct		s_env;
 
 typedef struct 		s_quadric
 {
@@ -131,6 +138,8 @@ typedef struct		s_ray
 {
 	t_vec			start;
 	t_vec			dir;
+	bool			indirect; //if the ray is reflected or refracted, is true
+	//not handled yet
 }					t_ray;
 
 typedef struct		s_color
@@ -160,11 +169,19 @@ typedef struct		s_mat
 	double			bump;
 }					t_mat;
 
+//parent is an object containing only a position, orientation, and child objects
+//orientation and position of child objects become local
 typedef struct		s_obj
 {
 	int				id;
+	//int 			parent;
+
 	int				type;
-	struct s_obj	*next;
+
+	struct s_obj	*nextitem;
+	struct s_obj	*nextchild;
+	struct s_obj	*nextslice;
+	struct s_obj	*nextneg;
 	t_mat			material;
 	t_vec			pos;
 	t_vec			dir;
@@ -172,6 +189,20 @@ typedef struct		s_obj
 	double			height;
 	double			alpha;
 	t_quadric		quad;
+	
+	bool			negative;
+	bool			reversen; //useful if we collide with the inside of an object
+
+	double 			rotation; // rotation degree on axis
+
+	double			t[2]; //storage needed for negative objects
+
+	//in the case of a negative object (or eventually a composed one)
+	//we need to have a varaible normal function
+	//ex : negative sphere in cylinder will need
+	//sphere normal calculation and object information
+	void 			(*normal)(struct s_env *, struct s_obj *obj);
+	struct s_obj 	*normobj;
 }					t_obj;
 
 typedef struct 		s_cam
@@ -186,7 +217,6 @@ typedef struct 		s_cam
 
 typedef struct		s_env
 {
-	void			*mlx;
 	void			*win;
 	void			*ima;
 
@@ -209,7 +239,7 @@ typedef struct		s_env
 	t_vec			scaled; //temporary
 	t_vec			newstart; //intersection point with an object
 	t_vec			n; //vector normal
-	t_obj			*obj;
+	t_obj			*obj; //start of object list
 	t_vec			vdir;
 	int				id; //new object id
 	double			lambert;
@@ -234,21 +264,25 @@ t_color				colorinit(double red, double green, double blue);
 t_obj				*computeray(t_env *e);
 int					deal_shadow(t_env *e);
 void				init_cam(t_env *e, char **buffer);
-void				init_cone(t_env *e, char **buffer);
-void				init_cyl(t_env *e, char **buffer);
+int					init_cone(t_obj **lstobj, char **buffer);
+int					init_cyl(t_obj **lstobj, char **buffer);
 void				init_light(t_env *e, char **buffer);
-void				init_plane(t_env *e, char **buffer);
-void				init_sphere(t_env *e, char **buffer);
-void				init_quadric(t_env *e, char **buffer);
+int					init_plane(t_obj **lstobj, char **buffer);
+int					init_sphere(t_obj **lstobj, char **buffer);
+int					init_quadric(t_obj **lstobj, char **buffer);
+void				init_compose(t_obj **lstobj, char **buffer);
+int					init_object(t_obj **lstobj, char **buffer);
 t_obj				*intersection(t_env *e, t_ray *r, int id_ignore);
-int					iraycone(t_ray *r, t_obj *co, double *t0);
+int					iraycone(t_ray *r, t_obj *co, double *t0, t_env *e);
 int					iraycone2(double abcd[4], double t[2], double *t0);
-int					iraycylinder(t_ray *r, t_obj *cyl, double *t0);
-int					irayplane(t_ray *r, t_obj *p, double *t);
-int					iraysphere(t_ray *r, t_obj *s, double *t0);
+int					iraycylinder(t_ray *r, t_obj *cyl, double *t0, t_env *e);
+int					irayplane(t_ray *r, t_obj *p, double *t, t_env *e);
+int					iraysphere(t_ray *r, t_obj *s, double *t0, t_env *e);
+int					irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e);
 void				print_img(unsigned char img[3 * WIDTH * HEIGHT]);
 void				reset(t_env *e, int x, int y);
 unsigned char		*update_img(t_env *e, int x, int y);
+
 t_vec				vectoradd(t_vec v1, t_vec v2);
 double				vectordot(t_vec v1, t_vec v2);
 t_vec				vectorinit(double x, double y, double z);
@@ -260,10 +294,27 @@ t_vec				vectorsub(t_vec v1, t_vec v2);
 t_vec				vectordiv(t_vec u, t_vec v);
 double				vectormagnitude(t_vec v);
 t_vec				vectorrotate(t_vec v, t_vec axis, double angle);
+t_vec 				vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta) ;
+
 double				computeshadow(t_env *e, t_ray *r, double light, double dist);
-int					irayquadric(t_ray *r, t_obj *obj, double *t0, t_vec eyepoint);
 
 double				noise(double x, double y, double z);
 t_quadric			quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos);
+
+void				lstaddneg(t_obj **alst, t_obj *new);
+void				lstaddobj(t_obj **alst, t_obj *new);
+void				lstaddslice(t_obj **alst, t_obj *new);
+void				lstaddlight(t_light **alst, t_light *new);
+t_obj				*lstremoveoneobj(t_obj **alst, int id);
+
+void				normalsphere(t_env *e, t_obj *obj);
+void				normalplane(t_env *e, t_obj *obj);
+void				normalcylinder(t_env *e, t_obj *obj);
+void				normalcone(t_env *e, t_obj *obj);
+void				normalquadric(t_env *e, t_obj *obj);
+
+int					irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e);
+int					irayslice(t_ray *r, t_obj *obj, double *dist);
+
 
 #endif

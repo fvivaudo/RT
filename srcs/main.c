@@ -163,10 +163,11 @@ int		deal_shadow(t_env *e)
 		}*/
 
 		double light = 1;
-		if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
+		//temporary removal
+		/*if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
 		{
 			continue;
-		}
+		}*/
 	//	printf("light = %g\n", light);
 	//	printf("intersection2\n");
 
@@ -418,23 +419,23 @@ t_env			*readConfig(int fd)
 		{
 			if (!(ft_strcmp(buffer_line[0], "SPHERE")))
 			{
-				init_sphere(e, buffer_line);
+				init_sphere(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CONE")))
 			{
-				init_cone(e, buffer_line);
+				init_cone(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
 			{
-				init_cyl(e, buffer_line);
+				init_cyl(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "PLANE")))
 			{
-				init_plane(e, buffer_line);
+				init_plane(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
 			{
-				init_quadric(e, buffer_line);
+				init_quadric(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
 			{
@@ -443,6 +444,14 @@ t_env			*readConfig(int fd)
 			else if (!(ft_strcmp(buffer_line[0], "CAMERA")))
 			{
 				init_cam(e, buffer_line);
+			}
+			else if (!(ft_strcmp(buffer_line[0], "COMPOSE")))
+			{
+				init_compose(&e->obj, buffer_line);
+			}
+			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
+			{
+				init_object(&e->obj, buffer_line);
 			}
 		}
 		free(buffer_gnl);

@@ -140,6 +140,37 @@ t_vec	vectorrotate(t_vec to_rot, t_vec r_a, double rad)
 	return (res);
 }
 
+//http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation/
+//rotating the point (x,y,z) about the line through (a,b,c) with direction vector ⟨u,v,w⟩ (where u2 + v2 + w2 = 1) by the angle θ.
+
+t_vec vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta) 
+{
+	// Set some intermediate values.
+	double u2 = axd.x * axd.x;
+	double v2 = axd.y * axd.y;
+	double w2 = axd.z * axd.z;
+	double cost = cos(theta);
+	double omc = 1 - cost;
+	double sint = sin(theta);
+
+	// Use the formula in the paper.
+	t_vec res;
+	res.x = ((axp.x *(v2 + w2) - axd.x*(axp.y*axd.y + axp.z*axd.z - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * omc
+			+ p.x*cost
+			+ (-axp.z*axd.y + axp.y*axd.z - axd.z*p.y + axd.y*p.z)*sint);
+
+	res.y = ((axp.y*(u2 + w2) - axd.y*(axp.x*axd.x + axp.z*axd.z - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * omc
+			+ p.y*cost
+			+ (axp.z*axd.x - axp.x*axd.z + axd.z*p.x - axd.x*p.z)*sint);
+
+	res.z = ((axp.z*(u2 + v2) - axd.z*(axp.x*axd.x + axp.y*axd.y - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * omc
+			+ p.z*cost
+			+ (-axp.y*axd.x + axp.x*axd.y - axd.y*p.x + axd.x*p.y)*sint);
+
+	return (res);
+}
+
+
 
 void setrotationmatrix(double angle, t_vec axis, double rotmat[4][4]) //normalize entry vector
 {
