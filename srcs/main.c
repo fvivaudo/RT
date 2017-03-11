@@ -164,10 +164,10 @@ int		deal_shadow(t_env *e)
 
 		double light = 1;
 		//temporary removal
-/*		if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
+		if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
 		{
 			continue;
-		}*/
+		}
 	//	printf("light = %g\n", light);
 	//	printf("intersection2\n");
 
