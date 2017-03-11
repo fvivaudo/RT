@@ -157,17 +157,17 @@ int		deal_shadow(t_env *e)
 		// -launch the ray a small distance away from the actual intersection point (CURRENT)
 		//printf("intersection\n");
 	//	printf("intersection\n");
-		/*if (intersection(e, &lightray, -1))
+/*		if (intersection(e, &lightray, -1))
 		{
 			continue;
 		}*/
 
 		double light = 1;
 		//temporary removal
-		/*if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
+		if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
 		{
 			continue;
-		}*/
+		}
 	//	printf("light = %g\n", light);
 	//	printf("intersection2\n");
 
@@ -349,7 +349,7 @@ t_color			reflect_and_refract(t_env e)
 ** if the ray meets something, deal with it's shadow
 ** else, generate another  ray
 */
-void			cast_ray(t_env *e)
+/*void			cast_ray(t_env *e)
 {
 	t_vec			tmp;
 	t_obj			*res;
@@ -364,7 +364,7 @@ void			cast_ray(t_env *e)
 	//e->blue += 1;
 
 	e->coef *= e->cmat.reflection;
-
+*/
 
 	//reflected ray = dir−2(dir⋅n )n
 /*	if (e->coef > 0)
@@ -374,7 +374,7 @@ void			cast_ray(t_env *e)
 		e->green = col.green;
 		e->blue = col.blue;
 	}*/
-
+/*
 	tmp = vectorscale(2 * vectordot(e->r.dir, e->n), e->n);
 	e->r.dir = vectorsub(e->r.dir, tmp);
 	e->r.start = vectoradd(e->newstart, e->r.dir);
@@ -384,7 +384,7 @@ void			cast_ray(t_env *e)
 		++e->level;
 		cast_ray(e);
 	}
-}
+}*/
 
 unsigned char	*update_img(t_env *e, int x, int y)
 {

@@ -230,7 +230,6 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
 int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 {
 	double	abcdiscr[5];
-	double	t[2];
 	t_vec	dist;
 	bool	ret;
 
@@ -250,24 +249,23 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	else
 	{
 		abcdiscr[4] = sqrtf(abcdiscr[3]);
-		t[0] = (-(abcdiscr[1]) + abcdiscr[4]) / (2);
-		t[1] = (-(abcdiscr[1]) - abcdiscr[4]) / (2);
+		obj->t[0] = (-(abcdiscr[1]) + abcdiscr[4]) / (2);
+		obj->t[1] = (-(abcdiscr[1]) - abcdiscr[4]) / (2);
 
-		if (t[0] < t[1])
+		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = t[0];
-			obj->t[1] = t[1];
-		}
-		else
-		{
-			obj->t[0] = t[1];
-			obj->t[1] = t[0];
+			obj->t[0] = obj->t[1];
+			obj->t[1] = obj->t[0];
 		}
 
-		if (t[0] < 0 && t[1] < 0) // this is not necesarily true, if i have a negative object, it can extend T and bring it into view
+		if (obj->t[0] < 0 && obj->t[1] < 0) // this is not necesarily true, if i have a negative object, it can extend T and bring it into view
 		{
 			return(FALSE);
 		}
+/*		else if (t[0] < 0)
+		{
+			t[0] = t[1];
+		}*/
 
 		obj->normal = normalsphere;
 
@@ -293,11 +291,11 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 			return (TRUE);
 		}
 
-		if (/*(t[0] > 0.001f) && */(t[0] < *t0))
+		if (/*(t[0] > 0.001f) && */(obj->t[0] < *t0))
 		{
 		//printf("tfinal = %g\n", t[0]);
 
-			*t0 = t[0];
+			*t0 = obj->t[0];
 			return (TRUE);
 		}
 	}

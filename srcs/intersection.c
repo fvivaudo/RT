@@ -47,11 +47,10 @@ void	normalsphere(t_env *e, t_obj *obj)
 
 	//if the intersection point is located behind the object center from the camera perspective,
 	//then we're inside the object
-	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
-	if (obj->t[0] != e->t)
+/*	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
 		e->n = vectorscale(-1, e->n); //FiX
-	}
+	}*/
 	//if (obj->reversen)
 	//{
 	//	e->n = vectorscale(-1, e->n);
@@ -95,10 +94,13 @@ void	normalcylinder(t_env *e, t_obj *obj)
 		e->n = vectorrotate(e->n, rot_axis, rot_angle);
 	}
 	vectornormalize(&e->n);
-	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
+
+//	if (obj->t[0] != e->t)
+	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
+		printf("obj->t[0] = %g, e->t = %g\n", obj->t[0], e->t);
 		e->n = vectorscale(-1, e->n);
-	}
+	}*/
 }
 
 //x = -r cos(rad)
@@ -118,10 +120,10 @@ void	normalcone(t_env *e, t_obj *obj)
 	//Removing object pos from the formula make it only true for a cone at the origin
 	e->n = vectorsub(e->newstart, vectoradd(vectorscale(tmp, obj->dir), obj->pos));
 	vectornormalize(&e->n);
-	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
+	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
 		e->n = vectorscale(-1, e->n);
-	}
+	}*/
 }
 
 t_quadric initquad(double param[10])
@@ -171,10 +173,10 @@ void	normalquadric(t_env *e, t_obj *obj)
 //	printf("tmp_start.x = %g, tmp_start.y = %g, tmp_start.z = %g\n", tmp_start.x, tmp_start.y, tmp_start.z);
 //	printf("e->n.x = %g, e->n.y = %g, e->n.z = %g\n", e->n.x, e->n.y, e->n.z);
 
-	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
+	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
 		e->n = vectorscale(-1, e->n);
-	}
+	}*/
 	//if the vector from the intersection to the apex is aligned to the cone axis, the it's fine
 }
 
@@ -302,7 +304,6 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	t_vec	delt_p;
 	t_vec	tmp[3];
 	double	abcd[4];
-	double	t[2];
 	bool	ret;
 
 	delt_p = vectorinit(r->start.x - obj->pos.x, r->start.y - obj->pos.y,
@@ -323,27 +324,22 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	abcd[3] = pow(abcd[1], 2) - (4 * abcd[0] * abcd[2]);
 	if (abcd[3] >= 0)
 	{
-		t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
-		t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
+		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
+		obj->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
 
-		if (t[0] < t[1])
+		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = t[0];
-			obj->t[1] = t[1];
-		}
-		else
-		{
-			obj->t[0] = t[1];
-			obj->t[1] = t[0];
+			obj->t[0] = obj->t[1];
+			obj->t[1] = obj->t[0];
 		}
 
-		if (t[0] < 0 && t[1] < 0)
+		if (obj->t[0] < 0 && obj->t[1] < 0)
 		{
 			return(FALSE);
 		}
-		if (t[0] > 0 && t[0] < *t0)
+		if (obj->t[0] > 0 && obj->t[0] < *t0)
 		{
-			*t0 = t[0];
+			*t0 = obj->t[0];
 			return (TRUE);
 		}
 		obj->normal = normalcone;
@@ -369,9 +365,9 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		{
 			return (TRUE);
 		}
-		if (/*(t[0] > 0.001f) && */t[0] < *t0)
+		if (/*(t[0] > 0.001f) && */obj->t[0] < *t0)
 		{
-			*t0 = t[0];
+			*t0 = obj->t[0];
 			return (TRUE);
 		}
 	}
@@ -439,11 +435,11 @@ int		irayplane(t_ray *r, t_obj *obj, double *t0, t_env *e)
 int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 {
 	double	abcd[4];
-	double	t[2];
 	bool	ret;
 	t_vec 	cam;
 
 	//r->dir is wrong if there are reflections
+
 
 	ret = FALSE;
 	t_vec camdir = vectorsub(obj->pos, e->cam.eyepoint);
@@ -490,10 +486,10 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 	if (abcd[0] == 0) // solving first degree equation
 	{
-		t[0] = -abcd[2] / abcd[1];
-		if (t[0] > 0 && t[0] < *t0)
+		obj->t[0] = -abcd[2] / abcd[1];
+		if (obj->t[0] > 0 && obj->t[0] < *t0)
 		{
-			*t0 = t[0];
+			*t0 = obj->t[0];
 			return (TRUE);
 		}
 		return (FALSE);
@@ -501,30 +497,20 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	abcd[3] = pow(abcd[1], 2) - (4 * abcd[0] * abcd[2]);
 	if (abcd[3] >= 0)
 	{
-		t[0] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
-	//	if (t[0] <= 0)
-			t[1] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
+		obj->t[0] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
+	//	if (obj->t[0] <= 0)
+			obj->t[1] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
 	//	else
-	//		t[1] = MAX_RANGE + 1;
-		if (t[0] < t[1])
+	//		obj->t[1] = MAX_RANGE + 1;
+		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = t[0];
-			obj->t[1] = t[1];
-		}
-		else
-		{
-			obj->t[0] = t[1];
-			obj->t[1] = t[0];
+			obj->t[0] = obj->t[1];
+			obj->t[1] = obj->t[0];
 		}
 
-		if (t[0] < 0 && t[1] < 0)
+		if (obj->t[0] < 0 && obj->t[1] < 0)
 		{
 			return(FALSE);
-		}
-		if (t[0] > 0 && t[0] < *t0)
-		{
-			*t0 = t[0];
-			return (TRUE);
 		}
 		obj->normal = normalquadric;
 
@@ -549,9 +535,9 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		{
 			return (TRUE);
 		}
-		if (/*(t[0] > 0.001f) && */t[0] < *t0)
+		if (/*(t[0] > 0.001f) && */obj->t[0] < *t0)
 		{
-			*t0 = t[0];
+			*t0 = obj->t[0];
 			return (TRUE);
 		}
 	}
@@ -580,7 +566,6 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 {
 	double	abcd[4];
-	double	t[2];
 	t_vec	cam;
 	bool	ret;
 
@@ -618,29 +603,24 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		return (FALSE);
 	else
 	{
-		t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
-		t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
-	//printf("t[0] = %g\n", t[0]);
-		//t[0] = (t[0] < t[1] && t[0] >= 0 ? t[0] : t[1]);
+		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
+		obj->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
+	//printf("obj->t[0] = %g\n", obj->t[0]);
+		//obj->t[0] = (obj->t[0] < obj->t[1] && obj->t[0] >= 0 ? obj->t[0] : obj->t[1]);
 
-		if (t[0] < t[1])
+		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = t[0];
-			obj->t[1] = t[1];
-		}
-		else
-		{
-			obj->t[0] = t[1];
-			obj->t[1] = t[0];
+			obj->t[0] = obj->t[1];
+			obj->t[1] = obj->t[0];
 		}
 
-		if (t[0] < 0 && t[1] < 0)
+		if (obj->t[0] < 0 && obj->t[1] < 0)
 		{
 			return(FALSE);
 		}
 		obj->normal = normalcylinder;
 
-		//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
+		//printf("obj->t[0] = %g\nt[1] = %g\n", obj->t[0], obj->t[1]);
 		if (obj->nextslice)
 		{
 			ret = irayslice(r, obj, t0);
@@ -661,10 +641,10 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		{
 			return (TRUE);
 		}
-	//printf("t[0] = %g\n", t[0]);
-		if (/*(t[0] > 0.001f) && */t[0] < *t0)
+	//printf("obj->t[0] = %g\n", obj->t[0]);
+		if (/*(obj->t[0] > 0.001f) && */obj->t[0] < *t0)
 		{
-			*t0 = t[0];
+			*t0 = obj->t[0];
 			return (TRUE);
 		}
 	}
