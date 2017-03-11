@@ -47,6 +47,11 @@ void	normalsphere(t_env *e, t_obj *obj)
 
 	//if the intersection point is located behind the object center from the camera perspective,
 	//then we're inside the object
+//	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad - 0.1))
+	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad))
+	{
+		e->n = vectorscale(-1, e->n);
+	}
 /*	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
 		e->n = vectorscale(-1, e->n); //FiX
@@ -119,6 +124,7 @@ void	normalcone(t_env *e, t_obj *obj)
 
 	//Removing object pos from the formula make it only true for a cone at the origin
 	e->n = vectorsub(e->newstart, vectoradd(vectorscale(tmp, obj->dir), obj->pos));
+
 	vectornormalize(&e->n);
 	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
@@ -306,6 +312,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	double	abcd[4];
 	bool	ret;
 
+	ret = FALSE;
 	delt_p = vectorinit(r->start.x - obj->pos.x, r->start.y - obj->pos.y,
 	r->start.z - obj->pos.z);
 	tmp[0] = vectorscale(vectordot(r->dir, obj->dir), obj->dir);
@@ -336,11 +343,6 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		if (obj->t[0] < 0 && obj->t[1] < 0)
 		{
 			return(FALSE);
-		}
-		if (obj->t[0] > 0 && obj->t[0] < *t0)
-		{
-			*t0 = obj->t[0];
-			return (TRUE);
 		}
 		obj->normal = normalcone;
 
