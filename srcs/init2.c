@@ -32,6 +32,7 @@ void		init_cam(t_env *e, char **buffer)
 		e->cam.lookat = vectorinit(ft_datoi(buffer[5]), ft_datoi(buffer[6]), ft_datoi(buffer[7]));
 		e->cam.vdir = vectorsub(e->cam.lookat, e->cam.eyepoint);
 		vectornormalize(&e->cam.vdir);
+		e->cam.lookat = vectorscale(SCREEN_EYE_DIST, e->cam.vdir); //temporary I hope
 	}
 	else if (!ft_strcmp("ORIENTATION", buffer[4]) && buffer[5] && buffer[6] && buffer[7])
 	{
@@ -77,11 +78,15 @@ void		init_cam(t_env *e, char **buffer)
 	v = vectornormalize(&v);
 
 //viewPlaneUpLeft = camPos + ((vecDir*viewplaneDist)+(upVec*(viewplaneHeight/2.0f))) - (rightVec*(viewplaneWidth/2.0f))
+//	e->cam.viewplanebottomleftpoint = vectorsub(
+//	vectorsub(e->cam.lookat, vectorscale(HEIGHT / 2, v)), vectorscale(WIDTH / 2, u));
 	e->cam.viewplanebottomleftpoint = vectorsub(
 	vectorsub(e->cam.lookat, vectorscale(HEIGHT / 2, v)), vectorscale(WIDTH / 2, u));
+	e->cam.viewplanebottomleftpoint = vectoradd (e->cam.viewplanebottomleftpoint, e->cam.eyepoint);
+	e->cam.viewplanebottomleftpoint = vectoradd (e->cam.viewplanebottomleftpoint, e->cam.lookat);
 	t_vec tmp = vectoradd(vectorscale(SCREEN_EYE_DIST, e->cam.vdir), e->cam.eyepoint);
-	printf("e->cam.lookat.x = %g, e->cam.lookat.y = %g, e->cam.lookat.z = %g\n", e->cam.lookat.x, e->cam.lookat.y, e->cam.lookat.z);
-	printf("tmp.x = %g, tmp.y = %g, tmp.z = %g\n", tmp.x, tmp.y, tmp.z);
+//	printf("e->cam.lookat.x = %g, e->cam.lookat.y = %g, e->cam.lookat.z = %g\n", e->cam.lookat.x, e->cam.lookat.y, e->cam.lookat.z);
+//	printf("tmp.x = %g, tmp.y = %g, tmp.z = %g\n", tmp.x, tmp.y, tmp.z);
 	/*e->cam.viewplanebottomleftpoint = vectorsub(
 	vectorsub(vectoradd(vectorscale(200, e->cam.vdir), e->cam.eyepoint), vectorscale(HEIGHT / 2, v)),
 	vectorscale(WIDTH / 2, u));*/ //200 is arbitrary

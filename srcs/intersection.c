@@ -45,12 +45,19 @@ void	normalsphere(t_env *e, t_obj *obj)
 	e->n = vectorscale(e->temp, e->n);
 	vectornormalize(&e->n);
 
+/*	if (e->x == 468 && e->y == 424)
+	{
+		printf("e->t = %g\n", e->t);
+	}*/
 	//if the intersection point is located behind the object center from the camera perspective,
 	//then we're inside the object
+//	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad))
 //	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad - 0.1))
-	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad))
+	if (obj->reversen)
 	{
+		//ft_putendl("ok");
 		e->n = vectorscale(-1, e->n);
+		obj->reversen = FALSE;
 	}
 /*	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{

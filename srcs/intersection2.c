@@ -40,9 +40,13 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 	}*/
 
 	if (obj->t[0] > 0)
+	{
 		relativepos = vectoradd(r->start, vectorscale(obj->t[0], r->dir)); //tmpstart instead?
+	}
 	else
+	{
 		relativepos = vectoradd(r->start, vectorscale(obj->t[1], r->dir)); //tmpstart instead?
+	}
 	relativepos = vectorsub(obj->pos, relativepos); //now in local space?
 	relativedir = /*vectorsub(cursor->pos, */relativepos/*)*/; //from local center position to intersection
 	vectornormalize(&relativedir);
@@ -90,7 +94,7 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				//object is fully in front of slice and slice is aligned on r->dir
 				if (obj->t[1] < tmpt && dot > 0)
 				{
-//		ft_putendl("ok2");
+			//	ft_putendl("Alright1");
 					if (obj->t[0] > 0 && obj->t[0] <= *dist)
 					{
 						*dist = obj->t[0];
@@ -103,20 +107,18 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				}//object is fully behind slice and slice is directed toward r->start
 				else if (obj->t[0] > tmpt && dot < 0)
 				{
+			//	ft_putendl("Alright2");
 					if (obj->t[0] > 0 && obj->t[0] <= *dist)
 					{
-		//ft_putendl("ok34");
 						*dist = obj->t[0];
 					}
 					else if (obj->t[1] > 0 && obj->t[1] <= *dist)
 					{
-		//ft_putendl("ok35");
 						*dist = obj->t[1];
 					}
-				}
+				}//object is sliced out, resulting in an absence of collision, I guess
 				else// if (obj->t[0] != *dist && obj->t[1] != *dist)
 				{
-				//	ft_putendl("ok4");                                                                                                            
 				//	*dist = tmptswitch;
 				//	return (TRUE);
 					return (FALSE);
@@ -127,7 +129,6 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 			{
 				//obj->t[0] will be the farthest point
 
-				//ft_putendl("ok4");
 				obj->reversen = TRUE;
 				if (obj->t[1] > 0)
 				{
@@ -143,7 +144,6 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 			}
 			else if (dot < 0 /*vectordot(relativedir, cursor->dir) < 0*/) // ray coming toward object untouched surface
 			{
-		//ft_putendl("ok5");
 				//obj->t[0] will be the closest point
 				if (obj->t[0] > 0)
 				{
@@ -159,13 +159,10 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 		}
 		else
 		{
-//			ft_putendl("ok6");
 //			return (FALSE);
 		}
-		//ft_putendl("ok7");
 		cursor = cursor->nextslice;
 	}
-	//	ft_putendl("ok6");
 				//	*dist = t0;
 	return (TRUE);
 }
