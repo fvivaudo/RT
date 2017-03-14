@@ -87,20 +87,23 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				}*/
 			//	else
 			//	{
-			//		return (FALSE); //no conceivable distance, i think
+				//	return (FALSE); //no conceivable distance, i think
 			//	}
 
 
 				//object is fully in front of slice and slice is aligned on r->dir
 				if (obj->t[1] < tmpt && dot > 0)
 				{
-			//	ft_putendl("Alright1");
+					//return(FALSE);
+				//	printf("obj->t[0] = %g, obj->t[1] = %g, tmpt = %g\n", obj->t[0], obj->t[1], tmpt);
 					if (obj->t[0] > 0 && obj->t[0] <= *dist)
 					{
+				//		printf("Outcome1 reached\n");
 						*dist = obj->t[0];
 					}
 					else if (obj->t[1] > 0 && obj->t[1] <= *dist)
 					{
+				//		printf("Outcome2 reached\n");
 						*dist = obj->t[1];
 					}
 				//	return (TRUE);
@@ -108,6 +111,7 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				else if (obj->t[0] > tmpt && dot < 0)
 				{
 			//	ft_putendl("Alright2");
+
 					if (obj->t[0] > 0 && obj->t[0] <= *dist)
 					{
 						*dist = obj->t[0];
@@ -129,7 +133,7 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 			{
 				//obj->t[0] will be the farthest point
 
-				obj->reversen = TRUE;
+				//	return(FALSE);
 				if (obj->t[1] > 0)
 				{
 					*dist = obj->t[1];
@@ -145,6 +149,7 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 			else if (dot < 0 /*vectordot(relativedir, cursor->dir) < 0*/) // ray coming toward object untouched surface
 			{
 				//obj->t[0] will be the closest point
+				obj->reversen = TRUE; // not logic, but it works, need to check if it works everywhere..
 				if (obj->t[0] > 0)
 				{
 					*dist = obj->t[0];
@@ -198,13 +203,13 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
 			//case 3 hole behind object
 			if (cursor->t[0] < obj->t[0] && cursor->t[1] > obj->t[1])
 			{
-				printf("case 1 = cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
+			//	printf("case 1 = cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
 				return (FALSE);
 			}
 			else if (cursor->t[0] < obj->t[0] && cursor->t[1] < obj->t[1])
 			{
-		//		ft_putendl("case 2");
-				printf("case 2 = cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
+			//	ft_putendl("case 2");
+			//	printf("case 2 = cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
 				if (cursor->t[1] > current)
 				{
 					obj->normobj = cursor;
@@ -251,8 +256,7 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = obj->t[1];
-			obj->t[1] = obj->t[0];
+			swapdouble(&obj->t[0], &obj->t[1]);
 		}
 
 		if (obj->t[0] < 0 && obj->t[1] < 0) // this is not necesarily true, if i have a negative object, it can extend T and bring it into view
@@ -270,6 +274,7 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		if (obj->nextslice)
 		{
 			ret = irayslice(r, obj, t0);
+
 			if (!ret)
 			{
 				return (FALSE);

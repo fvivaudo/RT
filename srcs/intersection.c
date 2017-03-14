@@ -55,7 +55,6 @@ void	normalsphere(t_env *e, t_obj *obj)
 //	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad - 0.1))
 	if (obj->reversen)
 	{
-		//ft_putendl("ok");
 		e->n = vectorscale(-1, e->n);
 		obj->reversen = FALSE;
 	}
@@ -107,6 +106,11 @@ void	normalcylinder(t_env *e, t_obj *obj)
 	}
 	vectornormalize(&e->n);
 
+	if (obj->reversen)
+	{
+		e->n = vectorscale(-1, e->n);
+		obj->reversen = FALSE;
+	}
 //	if (obj->t[0] != e->t)
 	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
@@ -133,6 +137,12 @@ void	normalcone(t_env *e, t_obj *obj)
 	e->n = vectorsub(e->newstart, vectoradd(vectorscale(tmp, obj->dir), obj->pos));
 
 	vectornormalize(&e->n);
+
+	if (obj->reversen)
+	{
+		e->n = vectorscale(-1, e->n);
+		obj->reversen = FALSE;
+	}
 	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
 	{
 		e->n = vectorscale(-1, e->n);
@@ -181,6 +191,12 @@ void	normalquadric(t_env *e, t_obj *obj)
 	e->n.z += 2 * obj->quad.h * tmp_start.y;
 	e->n.z += 2 * obj->quad.r;
 	vectornormalize(&e->n);
+
+	if (obj->reversen)
+	{
+		e->n = vectorscale(-1, e->n);
+		obj->reversen = FALSE;
+	}
 	//printf("%s\n", );
 	//printf("normal e->r.start.x = %g, e->r.start.y = %g, e->r.start.z = %g\n", e->r.start.x, e->r.start.y, e->r.start.z);
 //	printf("tmp_start.x = %g, tmp_start.y = %g, tmp_start.z = %g\n", tmp_start.x, tmp_start.y, tmp_start.z);
@@ -343,8 +359,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = obj->t[1];
-			obj->t[1] = obj->t[0];
+			swapdouble(&obj->t[0], &obj->t[1]);
 		}
 
 		if (obj->t[0] < 0 && obj->t[1] < 0)
@@ -513,8 +528,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	//		obj->t[1] = MAX_RANGE + 1;
 		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = obj->t[1];
-			obj->t[1] = obj->t[0];
+			swapdouble(&obj->t[0], &obj->t[1]);
 		}
 
 		if (obj->t[0] < 0 && obj->t[1] < 0)
@@ -619,8 +633,7 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 		if (obj->t[0] > obj->t[1])
 		{
-			obj->t[0] = obj->t[1];
-			obj->t[1] = obj->t[0];
+			swapdouble(&obj->t[0], &obj->t[1]);
 		}
 
 		if (obj->t[0] < 0 && obj->t[1] < 0)

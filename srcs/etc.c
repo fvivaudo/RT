@@ -101,3 +101,12 @@ void	print_img(unsigned char img[3 * WIDTH * HEIGHT])
 	SDL_SaveBMP(e.surface, "out.bmp");
 	//SDL_Delay(2000);
 }
+
+void	swapdouble(double *a, double *b)
+{
+	double c;
+
+	c = *a;
+	*a = *b;
+	*b = c;
+}

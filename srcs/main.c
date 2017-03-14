@@ -397,10 +397,10 @@ unsigned char	*update_img(t_env *e, int x, int y)
 	img[(x + y * WIDTH) * 3 + 2] =
 	(unsigned char)((e->col.blue * C) < C ? e->col.blue * C : C);
 	//ft_putendl("image update");
-/*	if (img[(x + y * WIDTH) * 3 + 0] == 0 && img[(x + y * WIDTH) * 3 + 1] == 0 && img[(x + y * WIDTH) * 3 + 2] == 0)
-	{
-		printf("x = %d, y = %d\n", x, y);
-	}*/
+//	if (img[(x + y * WIDTH) * 3 + 0] == 0 && img[(x + y * WIDTH) * 3 + 1] == 0 && img[(x + y * WIDTH) * 3 + 2] == 0)
+//	{
+//		printf("x = %d, y = %d\n", x, y);
+//	}
 	return (img);
 }
 

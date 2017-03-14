@@ -45,7 +45,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				4
+# define MAX_THREAD				1
 
 # define TYPE_SPHERE			1
 # define TYPE_PLANE				2
@@ -316,5 +316,6 @@ void				normalquadric(t_env *e, t_obj *obj);
 int					irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e);
 int					irayslice(t_ray *r, t_obj *obj, double *dist);
 
+void				swapdouble(double *a, double *b);
 
 #endif
