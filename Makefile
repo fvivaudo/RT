@@ -6,7 +6,7 @@
 #    By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2014/07/16 09:42:25 by fvivaudo          #+#    #+#              #
-#    Updated: 2016/11/25 17:39:51 by fvivaudo         ###   ########.fr        #
+#    Updated: 2017/03/16 10:36:50 by dmoureu-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,13 +14,17 @@ FLAGS = -Wall -Wextra -pthread
 
 SRC = 	srcs/etc.c \
 		srcs/init.c \
-		srcs/init2.c \
 		srcs/intersection.c \
 		srcs/intersection2.c \
 		srcs/main.c \
 		srcs/perlin.c \
 		srcs/vector.c \
-		srcs/list.c
+		srcs/list.c \
+		srcs/normal.c \
+		srcs/bump_mapping.c \
+		srcs/blinn_phong.c \
+		srcs/shadow.c \
+		srcs/config.c
 
 
 OBJ  = $(subst srcs/,,$(SRC:.c=.o))

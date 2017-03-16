@@ -6,7 +6,7 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:59:09 by fvivaudo          #+#    #+#             */
-/*   Updated: 2016/12/23 11:23:12 by fvivaudo         ###   ########.fr       */
+/*   Updated: 2017/03/16 10:35:29 by dmoureu-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,135 +60,7 @@ void			reset(t_env *e, int x, int y)
 		e->cmat.diffuse.green = output.y;
 		e->cmat.diffuse.blue = output.z;*/
 
-t_vec	bump_mapping(t_env *e)
-{
-	t_vec	tmp;
-	t_vec	new_n;
-	double	temp;
 
-	tmp = vectorscale(0.1, e->newstart);
-	double noiseCoefx = noise(tmp.x, tmp.y, tmp.z);
-	double noiseCoefy = noise(tmp.y, tmp.z, tmp.x);
-	double noiseCoefz = noise(tmp.z, tmp.x, tmp.y);
-	new_n.x = (1.0f -  e->cmat.bump ) * e->n.x +  e->cmat.bump * noiseCoefx; 
-	new_n.y = (1.0f -  e->cmat.bump ) * e->n.y +  e->cmat.bump * noiseCoefy; 
-	new_n.z = (1.0f -  e->cmat.bump ) * e->n.z +  e->cmat.bump * noiseCoefz; 
-	temp = vectordot(new_n ,new_n);
-	if (temp == 0.0f)
-		return (e->n);
-	temp = 1.0 / sqrtf(temp);
-	new_n = vectorscale(temp, new_n);
-	vectornormalize(&new_n);
-	return (new_n);
-}
-
-void	blinn_phong(t_env *e, t_vec lightray_dir)
-{
-	double			tmp;
-	double			blinnterm;
-	t_vec			blinnDir;
-
-	blinnDir = vectorsub(lightray_dir, e->r.dir);
-	tmp = sqrtf(vectordot(blinnDir, blinnDir));
-	if (tmp)
-	{
-		blinnDir = vectorscale((1 / tmp), blinnDir);
-		tmp = vectordot(blinnDir, e->n);
-		blinnterm = tmp ? tmp : 0;
-		blinnterm = e->cmat.brillance * pow(blinnterm, SPEC_POW) * e->coef;
-		e->col.red += e->cmat.brillance * blinnterm;
-		e->col.green += e->cmat.brillance * blinnterm;
-		e->col.blue += e->cmat.brillance * blinnterm;
-	}
-}
-
-/*for each light in the scene
-**{
-**	if the light is not in shadow of another object
-**	{
-**		add this light contribution to computed color;
-**	}
-**}*/
-int		deal_shadow(t_env *e)
-{
-	t_ray			lightray;
-	t_light			*tmplight;
-	double			tmpdot;
-	double			distancetolight;
-
-	tmplight = e->lights;
-		
-	while (tmplight)
-	{
-		if (e->cmat.bump)
-		{
-			e->n = bump_mapping(e);
-		}
-
-		e->clight = *tmplight;
-		tmplight = tmplight->next;
-		//distance between intersection point and light
-		e->dist = vectorsub(e->clight.pos, e->newstart);
-		distancetolight = vectormagnitude(e->dist);
-//		printf("Checkpoint0\n");
-/*		printf("e->newstart.x = %g, e->newstart.y = %g, e->newstart.z = %g\n", e->newstart.x, e->newstart.y, e->newstart.z);
-		printf("e->clight.pos.x = %g, e->clight.pos.y = %g, e->clight.pos.z = %g\n", e->clight.pos.x, e->clight.pos.y, e->clight.pos.z);
-		printf("e->n.x = %g, e->n.y = %g, e->n.z = %g\n", e->n.x, e->n.y, e->n.z);
-		printf("e->dist.x = %g, e->dist.y = %g, e->dist.z = %g\n", e->dist.x, e->dist.y, e->dist.z);
-		printf("e->t = %g\n", e->t);*/
-
-		//if the vector dot is negative, then both vectors are going in opposite directions
-		vectornormalize(&e->dist);
-		if ((tmpdot = vectordot(e->n, e->dist)) <= 0.0f)
-			continue;
-		e->t = vectormagnitude(e->dist);
-		if (e->t <= 0.0f)
-			continue; // delete later, eventually
-
-		//Check if there is something between point and light
-		//limits light range, or does it?
-	//	lightray.dir = vectorscale((1 / e->t), e->dist); //alternative to normalization?
-		lightray.dir = e->dist;
-		lightray.start = vectoradd(e->newstart, e->dist);
-		//lightray.start = vectoradd(e->newstart, lightray.dir);
-		// the object risks a colision with itself, which is quite problematic
-		// 2 solutions :
-		// -forbid colision detection with itself 
-		// -launch the ray a small distance away from the actual intersection point (CURRENT)
-		//printf("intersection\n");
-	//	printf("intersection\n");
-/*		if (intersection(e, &lightray, -1))
-		{
-			continue;
-		}*/
-
-		double light = 1;
-		//temporary removal
-		if ((light = computeshadow(e, &lightray, light, distancetolight)) == 0.0) // 1 is light, is it ok?
-		{
-			continue;
-		}
-	//	printf("light = %g\n", light);
-	//	printf("intersection2\n");
-
-	//	lambert diffusion
-		e->lambert = tmpdot * e->coef;
-		e->col.red += e->lambert * e->clight.intensity.red * e->cmat.diffuse.red * light;
-		e->col.green += e->lambert * e->clight.intensity.green * e->cmat.diffuse.green * light;
-		e->col.blue += e->lambert * e->clight.intensity.blue * e->cmat.diffuse.blue * light;
-
-		//check collision with objects between object and light
-
-		// Blinn Phong model
-		blinn_phong(e, lightray.dir);
-	}
-	if (e->col.red == 0 && e->col.green == 0 && e->col.red == 0)
-		return (FALSE);
-	return (TRUE);
-	//Ambient lighting
-
-	//	printf("e->red = %g, e->green = %g, e->blue = %g\n", e->red, e->green, e->blue);
-}
 
 void			refract(t_env *e)
 {
@@ -261,7 +133,7 @@ t_color			reflect_and_refract(t_env e)
 		deal_shadow(&e);
 	}//there is no shadow on the reflected surface, need to fix later
 	//e.blue += 1;
-	
+
 	//e.cmat.reflection = 1.0;
 
 	double originalcoef;
@@ -327,8 +199,8 @@ t_color			reflect_and_refract(t_env e)
 	res.blue = originalcoef * (e.reflecoef * reflecolor.blue + e.refracoef * refracolor.blue + e.col.blue);
 //	if (e.id == 2)
 //		printf("res.red = %g, res.green = %g, res.blue = %g\n", res.red, res.green, res.blue);
-	return (res);
-/*	if ((e.coef > 0) && (e.level < MAX_DEPTH_LEVEL))
+
+	if ((e.coef > 0) && (e.level < MAX_DEPTH_LEVEL))
 	{
 		++e.level;
 		//reflected ray = dir−2(dir⋅n )n
@@ -341,50 +213,9 @@ t_color			reflect_and_refract(t_env e)
 	else
 	{
 
-	}*/
-}
-
-/*
-** send a ray.
-** if the ray meets something, deal with it's shadow
-** else, generate another  ray
-*/
-/*void			cast_ray(t_env *e)
-{
-	t_vec			tmp;
-	t_obj			*res;
-	//t_color			col;
-	e->t = MAX_RANGE;
-	res = computeray(e);
-	if (!res)
-		return;
-	e->cmat = res->material;
-
-	deal_shadow(e);
-	//e->blue += 1;
-
-	e->coef *= e->cmat.reflection;
-*/
-
-	//reflected ray = dir−2(dir⋅n )n
-/*	if (e->coef > 0)
-	{
-		col = reflect_and_refract(*e);
-		e->red = col.red;
-		e->green = col.green;
-		e->blue = col.blue;
-	}*/
-/*
-	tmp = vectorscale(2 * vectordot(e->r.dir, e->n), e->n);
-	e->r.dir = vectorsub(e->r.dir, tmp);
-	e->r.start = vectoradd(e->newstart, e->r.dir);
-	vectornormalize(&e->r.dir);
-	if ((e->coef > 0) && (e->level < MAX_DEPTH_LEVEL))
-	{
-		++e->level;
-		cast_ray(e);
 	}
-}*/
+	return (res);
+}
 
 unsigned char	*update_img(t_env *e, int x, int y)
 {
@@ -396,74 +227,7 @@ unsigned char	*update_img(t_env *e, int x, int y)
 	(unsigned char)((e->col.green * C) < C ? e->col.green * C : C);
 	img[(x + y * WIDTH) * 3 + 2] =
 	(unsigned char)((e->col.blue * C) < C ? e->col.blue * C : C);
-	//ft_putendl("image update");
-//	if (img[(x + y * WIDTH) * 3 + 0] == 0 && img[(x + y * WIDTH) * 3 + 1] == 0 && img[(x + y * WIDTH) * 3 + 2] == 0)
-//	{
-//		printf("x = %d, y = %d\n", x, y);
-//	}
 	return (img);
-}
-
-t_env			*readConfig(int fd)
-{
-	char			*buffer_gnl;
-	char			**buffer_line;
-	t_env			*e;
-
-	e = (t_env*)malloc(sizeof(t_env));
-	reset(e, 0, 0);
-	e->obj = NULL;
-	e->lights = NULL;
-	e->id = 0;
-	while (get_next_line(fd, &buffer_gnl) == 1)
-	{
-//		ft_putendl(buffer_gnl);
-		buffer_line = ft_strsplitspace(buffer_gnl);
-		if (buffer_line[0])
-		{
-			if (!(ft_strcmp(buffer_line[0], "SPHERE")))
-			{
-				init_sphere(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "CONE")))
-			{
-				init_cone(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
-			{
-				init_cyl(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "PLANE")))
-			{
-				init_plane(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
-			{
-				init_quadric(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
-			{
-				init_light(e, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "CAMERA")))
-			{
-				init_cam(e, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "COMPOSE")))
-			{
-				init_compose(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
-			{
-				init_object(&e->obj, buffer_line);
-			}
-		}
-		free(buffer_gnl);
-		ft_doubletabfree(&buffer_line);
-		++e->id;
-	}
-	close(fd);
-	return (e);
 }
 
 void			get_img_pos(int *x, int *y, int inter)
@@ -491,19 +255,11 @@ void			*cast_ray_thread(void *e)
 	get_img_pos(&new.x, &new.y, interval);
 	while (1)
 	{
-		//pthread_mutex_lock(&env->mutex);
-		/*while (!env->available_ressource)
-		{
-			pthread_cond_wait(&env->cond, &env->mutex);
-		}*/
-		//printf("beyond the lock\n");
 		new.cam = env->cam;
 		new.lights = env->lights; // maybe copy a malloced version for each thread?
 		new.obj = env->obj; // maybe copy a malloced version for each thread?
 
 		get_img_pos(&new.x, &new.y, interval);
-		//pthread_mutex_unlock(&env->mutex);
-		//env->available_ressource = 1;
 		reset(&new, new.x, new.y);
 //		while ((new.coef > 0) && (new.level < MAX_DEPTH_LEVEL))
 //		{
@@ -521,9 +277,7 @@ void			*cast_ray_thread(void *e)
 			new.col.blue = 1.0 - exp(new.col.blue * EXPOSURE);
 			new.col.green = 1.0 - exp(new.col.green * EXPOSURE);
 		}
-	//	printf("new.red = %g, new.green = %g, new.blue = %g\n", new.red, new.green, new.blue);
 		update_img(&new, new.x, new.y);
-		//printf("new->x = %d, new->y = %d\n", new.x, new.y);
 		if (new.x >= WIDTH && new.y >= HEIGHT)
 		{
 		//	pthread_cond_broadcast(&e->cond, &e->mutex);

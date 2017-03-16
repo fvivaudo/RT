@@ -6,7 +6,7 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:58:09 by fvivaudo          #+#    #+#             */
-/*   Updated: 2016/12/21 16:48:51 by fvivaudo         ###   ########.fr       */
+/*   Updated: 2017/03/16 10:38:40 by dmoureu-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,223 +15,6 @@
 double	getdegree(double rad)
 {
 	return (rad * 180 / M_PI);
-}
-
-void	normalplane(t_env *e, t_obj *obj)
-{
-	//vector dot > 0 check if both vectors are going in the same direction
-	//if they are not, get the reverse direction of the plane to get it's normal
-	if (vectordot(obj->dir, e->r.dir) >= 0.0)
-	{
-		e->n = vectorscale(-1, obj->dir);
-	}
-	else
-	{
-		e->n = obj->dir;
-	}
-}
-
-void	normalsphere(t_env *e, t_obj *obj)
-{
-	//calcul de la normale d'une sphere
-	//get distance between new distant ray and object pos?
-	// distance = root of  (v1 - v2).(v1 - v2)
-	e->n = vectorsub(e->newstart, obj->pos);
-	e->temp = vectordot(e->n, e->n);
-	if (e->temp == 0)
-		return ;
-	//the root of the dot product
-	e->temp = 1.0f / sqrtf(e->temp);
-	e->n = vectorscale(e->temp, e->n);
-	vectornormalize(&e->n);
-
-/*	if (e->x == 468 && e->y == 424)
-	{
-		printf("e->t = %g\n", e->t);
-	}*/
-	//if the intersection point is located behind the object center from the camera perspective,
-	//then we're inside the object
-//	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad))
-//	if (vectormagnitude(vectorsub(e->newstart, obj->pos)) < (obj->rad - 0.1))
-	if (obj->reversen)
-	{
-		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
-	}
-/*	if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
-	{
-		e->n = vectorscale(-1, e->n); //FiX
-	}*/
-	//if (obj->reversen)
-	//{
-	//	e->n = vectorscale(-1, e->n);
-	//}
-}
-
-void	normalcylinder(t_env *e, t_obj *obj)
-{
-	t_vec	y_axis;
-	t_vec	rot_axis;
-	//t_vec	dir_cyl;
-	t_vec	center_cyl;
-	t_vec	inter_point;
-	//t_vec	pos_cyl;
-	double	rot_angle;
-
-	y_axis = vectorinit(0, 1, 0);
-	rot_angle = acos(vectordot(obj->dir, y_axis));
-	//get rotation angle
-
-	rot_axis = vectorproduct(obj->dir, y_axis);
-	//get orthogonal rotation vector
-
-	vectornormalize(&rot_axis);
-
-	if (rot_axis.x || rot_axis.y || rot_axis.z)
-	{
-		inter_point = vectorrotate(e->newstart, rot_axis, rot_angle);
-	}
-	else
-	{
-		inter_point = e->newstart;
-	}
-
-	//get a point in the center of the cylinder at the same level as the intersection
-	center_cyl = vectorinit(obj->pos.x, inter_point.y, obj->pos.z);
-	//getting vector from center of cylinder slice toward the intersection point
-	e->n = vectorsub(inter_point, center_cyl);
-	if (rot_axis.x || rot_axis.y || rot_axis.z)
-	{
-		e->n = vectorrotate(e->n, rot_axis, rot_angle);
-	}
-	vectornormalize(&e->n);
-
-	if (obj->reversen)
-	{
-		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
-	}
-//	if (obj->t[0] != e->t)
-	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
-	{
-		printf("obj->t[0] = %g, e->t = %g\n", obj->t[0], e->t);
-		e->n = vectorscale(-1, e->n);
-	}*/
-}
-
-//x = -r cos(rad)
-//y = r
-//z = -r sin(rad)
-//n = e->newstart - magnitude(newstart - cone.pos) / cos(e->alpha) * cone.dir
-void	normalcone(t_env *e, t_obj *obj)
-{
-	double tmp;
-
-	//if the vector from the intersection to the apex is aligned to the cone axis, the it's fine
-	if (vectordot(vectorsub(e->newstart, obj->pos), obj->dir) > 0)
-		tmp = vectormagnitude(vectorsub(e->newstart, obj->pos)) / cos(obj->alpha);
-	else
-		tmp = vectormagnitude(vectorsub(e->newstart, obj->pos)) / cos(obj->alpha) * (-1);
-
-	//Removing object pos from the formula make it only true for a cone at the origin
-	e->n = vectorsub(e->newstart, vectoradd(vectorscale(tmp, obj->dir), obj->pos));
-
-	vectornormalize(&e->n);
-
-	if (obj->reversen)
-	{
-		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
-	}
-	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
-	{
-		e->n = vectorscale(-1, e->n);
-	}*/
-}
-
-t_quadric initquad(double param[10])
-{
-	t_quadric quad;
-
-	quad.a = param[0];
-	quad.b = param[1];
-	quad.c = param[2];
-	quad.f = param[3];
-	quad.g = param[4];
-	quad.h = param[5];
-	quad.p = param[6];
-	quad.q = param[7];
-	quad.r = param[8];
-	quad.d = param[9];
-
-	return (quad);
-}
-//xn = 2*A*xi + D*yi + E*zi + G
-//yn = 2*B*yi + D*xi + F*zi + H
-//z n = 2*C*zi + E*xi + F*yi + I
-void	normalquadric(t_env *e, t_obj *obj)
-{
-	t_vec camdir = vectorsub(obj->pos, e->cam.eyepoint);
-	double tmpdist = vectormagnitude(camdir);
-	vectornormalize(&camdir);
-
-//	t_vec tmp_start = vectorscale(-1, vectorscale(tmpdist, camdir));
-	t_vec tmp_start = vectoradd(e->newstart, vectorscale(-1, vectorscale(tmpdist + SCREEN_EYE_DIST, camdir)));
-
-	e->n.x = 2 * obj->quad.a * tmp_start.x;
-	e->n.x += 2 * obj->quad.f * tmp_start.y;
-	e->n.x += 2 * obj->quad.g * tmp_start.z;
-	e->n.x += 2 * obj->quad.p;
-	e->n.y = 2 * obj->quad.b * tmp_start.y;
-	e->n.y += 2 * obj->quad.f * tmp_start.x;
-	e->n.y += 2 * obj->quad.h * tmp_start.z;
-	e->n.y += 2 * obj->quad.q;
-	e->n.z = 2 * obj->quad.c * tmp_start.z;
-	e->n.z += 2 * obj->quad.g * tmp_start.x;
-	e->n.z += 2 * obj->quad.h * tmp_start.y;
-	e->n.z += 2 * obj->quad.r;
-	vectornormalize(&e->n);
-
-	if (obj->reversen)
-	{
-		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
-	}
-	//printf("%s\n", );
-	//printf("normal e->r.start.x = %g, e->r.start.y = %g, e->r.start.z = %g\n", e->r.start.x, e->r.start.y, e->r.start.z);
-//	printf("tmp_start.x = %g, tmp_start.y = %g, tmp_start.z = %g\n", tmp_start.x, tmp_start.y, tmp_start.z);
-//	printf("e->n.x = %g, e->n.y = %g, e->n.z = %g\n", e->n.x, e->n.y, e->n.z);
-
-	/*if (vectordot(vectorsub(e->newstart, obj->pos), e->r.dir) > 0)
-	{
-		e->n = vectorscale(-1, e->n);
-	}*/
-	//if the vector from the intersection to the apex is aligned to the cone axis, the it's fine
-}
-
-//I consider an object like a series of wall instead of a single entity, it might not be the best way to calculate
-// transparency, refraction
-double		computeshadow(t_env *e, t_ray *r, double light, double dist)
-{
-	t_obj			*cursor;
-	cursor = e->obj;
-//	double t = dist; // distance between point and light
-
-	while (cursor)
-	{
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &dist, e)))
-		{
-		//	e->t = t;
-			light *= cursor->material.transparency; // is it accurate?
-		}
-		cursor = cursor->nextitem;
-	}
-	return (light);
-	// if an intersection was found
 }
 
 t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
@@ -245,8 +28,6 @@ t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
 
 	while (cursor)
 	{
-//		printf("cursor id = %d\n", cursor->id);
-//		ft_putendl("ok-1");
 
 		if (cursor->id == id_ignore)
 		{
@@ -272,41 +53,17 @@ t_obj	*computeray(t_env *e)
 {
 	t_obj *res;
 
-	//printf("slowdown\n");
-	/*for(int i = 0; i < 100000 ; ++i)
-	{
-		int j = i+i;
-		(void)j;
-	}*/
 	if ((res = intersection(e, &e->r, -1)))
 	{
 		e->id = res->id;
 		//e->scaled = distance between start of ray and object intersection
 		e->scaled = vectorscale(e->t, e->r.dir);
-		/*printf("e->r.dir.x = %g, e->r.dir.y = %g, e->r.dir.z = %g\n", e->r.dir.x, e->r.dir.y, e->r.dir.z);
-		printf("e->scaled.x = %g, e->scaled.y = %g, e->scaled.z = %g\n", e->scaled.x, e->scaled.y, e->scaled.z);
-		printf("e->t = %g\n", e->t);*/
 		//e->newstart = object intersection
 		e->newstart = vectoradd(e->r.start, e->scaled);
-
-		//printf("e->newstart.x = %g, e->newstart.y = %g, e->newstart.z = %g\n", e->newstart.x, e->newstart.y, e->newstart.z);
-
 		if (res->normobj)
 			res->normal(e, res->normobj);
 		else
 			res->normal(e, res);
-
-
-		/*if ((res->type) == TYPE_PLANE)
-			normalplane(e, res);
-		else if ((res->type) == TYPE_CYLINDER)
-			normalcylinder(e, res);
-		else if ((res->type) == TYPE_CONE)
-			normalcone(e, res);
-		else if ((res->type) == TYPE_SPHERE)
-			normalsphere(e, res);
-		else if ((res->type) == TYPE_QUADRIC)
-			normalquadric(e, res);*/
 	}
 	return (res);
 }
@@ -584,7 +341,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 //Bq = 2*Axoxd + 2*Byoyd + 2*Czozd + D(xoyd + yoxd) + E(xozd + zoxd) + F(yozd + ydzo) + Gxd + Hyd + Izd
 
-//Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J 
+//Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
 
 int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 {

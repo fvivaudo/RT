@@ -6,7 +6,7 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/05/07 11:39:05 by fvivaudo          #+#    #+#             */
-/*   Updated: 2016/12/23 12:42:48 by fvivaudo         ###   ########.fr       */
+/*   Updated: 2017/03/16 10:38:00 by dmoureu-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,7 +189,7 @@ typedef struct		s_obj
 	double			height;
 	double			alpha;
 	t_quadric		quad;
-	
+
 	bool			negative;
 	bool			reversen; //useful if we collide with the inside of an object
 
@@ -263,6 +263,16 @@ void				cast_ray(t_env *e);
 t_color				colorinit(double red, double green, double blue);
 t_obj				*computeray(t_env *e);
 int					deal_shadow(t_env *e);
+
+
+t_env				*readConfig(int fd);
+t_obj 			*init_null(void);
+bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
+bool				setslice(char **buffer, int *y, t_obj *obj);
+bool				setorient(char **buffer, int *y, t_obj *obj);
+bool			 	setmat(char **buffer, int *y, t_mat *mat);
+void				extractobj(t_obj **lstobj, t_obj *obj);
+
 void				init_cam(t_env *e, char **buffer);
 int					init_cone(t_obj **lstobj, char **buffer);
 int					init_cyl(t_obj **lstobj, char **buffer);
@@ -317,5 +327,8 @@ int					irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e);
 int					irayslice(t_ray *r, t_obj *obj, double *dist);
 
 void				swapdouble(double *a, double *b);
+
+t_vec				bump_mapping(t_env *e);
+void				blinn_phong(t_env *e, t_vec lightray_dir);
 
 #endif
