@@ -6,7 +6,7 @@
 #    By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2014/07/16 09:42:25 by fvivaudo          #+#    #+#              #
-#    Updated: 2017/03/16 10:36:50 by dmoureu-         ###   ########.fr        #
+#    Updated: 2017/03/16 10:57:55 by dmoureu-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,12 +15,12 @@ FLAGS = -Wall -Wextra -pthread
 SRC = 	srcs/etc.c \
 		srcs/init.c \
 		srcs/intersection.c \
-		srcs/intersection2.c \
 		srcs/main.c \
 		srcs/perlin.c \
 		srcs/vector.c \
 		srcs/list.c \
 		srcs/normal.c \
+		srcs/iray.c \
 		srcs/bump_mapping.c \
 		srcs/blinn_phong.c \
 		srcs/shadow.c \
