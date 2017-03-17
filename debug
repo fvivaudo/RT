@@ -1,2 +1,0 @@
-e->cam.lookat.x = 0, e->cam.lookat.y = 0, e->cam.lookat.z = -400
-tmp.x = 0, tmp.y = 0, tmp.z = 100

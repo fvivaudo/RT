@@ -6,7 +6,7 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:57:51 by fvivaudo          #+#    #+#             */
-/*   Updated: 2017/03/16 10:39:01 by dmoureu-         ###   ########.fr       */
+/*   Updated: 2017/03/17 16:34:23 by dmoureu-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -576,7 +576,7 @@ void		init_cam(t_env *e, char **buffer)
 	tmp_vdir = vectorinit(0, 0, 1);
 	tmp_up = vectorinit(0, -1, 0); // why -1? Dunno, it works for now.
 
-	rot_angle = acos(vectordot(tmp_vdir,  e->cam.vdir));
+	/*rot_angle = acos(vectordot(tmp_vdir,  e->cam.vdir));
 	rot_axis = vectorproduct(tmp_vdir,  e->cam.vdir);
 
 	vectornormalize(&rot_axis);
@@ -588,13 +588,14 @@ void		init_cam(t_env *e, char **buffer)
 	else
 	{
 		up = tmp_up;
-	}
-
+	}*/
+	up = vectorinit(0, -1, 0);
 //	rot_axis = vectorproduct(e->cam.vdir, up);
 	//up = vectorrotate(e->cam.vdir, rot_axis, 90);
 	//vectornormalize(&up);
 //	printf("up.x = %g, up.y = %g, up.z = %g\n", up.x, up.y, up.z);
 	u = vectorproduct(e->cam.vdir, up);
+	printf("up.x = %g, up.y = %g, up.z = %g\n", up.x, up.y, up.z);
 	v = vectorproduct(u, e->cam.vdir);
 
 	u = vectornormalize(&u);

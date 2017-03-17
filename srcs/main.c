@@ -6,7 +6,7 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:59:09 by fvivaudo          #+#    #+#             */
-/*   Updated: 2017/03/16 10:35:29 by dmoureu-         ###   ########.fr       */
+/*   Updated: 2017/03/17 15:40:03 by dmoureu-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,12 +261,7 @@ void			*cast_ray_thread(void *e)
 
 		get_img_pos(&new.x, &new.y, interval);
 		reset(&new, new.x, new.y);
-//		while ((new.coef > 0) && (new.level < MAX_DEPTH_LEVEL))
-//		{
-			//cast_ray(&new);
 			new.col = reflect_and_refract(new);
-//			++new.level;
-//		}
 		if (new.id != -1) //Ambient shading has to take place after every reflection took place
 		{
 			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;

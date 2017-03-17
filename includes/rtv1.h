@@ -6,7 +6,7 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/05/07 11:39:05 by fvivaudo          #+#    #+#             */
-/*   Updated: 2017/03/16 10:38:00 by dmoureu-         ###   ########.fr       */
+/*   Updated: 2017/03/17 16:20:19 by dmoureu-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				1
+# define MAX_THREAD				4
 
 # define TYPE_SPHERE			1
 # define TYPE_PLANE				2
