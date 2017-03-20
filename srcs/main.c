@@ -60,52 +60,76 @@ void			reset(t_env *e, int x, int y)
 		e->cmat.diffuse.green = output.y;
 		e->cmat.diffuse.blue = output.z;*/
 
-
-
-void			refract(t_env *e)
+void		refract(t_env *e)
 {
-	double ndoti, two_ndoti, a, b, b2, D2;
-	ndoti = vectordot(e->n, e->r.dir);
-	// r = relative refractence index
-	double r = e->crefraction / e->cmat.refraction;
-	double invr = e->cmat.refraction / e->crefraction;
-
-	if (ndoti >= 0.0)
+	double	ViewProjection = vectordot(e->r.dir, e->n);
+	double coef = 1;
+	double fCosThetaT;
+	double 	fdensity1 = e->refracoef;
+	double 	fdensity2 = e->cmat.refraction;
+	double reflectance;
+	double	fCosThetaI = fabs(ViewProjection);
+	double fSinThetaI = sqrtf(1 - fCosThetaI * fCosThetaI);
+	double fSinThetaT = (fdensity1 / fdensity2) * fSinThetaI;
+	fSinThetaI = sqrt(1 - fCosThetaI * fCosThetaI);
+	fSinThetaT = (fdensity1 / fdensity2) * fSinThetaI; 
+	//printf("%f\n", fSinThetaI);
+	if (fSinThetaT * fSinThetaT > 0.9999)
 	{
-		b = r;
-		b2 = r * r;
+ 		reflectance = 1.0; // pure reflectance at grazing angle
+		fCosThetaT = 0.0;
 	}
 	else
 	{
-		b = invr;
-		b2 = invr * invr;
-	}
-	D2 = 1.0 - b2 * (1.0 - (ndoti * ndoti));
+	 	fCosThetaT = sqrtf(1 - fSinThetaT * fSinThetaT);
+	 	double fReflectanceOrtho = (fdensity2 * fCosThetaT - fdensity1 * fCosThetaI ) / (fdensity2 * fCosThetaT + fdensity1 * fCosThetaI);
+	 	fReflectanceOrtho = fReflectanceOrtho * fReflectanceOrtho;
+	 
+		double fReflectanceParal =(fdensity1 * fCosThetaT - fdensity2 * fCosThetaI ) / (fdensity1 * fCosThetaT + fdensity2 * fCosThetaI);
 
-	if (D2 >= 0.0)
-	{
-		if (ndoti >= 0.0)
-			a = b * ndoti - sqrt(D2);
-		else
-			a = b * ndoti + sqrt(D2);
-//		printf("ndoti = %g\n", ndoti);
-//		printf("e->r.dir1.x = %g, e->r.dir1.y = %g, e->r.dir1.z = %g\n", e->r.dir.x, e->r.dir.y, e->r.dir.z);
-		e->r.dir.x = a * e->n.x - b * e->r.dir.x;
-		e->r.dir.y = a * e->n.y - b * e->r.dir.y;
-		e->r.dir.z = a * e->n.z - b * e->r.dir.z;
-//		printf("e->r.dir2.x = %g, e->r.dir2.y = %g, e->r.dir2.z = %g\n", e->r.dir.x, e->r.dir.y, e->r.dir.z);
-		e->r.start = vectoradd(e->newstart, e->r.dir);
-		e->crefraction = e->cmat.refraction; //solve later.
+		fReflectanceParal = fReflectanceParal * fReflectanceParal;
+		reflectance = 0.5 * (fReflectanceOrtho + fReflectanceParal);
 	}
-	else // total internal reflection
+
+	double fRoulette = (1.0 / RAND_MAX) * rand();
+	//printf("roulette  ==  %g            |||          reflectance == %g\n",fRoulette, reflectance);
+	if (fRoulette < reflectance)
 	{
-		two_ndoti = ndoti + ndoti;
-		e->r.dir.x = two_ndoti * e->n.x - e->r.dir.x;
-		e->r.dir.y = two_ndoti * e->n.y - e->r.dir.y;
-		e->r.dir.z = two_ndoti * e->n.z - e->r.dir.z;
+	//	printf("lol\n");
+	 // rays are either reflected, ..
+	 	coef *= e->cmat.reflection;
+	 	e->r.start = vectoradd(e->newstart, e->r.dir);
+	 	e->r.dir = vectoradd(e->r.dir, vectorscale(e->cmat.reflection, e->n));
+		vectornormalize(&e->r.dir);
+	}
+	else
+	{
+	  //..transmitted..
+	//	printf("mdr\n");
+
+
+		coef *= e->cmat.refraction;
+		double fOldRefractionCoef = e->crefraction;
+		e->obj->reversen = FALSE;
+		if (e->obj->t[1] != DOESNOTEXIST)
+		{
+			e->crefraction = 1.0;
+			e->obj->reversen = TRUE;						
+		}
+		else
+		{
+			e->crefraction = e->cmat.refraction;
+		}
+
 		e->r.start = vectoradd(e->newstart, e->r.dir);
+		e->r.dir = vectoradd(e->r.dir,vectorscale(fCosThetaI, e->n));
+		e->r.dir = vectorscale((fOldRefractionCoef / e->crefraction), e->r.dir);
+		e->r.dir = vectoradd(e->r.dir, vectorscale(-fCosThetaT , e->n));
+		vectornormalize(&e->r.dir);
 	}
 }
+
+
 
 t_color			reflect_and_refract(t_env e)
 {

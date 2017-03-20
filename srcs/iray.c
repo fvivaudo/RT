@@ -58,7 +58,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
 		obj->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
 
-		if (obj->t[0] > obj->t[1])
+		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
 		{
 			swapdouble(&obj->t[0], &obj->t[1]);
 		}
@@ -225,7 +225,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 			obj->t[1] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
 	//	else
 	//		obj->t[1] = MAX_RANGE + 1;
-		if (obj->t[0] > obj->t[1])
+		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
 		{
 			swapdouble(&obj->t[0], &obj->t[1]);
 		}
@@ -306,7 +306,7 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	{
 		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
 		obj->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
-		if (obj->t[0] > obj->t[1])
+		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
 		{
 			swapdouble(&obj->t[0], &obj->t[1]);
 		}
@@ -588,7 +588,7 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		obj->t[0] = (-(abcdiscr[1]) + abcdiscr[4]) / (2);
 		obj->t[1] = (-(abcdiscr[1]) - abcdiscr[4]) / (2);
 
-		if (obj->t[0] > obj->t[1])
+		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
 		{
 			swapdouble(&obj->t[0], &obj->t[1]);
 		}
