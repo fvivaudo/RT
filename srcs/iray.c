@@ -506,25 +506,41 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 	return (TRUE);
 }
 
+//The problem lies in computeshadow, do my intersection works well when i go from the hole toward light?
 int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
 {
 	t_obj	*cursor;
+	t_obj	*deepestobj;
 	double 	tmax;
 	double	current;
-
+	double  holet[2];
 //	t_vec sliceinter;
 
 			//	ft_putendl("unhandled case irayneg");
+	holet[0] = 0;
+	holet[1] = 0;
 	cursor = obj->nextneg;
+	obj->normobj = NULL;
 //	printf("slice->pos.x = %g, slice->pos.y = %g, slice->pos.z = %g\n", slice->pos.x, slice->pos.y, slice->pos.z);
 	if (obj->t[0] < 0 && obj->t[1] < 0)
 	{
 		return (FALSE);
 	}
+
 	current = obj->t[0];
+/*		printf("\n");
+
+	deepestobj = cursor;
+	while (deepestobj)
+	{
+		printf("type = %d, deepestobj->t[0] = %g, deepestobj->t[1] = %g, deepestobj->rad = %g, deepestobj->pos.x = %g, deepestobj->pos.y = %g, deepestobj->pos.z = %g, deepestobj->dir.x = %g, deepestobj->dir.y = %g, deepestobj->dir.z = %g\n", deepestobj->type, deepestobj->t[0], deepestobj->t[1], deepestobj->rad, deepestobj->pos.x, deepestobj->pos.y, deepestobj->pos.z, deepestobj->dir.x, deepestobj->dir.y, deepestobj->dir.z);
+		deepestobj = deepestobj->nextitem;
+	}*/
+
+//printf("\n");
 	while (cursor)
 	{
-//			printf("1cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
+		//printf("type = %d, cursor->t[0] = %g, cursor->t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, cursor->t[0], cursor->t[1], holet[0], holet[1]);
 		tmax = MAX_RANGE;
 		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &tmax, e)) ||
 			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &tmax, e)) ||
@@ -532,34 +548,83 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
 			(cursor->type == TYPE_CONE && iraycone(r, cursor, &tmax, e)) ||
 			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &tmax, e)))
 		{
-			//case 1 hole going through object
-			//case 2 hole in front object
-			//case 3 hole behind object
-			if (cursor->t[0] < obj->t[0] && cursor->t[1] > obj->t[1])
+			if (cursor->t[1] == DOESNOTEXIST)
 			{
-			//	printf("case 1 = cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
-				return (FALSE);
+				continue;
 			}
-			else if (cursor->t[0] < obj->t[0] && cursor->t[1] < obj->t[1])
+			if (cursor->t[0] > cursor->t[1]) //doesnt matter if holet[0] is inferior to 0 here
 			{
-			//	ft_putendl("case 2");
-			//	printf("case 2 = cursor->t[0] = %g, cursor->t[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", cursor->t[0], cursor->t[1], obj->t[0], obj->t[1]);
-				if (cursor->t[1] > current)
+				swapdouble(&cursor->t[0], &cursor->t[1]);
+			}
+			//first negative object
+			if (holet[0] == 0 && holet[1] == 0)
+			{
+				deepestobj = cursor;
+			//	obj->normobj = cursor;
+			//	obj->normal = cursor->normal;
+				holet[0] = cursor->t[0];
+				holet[1] = cursor->t[1];
+			//	if (holet[0] > holet[1]) //doesnt matter if holet[0] is inferior to 0 here
+			//	{
+			//		swapdouble(&holet[0], &holet[1]);
+			//	}
+			}
+			else if (holet[0] <= cursor->t[1] && cursor->t[0] <= holet[1]) // check for overlap
+			{
+				if (cursor->t[0] < holet[0])
 				{
-					obj->normobj = cursor;
-					obj->normal = cursor->normal;
-					current = cursor->t[1]; //we need the deepest hole
+					holet[0] = cursor->t[0];
+				}
+				if (cursor->t[1] > holet[1])
+				{
+					deepestobj = cursor;
+				//	obj->normobj = cursor;
+				//	obj->normal = cursor->normal;
+					holet[1] = cursor->t[1];
 				}
 			}
 		}
+		//printf("type = %d, cursor->t[0] = %g, cursor->t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, cursor->t[0], cursor->t[1], holet[0], holet[1]);
 		//it should be nextitem and not nextneg
 		cursor = cursor->nextitem;
 	}
+		//case 1 hole going through object
+		//case 2 hole in front object
+		//case 3 hole behind object
+//	if (e->x == 355 && e->y == 263)
+//	{
+//		printf("case 0 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
+//	}
+//if we are inside the object how do we determine how to
+	if (holet[0] < obj->t[0] && holet[1] > obj->t[1])
+	{
+//	if (e->x == 355 && e->y == 263)
+//		printf("case 1 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
+		return (FALSE);
+	}
+	else if (holet[0] < obj->t[0]/* && holet[1] < obj->t[1]*/)
+	{
+	//	ft_putendl("case 2");
+//	if (e->x == 355 && e->y == 263)
+//		printf("case 2 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
+		if (holet[1] > current)
+		{
+			obj->normobj = deepestobj;
+			obj->normal = deepestobj->normal;
+			if (obj->normobj)
+			{
+				obj->normobj->reversen = TRUE;
+			}
+			current = holet[1]; //we need the deepest hole
+		}
+	}
+
 	//	ft_putendl("ok6");
 				//	*dist = t0;
 	*dist = current;
 	return (TRUE);
 }
+
 
 //negative object model working with shadow
 //a negative object going through an object (t0 and t1 of negative larger than both t0 and t1 of native object)

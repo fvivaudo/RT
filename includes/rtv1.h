@@ -45,7 +45,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				4
+# define MAX_THREAD				1
 
 # define TYPE_SPHERE			1
 # define TYPE_PLANE				2
@@ -190,7 +190,7 @@ typedef struct		s_obj
 	double			alpha;
 	t_quadric		quad;
 
-	bool			negative;
+	bool			isneg;
 	bool			reversen; //useful if we collide with the inside of an object
 
 	double 			rotation; // rotation degree on axis
@@ -274,14 +274,14 @@ bool			 	setmat(char **buffer, int *y, t_mat *mat);
 void				extractobj(t_obj **lstobj, t_obj *obj);
 
 void				init_cam(t_env *e, char **buffer);
-int					init_cone(t_obj **lstobj, char **buffer);
-int					init_cyl(t_obj **lstobj, char **buffer);
+int					init_cone(t_obj **lstobj, char **buffer, bool neg);
+int					init_cyl(t_obj **lstobj, char **buffer, bool neg);
 void				init_light(t_env *e, char **buffer);
-int					init_plane(t_obj **lstobj, char **buffer);
-int					init_sphere(t_obj **lstobj, char **buffer);
-int					init_quadric(t_obj **lstobj, char **buffer);
+int					init_plane(t_obj **lstobj, char **buffer, bool neg);
+int					init_sphere(t_obj **lstobj, char **buffer, bool neg);
+int					init_quadric(t_obj **lstobj, char **buffer, bool neg);
 void				init_compose(t_obj **lstobj, char **buffer);
-int					init_object(t_obj **lstobj, char **buffer);
+int					init_object(t_obj **lstobj, char **buffer, bool neg);
 t_obj				*intersection(t_env *e, t_ray *r, int id_ignore);
 int					iraycone(t_ray *r, t_obj *co, double *t0, t_env *e);
 int					iraycone2(double abcd[4], double t[2], double *t0);

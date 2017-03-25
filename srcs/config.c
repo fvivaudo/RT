@@ -35,23 +35,23 @@ t_env			*readConfig(int fd)
 		{
 			if (!(ft_strcmp(buffer_line[0], "SPHERE")))
 			{
-				init_sphere(&e->obj, buffer_line);
+				init_sphere(&e->obj, buffer_line, FALSE);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CONE")))
 			{
-				init_cone(&e->obj, buffer_line);
+				init_cone(&e->obj, buffer_line, FALSE);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
 			{
-				init_cyl(&e->obj, buffer_line);
+				init_cyl(&e->obj, buffer_line, FALSE);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "PLANE")))
 			{
-				init_plane(&e->obj, buffer_line);
+				init_plane(&e->obj, buffer_line, FALSE);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
 			{
-				init_quadric(&e->obj, buffer_line);
+				init_quadric(&e->obj, buffer_line, FALSE);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
 			{
@@ -67,7 +67,7 @@ t_env			*readConfig(int fd)
 			}
 			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
 			{
-				init_object(&e->obj, buffer_line);
+				init_object(&e->obj, buffer_line, FALSE);
 			}
 		}
 		free(buffer_gnl);
@@ -79,7 +79,7 @@ t_env			*readConfig(int fd)
 }
 
 
-int				init_cyl(t_obj **lstobj, char **buffer)
+int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 {
 	int			y;
 	t_obj		*obj;
@@ -117,7 +117,8 @@ int				init_cyl(t_obj **lstobj, char **buffer)
 		}
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
 		else if (!ft_strcmp("HEIGHT", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -140,7 +141,7 @@ int				init_cyl(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_cone(t_obj **lstobj, char **buffer)
+int		init_cone(t_obj **lstobj, char **buffer, bool neg)
 {
 	int			y;
 	t_obj		*obj;
@@ -179,7 +180,8 @@ int		init_cone(t_obj **lstobj, char **buffer)
 		}
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
 		else
 			++y;
 	}
@@ -190,7 +192,7 @@ int		init_cone(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_sphere(t_obj **lstobj, char **buffer)
+int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
 {
 	int			y;
 	t_obj		*obj;
@@ -218,7 +220,8 @@ int		init_sphere(t_obj **lstobj, char **buffer)
 		}
 		else if (setmat(buffer, &y, &material));
 		else if (setslice(buffer, &y, obj));
-		else if (setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
 		else if (!ft_strcmp("RADIUS", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -242,7 +245,7 @@ int		init_sphere(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_plane(t_obj **lstobj, char **buffer)
+int		init_plane(t_obj **lstobj, char **buffer, bool neg)
 {
 	int			y;
 	t_obj		*obj;
@@ -272,7 +275,8 @@ int		init_plane(t_obj **lstobj, char **buffer)
 		else if (setmat(buffer, &y, &material));
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
 		else
 		{
 			++y;
@@ -286,7 +290,7 @@ int		init_plane(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_quadric(t_obj **lstobj, char **buffer)
+int		init_quadric(t_obj **lstobj, char **buffer, bool neg)
 {
 	int			y;
 	t_obj		*obj;
@@ -317,7 +321,8 @@ int		init_quadric(t_obj **lstobj, char **buffer)
 		else if (setmat(buffer, &y, &material));
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
 		else if (!ft_strcmp("PARAM", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8] && buffer[y + 9] && buffer[y + 10])
@@ -435,6 +440,7 @@ t_obj 				*init_null(void)
 	obj->nextslice = NULL;
 	obj->nextneg = NULL;
 	obj->rotation = 0;
+	obj->isneg = FALSE;
 	return(obj);
 }
 
@@ -499,38 +505,44 @@ bool				setslice(char **buffer, int *y, t_obj *obj)
 
 bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj)
 {
+	static t_obj* parentsave = NULL;
+
+	if (parent)
+		parentsave = parent;
 	if (!ft_strcmp("NEGATIVE", buffer[*y]))
 	{
 		if (!(ft_strcmp(buffer[*y + 1], "SPHERE")))
 		{
-			*y += init_sphere(lstobj, &(*(buffer + *y + 1)));
+			*y += init_sphere(lstobj, &(*(buffer + *y + 1)), TRUE);
 			(*lstobj)->normal = normalsphere;
 		}
 		else if (!(ft_strcmp(buffer[*y + 1], "CONE")))
 		{
-			*y += init_cone(lstobj, &(*(buffer + *y + 1)));
+			*y += init_cone(lstobj, &(*(buffer + *y + 1)), TRUE);
 			(*lstobj)->normal = normalcone;
 		}
 		else if (!(ft_strcmp(buffer[*y + 1], "CYLINDER")))
 		{
-			*y += init_cyl(lstobj, &(*(buffer + *y + 1)));
+			*y += init_cyl(lstobj, &(*(buffer + *y + 1)), TRUE);
 			(*lstobj)->normal = normalcylinder;
 		}
 		else if (!(ft_strcmp(buffer[*y + 1], "PLANE")))
 		{
-			*y += init_plane(lstobj, &(*(buffer + *y + 1)));
+			*y += init_plane(lstobj, &(*(buffer + *y + 1)), TRUE);
 			(*lstobj)->normal = normalplane;
 		}
 		else if (!(ft_strcmp(buffer[*y + 1], "QUADRIC")))
 		{
-			*y += init_quadric(lstobj, &(*(buffer + *y + 1)));
+			*y += init_quadric(lstobj, &(*(buffer + *y + 1)), TRUE);
 			(*lstobj)->normal = normalquadric;
 		}
 		else if (!(ft_strcmp(buffer[*y + 1], "OBJECT")))
 		{
-			*y += init_object(lstobj, &(*(buffer + *y + 1)));
+			*y += init_object(lstobj, &(*(buffer + *y + 1)), TRUE);
 		}
-		(*lstobj)->pos = vectoradd(parent->pos, (*lstobj)->pos); // add something for direction too?
+		(*lstobj)->pos = vectoradd(parentsave->pos, (*lstobj)->pos); // add something for direction too?
+		(*lstobj)->isneg = TRUE;
+		return (TRUE);
 	}
 	return (FALSE);
 }
@@ -543,8 +555,8 @@ void		init_cam(t_env *e, char **buffer)
 
 	t_vec	tmp_up;
 	t_vec	tmp_vdir;
-	t_vec	rot_axis;
-	double	rot_angle;
+//	t_vec	rot_axis;
+//	double	rot_angle;
 	if (buffer[1] && buffer[2] && buffer[3])
 		e->cam.eyepoint = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
@@ -625,7 +637,7 @@ void		init_cam(t_env *e, char **buffer)
 
 //init object will set up the composed object rotation and position and allow it to be rendered
 // by copying its component into the scene
-int			init_object(t_obj **lstobj, char **buffer)
+int			init_object(t_obj **lstobj, char **buffer, bool neg)
 {
 	int 		y;
 	t_obj		*obj;
@@ -668,7 +680,8 @@ int			init_object(t_obj **lstobj, char **buffer)
 		}
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
 		else if (!ft_strcmp("ROTATE", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -741,7 +754,7 @@ t_obj	*copyobj(t_obj obj)
 	copy->height = obj.height;
 	copy->alpha = obj.alpha;
 	copy->quad = obj.quad;
-	copy->negative = obj.negative;
+	copy->isneg = obj.isneg;
 	copy->rotation = obj.rotation;
 	copy->nextneg = obj.nextneg;
 	copy->nextslice = obj.nextslice;
