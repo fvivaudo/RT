@@ -22,11 +22,11 @@ double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 
 	while (cursor)
 	{
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &dist, e)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &dist, e)))
+		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &dist)) ||
+			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &dist)) ||
+			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &dist)) ||
+			(cursor->type == TYPE_CONE && iraycone(r, cursor, &dist)) ||
+			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &dist)))
 		{
 		//	e->t = t;
 			light *= cursor->material.transparency; // is it accurate?

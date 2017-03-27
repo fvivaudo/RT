@@ -29,7 +29,7 @@ int		iraycone2(double abcd[4], double t[2], double *t0)
 	return (FALSE);
 }
 
-int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
+int		iraycone(t_ray *r, t_obj *obj, double *t0)
 {
 	t_vec	delt_p;
 	t_vec	tmp[3];
@@ -80,7 +80,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		}
 		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0, e);
+			ret = irayneg(r, obj, t0);
 			if (!ret)
 			{
 				return (FALSE);
@@ -99,7 +99,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	return (FALSE);
 }
 
-int		irayplane(t_ray *r, t_obj *obj, double *t0, t_env *e)
+int		irayplane(t_ray *r, t_obj *obj, double *t0)
 {
 	t_vec	tmp;
 	double	t[2];
@@ -136,7 +136,7 @@ int		irayplane(t_ray *r, t_obj *obj, double *t0, t_env *e)
 	}
 	if (obj->nextneg)
 	{
-		ret = irayneg(r, obj, t0, e);
+		ret = irayneg(r, obj, t0);
 		if (!ret)
 		{
 			return (FALSE);
@@ -157,7 +157,7 @@ int		irayplane(t_ray *r, t_obj *obj, double *t0, t_env *e)
 //Aq = Axd2 + Byd2 + Czd2 + Dxdyd + Exdzd + Fydzd
 //Bq = 2*Axoxd + 2*Byoyd + 2*Czozd + D(xoyd + yoxd) + E(xozd + zoxd) + F(yozd + ydzo) + Gxd + Hyd + Izd
 //Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
-int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
+int		irayquadric(t_ray *r, t_obj *obj, double *t0)
 {
 	double	abcd[4];
 	bool	ret;
@@ -167,7 +167,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 
 	ret = FALSE;
-	t_vec camdir = vectorsub(obj->pos, e->cam.eyepoint);
+	t_vec camdir = vectorsub(obj->pos, r->initialstart);
 	double tmpdist = vectormagnitude(camdir);
 	vectornormalize(&camdir);
 	t_vec tmp_start = vectoradd(r->start, vectorscale(-1, vectorscale(tmpdist + SCREEN_EYE_DIST, camdir)));
@@ -245,7 +245,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		}
 		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0, e);
+			ret = irayneg(r, obj, t0);
 			if (!ret)
 			{
 				return (FALSE);
@@ -283,7 +283,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e)
 
 //Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
 
-int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
+int		iraycylinder(t_ray *r, t_obj *obj, double *t0)
 {
 	double	abcd[4];
 	t_vec	cam;
@@ -326,7 +326,7 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		}
 		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0, e);
+			ret = irayneg(r, obj, t0);
 			if (!ret)
 			{
 				return (FALSE);
@@ -507,7 +507,7 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 }
 
 //The problem lies in computeshadow, do my intersection works well when i go from the hole toward light?
-int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
+int		irayneg(t_ray *r, t_obj *obj, double *dist)
 {
 	t_obj	*cursor;
 	t_obj	*deepestobj;
@@ -542,11 +542,11 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
 	{
 		//printf("type = %d, cursor->t[0] = %g, cursor->t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, cursor->t[0], cursor->t[1], holet[0], holet[1]);
 		tmax = MAX_RANGE;
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &tmax, e)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &tmax, e)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &tmax, e)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &tmax, e)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &tmax, e)))
+		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &tmax)) ||
+			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &tmax)) ||
+			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &tmax)) ||
+			(cursor->type == TYPE_CONE && iraycone(r, cursor, &tmax)) ||
+			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &tmax)))
 		{
 			if (cursor->t[1] == DOESNOTEXIST)
 			{
@@ -628,7 +628,7 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e)
 
 //negative object model working with shadow
 //a negative object going through an object (t0 and t1 of negative larger than both t0 and t1 of native object)
-int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
+int		iraysphere(t_ray *r, t_obj *obj, double *t0)
 {
 	double	abcdiscr[5];
 	t_vec	dist;
@@ -681,7 +681,7 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_env *e)
 		}
 		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0, e);
+			ret = irayneg(r, obj, t0);
 			if (!ret)
 			{
 				return (FALSE);

@@ -27,6 +27,7 @@ void			reset(t_env *e, int x, int y)
 	e->col.blue = 0;
 	e->level = 0;
 	e->coef = 1.0;
+	e->r.initialstart = e->cam.eyepoint;
 	e->r.start = e->cam.eyepoint;
 	e->vdir = e->r.dir;
 	e->crefraction = 1.0;
@@ -266,6 +267,39 @@ void			get_img_pos(int *x, int *y, int inter)
 	}
 }
 
+t_obj	*copyallobj(t_obj obj)
+{
+	t_obj *copy;
+
+	copy = (t_obj*)malloc(sizeof(t_obj));
+	copy->id = obj.id;
+	//copy->id = obj->id;
+	//copy->parent = obj->parent;
+	copy->type = obj.type;
+	copy->material = obj.material;
+	copy->pos = obj.pos;
+	copy->dir = obj.dir;
+	copy->rad = obj.rad;
+	copy->height = obj.height;
+	copy->alpha = obj.alpha;
+	copy->quad = obj.quad;
+	copy->isneg = obj.isneg;
+	copy->rotation = obj.rotation;
+	if (obj.nextneg)
+	{
+		copy->nextneg = copyallobj(*obj.nextneg);
+	}
+	if (obj.nextslice)
+	{
+		copy->nextslice = copyallobj(*obj.nextslice);
+	}
+	if (obj.nextitem)
+	{
+		copy->nextitem = copyallobj(*obj.nextitem);
+	}
+	return (copy);
+}
+
 void			*cast_ray_thread(void *e)
 {
 	t_env 	new;
@@ -277,15 +311,16 @@ void			*cast_ray_thread(void *e)
 	//printf("interval = %d\n", interval);
 
 	get_img_pos(&new.x, &new.y, interval);
+	new.obj = copyallobj(*env->obj);
+	new.cam = env->cam;
+	new.lights = env->lights; // maybe copy a malloced version for each thread?
 	while (1)
 	{
-		new.cam = env->cam;
-		new.lights = env->lights; // maybe copy a malloced version for each thread?
-		new.obj = env->obj; // maybe copy a malloced version for each thread?
+
 
 		get_img_pos(&new.x, &new.y, interval);
 		reset(&new, new.x, new.y);
-			new.col = reflect_and_refract(new);
+		new.col = reflect_and_refract(new);
 		if (new.id != -1) //Ambient shading has to take place after every reflection took place
 		{
 			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;

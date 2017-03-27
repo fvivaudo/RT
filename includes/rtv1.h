@@ -45,7 +45,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				1
+# define MAX_THREAD				4
 
 # define TYPE_SPHERE			1
 # define TYPE_PLANE				2
@@ -136,6 +136,7 @@ typedef struct		s_cone
 */
 typedef struct		s_ray
 {
+	t_vec			initialstart; // before any reflection/refraction
 	t_vec			start;
 	t_vec			dir;
 	bool			indirect; //if the ray is reflected or refracted, is true
@@ -283,12 +284,12 @@ int					init_quadric(t_obj **lstobj, char **buffer, bool neg);
 void				init_compose(t_obj **lstobj, char **buffer);
 int					init_object(t_obj **lstobj, char **buffer, bool neg);
 t_obj				*intersection(t_env *e, t_ray *r, int id_ignore);
-int					iraycone(t_ray *r, t_obj *co, double *t0, t_env *e);
+int					iraycone(t_ray *r, t_obj *co, double *t0);
 int					iraycone2(double abcd[4], double t[2], double *t0);
-int					iraycylinder(t_ray *r, t_obj *cyl, double *t0, t_env *e);
-int					irayplane(t_ray *r, t_obj *p, double *t, t_env *e);
-int					iraysphere(t_ray *r, t_obj *s, double *t0, t_env *e);
-int					irayquadric(t_ray *r, t_obj *obj, double *t0, t_env *e);
+int					iraycylinder(t_ray *r, t_obj *cyl, double *t0);
+int					irayplane(t_ray *r, t_obj *p, double *t);
+int					iraysphere(t_ray *r, t_obj *s, double *t0);
+int					irayquadric(t_ray *r, t_obj *obj, double *t0);
 void				print_img(unsigned char img[3 * WIDTH * HEIGHT]);
 void				reset(t_env *e, int x, int y);
 unsigned char		*update_img(t_env *e, int x, int y);
@@ -323,7 +324,7 @@ void				normalcylinder(t_env *e, t_obj *obj);
 void				normalcone(t_env *e, t_obj *obj);
 void				normalquadric(t_env *e, t_obj *obj);
 
-int					irayneg(t_ray *r, t_obj *obj, double *dist, t_env *e);
+int					irayneg(t_ray *r, t_obj *obj, double *dist);
 int					irayslice(t_ray *r, t_obj *obj, double *dist);
 
 void				swapdouble(double *a, double *b);

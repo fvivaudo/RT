@@ -738,6 +738,7 @@ void	init_light(t_env *e, char **buffer)
 }
 
 
+
 t_obj	*copyobj(t_obj obj)
 {
 	t_obj *copy;

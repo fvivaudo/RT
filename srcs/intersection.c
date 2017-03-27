@@ -34,11 +34,11 @@ t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
 		//	cursor = cursor->nextitem;
 		//	continue;
 		}
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &t, e)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &t, e)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &t, e)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &t, e)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &t, e)))
+		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &t)) ||
+			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &t)) ||
+			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &t)) ||
+			(cursor->type == TYPE_CONE && iraycone(r, cursor, &t)) ||
+			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &t)))
 		{
 			e->t = t;
 			res = cursor;
