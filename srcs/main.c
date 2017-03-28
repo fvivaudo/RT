@@ -255,12 +255,15 @@ unsigned char	*update_img(t_env *e, int x, int y)
 {
 	static unsigned char	img[3 * WIDTH * HEIGHT];
 
-	img[(x + y * WIDTH) * 3 + 0] =
-	(unsigned char)((e->col.red * C) < C ? e->col.red * C : C);
-	img[(x + y * WIDTH) * 3 + 1] =
-	(unsigned char)((e->col.green * C) < C ? e->col.green * C : C);
-	img[(x + y * WIDTH) * 3 + 2] =
-	(unsigned char)((e->col.blue * C) < C ? e->col.blue * C : C);
+	if (e)
+	{
+		img[(x + y * WIDTH) * 3 + 0] =
+		(unsigned char)((e->col.red * C) < C ? e->col.red * C : C);
+		img[(x + y * WIDTH) * 3 + 1] =
+		(unsigned char)((e->col.green * C) < C ? e->col.green * C : C);
+		img[(x + y * WIDTH) * 3 + 2] =
+		(unsigned char)((e->col.blue * C) < C ? e->col.blue * C : C);
+	}
 	return (img);
 }
 
@@ -341,7 +344,7 @@ t_light	*copyalllights(t_light *light)
 
 void			*cast_ray_thread(void *e)
 {
-	t_env 	*new;
+	t_env 	new;
 	t_env 	*env;
 	int 	interval;
 
@@ -349,33 +352,37 @@ void			*cast_ray_thread(void *e)
 	env = ((t_thread_task*)e)->arg;
 	//printf("interval = %d\n", interval);
 
-	new = env;
-	get_img_pos(&new->x, &new->y, interval);
+	new.obj = env->obj;
+	new.cam = env->cam;
+	new.lights = env->lights;
+	new.x = 0;
+	new.y = 0;
+	get_img_pos(&new.x, &new.y, interval);
 
-//	new->obj = copyallobj(*env->obj);
-//	new->cam = env->cam;
-//	new->lights = copyalllights(env->lights); // maybe copy a malloced version for each thread?
+//	new.obj = copyallobj(*env->obj);
+//	new.cam = env->cam;
+//	new.lights = copyalllights(env->lights); // maybe copy a malloced version for each thread?
 	while (1)
 	{
-		get_img_pos(&new->x, &new->y, interval);
-		reset(new, new->x, new->y);
-		new->col = reflect_and_refract(*new);
-		if (new->id != -1) //Ambient shading has to take place after every reflection took place
+		reset(&new, new.x, new.y);
+		new.col = reflect_and_refract(new);
+		if (new.id != -1) //Ambient shading has to take place after every reflection took place
 		{
-			new->col.red += AMBIANT_SHADING * new->cmat.diffuse.red;
-			new->col.green += AMBIANT_SHADING * new->cmat.diffuse.green;
-			new->col.blue += AMBIANT_SHADING * new->cmat.diffuse.blue;
+			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;
+			new.col.green += AMBIANT_SHADING * new.cmat.diffuse.green;
+			new.col.blue += AMBIANT_SHADING * new.cmat.diffuse.blue;
 			//exposure/ saturation
-			new->col.red = 1.0 - exp(new->col.red * EXPOSURE);
-			new->col.blue = 1.0 - exp(new->col.blue * EXPOSURE);
-			new->col.green = 1.0 - exp(new->col.green * EXPOSURE);
+			new.col.red = 1.0 - exp(new.col.red * EXPOSURE);
+			new.col.blue = 1.0 - exp(new.col.blue * EXPOSURE);
+			new.col.green = 1.0 - exp(new.col.green * EXPOSURE);
 		}
-		update_img(new, new->x, new->y);
-		if (new->x >= WIDTH && new->y >= HEIGHT)
+		update_img(&new, new.x, new.y);
+		if (new.x >= WIDTH && new.y >= HEIGHT)
 		{
 		//	pthread_cond_broadcast(&e->cond, &e->mutex);
 			break;
 		}
+		get_img_pos(&new.x, &new.y, interval);
 	}
 	return (NULL);
 }
@@ -407,7 +414,7 @@ int				main(int ac, char **av)
 		copy = (t_env*)malloc(sizeof(t_env));
 		copy->obj = copyallobj(original->obj);
 		copy->cam = original->cam;
-		copy->lights = copyalllights(original->lights); // maybe copy a malloced version for each thread?
+		copy->lights = original->lights; // maybe copy a malloced version for each thread?
 		arg.arg = (void*)original;
 		pthread_create(&pth[arg.i - 1], NULL, cast_ray_thread, (void *)&arg);
 		usleep(100); //better way to do things?
@@ -423,6 +430,6 @@ int				main(int ac, char **av)
 		pthread_join(pth[i], NULL);
 		++i;
 	}
-//	print_img(update_img(e, WIDTH - 1, HEIGHT - 1));
+	print_img(update_img(NULL, WIDTH - 1, HEIGHT - 1));
 	return (0);
 }
