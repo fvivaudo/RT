@@ -45,7 +45,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				4
+# define MAX_THREAD				16
 
 # define TYPE_SPHERE			1
 # define TYPE_PLANE				2

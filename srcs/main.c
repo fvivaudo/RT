@@ -415,7 +415,7 @@ int				main(int ac, char **av)
 		copy->obj = copyallobj(original->obj);
 		copy->cam = original->cam;
 		copy->lights = original->lights; // maybe copy a malloced version for each thread?
-		arg.arg = (void*)original;
+		arg.arg = (void*)copy;
 		pthread_create(&pth[arg.i - 1], NULL, cast_ray_thread, (void *)&arg);
 		usleep(100); //better way to do things?
 	}
