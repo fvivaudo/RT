@@ -140,14 +140,17 @@ t_color			reflect_and_refract(t_env e)
 	t_vec			tmp;
 	t_obj			*collide;
 
+
 	e.t = MAX_RANGE;
 	collide = computeray(&e);
+	//ft_putendl("ok99");
 	if (!collide)
 	{
 		res = colorinit(0, 0, 0);
 		return (res);
 	}
 	e.cmat = collide->material;
+
 
 //	if (e.id == 2)
 //		printf("e.cmat.transparency = %g\n", e.cmat.transparency);
@@ -190,6 +193,12 @@ t_color			reflect_and_refract(t_env e)
 	++e.level;
 	if (e.level < MAX_DEPTH_LEVEL && e.reflecoef > 0)
 	{//only reflection
+//	if (e.level != 0)
+//	{
+//		if (e.reflecoef)
+//		if (e.refracoef)
+//		printf("e.level = %d\n", e.level);
+//	}
 		//reflected ray = dir−2(dir⋅n )n
 		e.coef = tmpcoef1;
 		tmp = vectorscale(2 * vectordot(e.r.dir, e.n), e.n);
@@ -225,7 +234,7 @@ t_color			reflect_and_refract(t_env e)
 //	if (e.id == 2)
 //		printf("res.red = %g, res.green = %g, res.blue = %g\n", res.red, res.green, res.blue);
 
-	if ((e.coef > 0) && (e.level < MAX_DEPTH_LEVEL))
+	/*if ((e.coef > 0) && (e.level < MAX_DEPTH_LEVEL))
 	{
 		++e.level;
 		//reflected ray = dir−2(dir⋅n )n
@@ -238,7 +247,7 @@ t_color			reflect_and_refract(t_env e)
 	else
 	{
 
-	}
+	}*/
 	return (res);
 }
 
@@ -267,42 +276,72 @@ void			get_img_pos(int *x, int *y, int inter)
 	}
 }
 
-t_obj	*copyallobj(t_obj obj)
+t_obj	*copyallobj(t_obj *obj)
 {
 	t_obj *copy;
 
 	copy = (t_obj*)malloc(sizeof(t_obj));
-	copy->id = obj.id;
+	copy->id = obj->id;
 	//copy->id = obj->id;
 	//copy->parent = obj->parent;
-	copy->type = obj.type;
-	copy->material = obj.material;
-	copy->pos = obj.pos;
-	copy->dir = obj.dir;
-	copy->rad = obj.rad;
-	copy->height = obj.height;
-	copy->alpha = obj.alpha;
-	copy->quad = obj.quad;
-	copy->isneg = obj.isneg;
-	copy->rotation = obj.rotation;
-	if (obj.nextneg)
+	copy->type = obj->type;
+	copy->material = obj->material;
+	copy->pos = obj->pos;
+	copy->dir = obj->dir;
+	copy->rad = obj->rad;
+	copy->height = obj->height;
+	copy->alpha = obj->alpha;
+	copy->quad = obj->quad;
+	copy->isneg = obj->isneg;
+	copy->rotation = obj->rotation;
+	if (obj->nextneg)
 	{
-		copy->nextneg = copyallobj(*obj.nextneg);
+		copy->nextneg = copyallobj(obj->nextneg);
 	}
-	if (obj.nextslice)
+	if (obj->nextslice)
 	{
-		copy->nextslice = copyallobj(*obj.nextslice);
+		copy->nextslice = copyallobj(obj->nextslice);
 	}
-	if (obj.nextitem)
+	if (obj->nextitem)
 	{
-		copy->nextitem = copyallobj(*obj.nextitem);
+		copy->nextitem = copyallobj(obj->nextitem);
+	}
+	return (copy);
+}
+
+/*t_cam copycam(t_cam cam)
+{
+	t_cam camcopy;
+
+	camcopy.xincvector = cam.xincvector;
+	camcopy.yincvector = cam.yincvector;
+	camcopy.eyepoint = cam.eyepoint;
+	camcopy.lookat = cam.lookat;
+	camcopy.viewplanebottomleftpoint = cam.viewplanebottomleftpoint;
+	camcopy.vdir = cam.vdir;
+
+	return (camcopy);
+}*/
+
+t_light	*copyalllights(t_light *light)
+{
+	t_light *copy;
+
+	copy = (t_light*)malloc(sizeof(t_light));
+
+	copy->pos = light->pos;
+	copy->intensity = light->intensity;
+
+	if (light->next)
+	{
+		copy->next = copyalllights(light->next);
 	}
 	return (copy);
 }
 
 void			*cast_ray_thread(void *e)
 {
-	t_env 	new;
+	t_env 	*new;
 	t_env 	*env;
 	int 	interval;
 
@@ -310,29 +349,29 @@ void			*cast_ray_thread(void *e)
 	env = ((t_thread_task*)e)->arg;
 	//printf("interval = %d\n", interval);
 
-	get_img_pos(&new.x, &new.y, interval);
-	new.obj = copyallobj(*env->obj);
-	new.cam = env->cam;
-	new.lights = env->lights; // maybe copy a malloced version for each thread?
+	new = env;
+	get_img_pos(&new->x, &new->y, interval);
+
+//	new->obj = copyallobj(*env->obj);
+//	new->cam = env->cam;
+//	new->lights = copyalllights(env->lights); // maybe copy a malloced version for each thread?
 	while (1)
 	{
-
-
-		get_img_pos(&new.x, &new.y, interval);
-		reset(&new, new.x, new.y);
-		new.col = reflect_and_refract(new);
-		if (new.id != -1) //Ambient shading has to take place after every reflection took place
+		get_img_pos(&new->x, &new->y, interval);
+		reset(new, new->x, new->y);
+		new->col = reflect_and_refract(*new);
+		if (new->id != -1) //Ambient shading has to take place after every reflection took place
 		{
-			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;
-			new.col.green += AMBIANT_SHADING * new.cmat.diffuse.green;
-			new.col.blue += AMBIANT_SHADING * new.cmat.diffuse.blue;
+			new->col.red += AMBIANT_SHADING * new->cmat.diffuse.red;
+			new->col.green += AMBIANT_SHADING * new->cmat.diffuse.green;
+			new->col.blue += AMBIANT_SHADING * new->cmat.diffuse.blue;
 			//exposure/ saturation
-			new.col.red = 1.0 - exp(new.col.red * EXPOSURE);
-			new.col.blue = 1.0 - exp(new.col.blue * EXPOSURE);
-			new.col.green = 1.0 - exp(new.col.green * EXPOSURE);
+			new->col.red = 1.0 - exp(new->col.red * EXPOSURE);
+			new->col.blue = 1.0 - exp(new->col.blue * EXPOSURE);
+			new->col.green = 1.0 - exp(new->col.green * EXPOSURE);
 		}
-		update_img(&new, new.x, new.y);
-		if (new.x >= WIDTH && new.y >= HEIGHT)
+		update_img(new, new->x, new->y);
+		if (new->x >= WIDTH && new->y >= HEIGHT)
 		{
 		//	pthread_cond_broadcast(&e->cond, &e->mutex);
 			break;
@@ -343,26 +382,33 @@ void			*cast_ray_thread(void *e)
 
 int				main(int ac, char **av)
 {
-	t_env			*e;
+	t_env			*original;
+	t_env			*copy;
 	int				fd;
 	pthread_t		pth[MAX_THREAD];
 	t_thread_task	arg;
 	int				i;
 
 	i = 0;
-	if (ac != 2 || (fd = open(av[1], O_RDONLY)) <= -1 || !(e = readConfig(fd)))
+	if (ac != 2 || (fd = open(av[1], O_RDONLY)) <= -1 || !(original = readConfig(fd)))
 	{
 		//error message?
 		return (0);
 	}
 
+
+
 	arg.i = 0;
-	arg.arg = (void*)e;
 		//ft_putendl("alive1");
 	while (arg.i < MAX_THREAD)
 	{
 		++arg.i;
 	//	ft_putendl("alive2");
+		copy = (t_env*)malloc(sizeof(t_env));
+		copy->obj = copyallobj(original->obj);
+		copy->cam = original->cam;
+		copy->lights = copyalllights(original->lights); // maybe copy a malloced version for each thread?
+		arg.arg = (void*)original;
 		pthread_create(&pth[arg.i - 1], NULL, cast_ray_thread, (void *)&arg);
 		usleep(100); //better way to do things?
 	}
@@ -377,6 +423,6 @@ int				main(int ac, char **av)
 		pthread_join(pth[i], NULL);
 		++i;
 	}
-	print_img(update_img(e, WIDTH - 1, HEIGHT - 1));
+//	print_img(update_img(e, WIDTH - 1, HEIGHT - 1));
 	return (0);
 }

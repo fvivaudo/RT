@@ -61,9 +61,13 @@ t_obj	*computeray(t_env *e)
 		//e->newstart = object intersection
 		e->newstart = vectoradd(e->r.start, e->scaled);
 		if (res->normobj)
+		{
 			res->normal(e, res->normobj);
+		}
 		else
+		{
 			res->normal(e, res);
+		}
 	}
 	return (res);
 }

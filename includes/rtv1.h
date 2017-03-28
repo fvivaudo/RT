@@ -45,7 +45,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				4
+# define MAX_THREAD				16
 
 # define TYPE_SPHERE			1
 # define TYPE_PLANE				2
@@ -267,7 +267,7 @@ int					deal_shadow(t_env *e);
 
 
 t_env				*readConfig(int fd);
-t_obj 			*init_null(void);
+t_obj 				*init_null(void);
 bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
 bool				setslice(char **buffer, int *y, t_obj *obj);
 bool				setorient(char **buffer, int *y, t_obj *obj);
