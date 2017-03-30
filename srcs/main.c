@@ -21,7 +21,7 @@ void			reset(t_env *e, int x, int y)
 	vectorscale(y, e->cam.yincvector));
 	e->r.dir = vectorsub(viewplanepoint, e->cam.eyepoint);
 	vectornormalize(&e->r.dir);
-	e->id = -1;
+	e->id = 0;
 	e->col.red = 0;
 	e->col.green = 0;
 	e->col.blue = 0;
@@ -326,6 +326,22 @@ t_obj	*copyallobj(t_obj *obj)
 	return (camcopy);
 }*/
 
+static void		effect(t_env *new)
+{
+	double	tmpred;
+	double	tmpgreen;
+	double	tmpblue;
+
+	
+		tmpred = new->col.red;
+		tmpgreen = new->col.green;
+		tmpblue = new->col.blue;
+		new->col.red = (tmpred + tmpgreen + tmpblue) * RED / 100;
+		new->col.green = (tmpred + tmpgreen + tmpblue) * GREEN / 100;
+		new->col.blue = (tmpred + tmpgreen + tmpblue) * BLUE / 100;
+}
+
+
 t_light	*copyalllights(t_light *light)
 {
 	t_light *copy;
@@ -362,10 +378,14 @@ void			*cast_ray_thread(void *e)
 //	new.obj = copyallobj(*env->obj);
 //	new.cam = env->cam;
 //	new.lights = copyalllights(env->lights); // maybe copy a malloced version for each thread?
+	
 	while (1)
 	{
 		reset(&new, new.x, new.y);
 		new.col = reflect_and_refract(new);
+	
+		if (EFFECT == 1)
+			effect(&new);
 		if (new.id != -1) //Ambient shading has to take place after every reflection took place
 		{
 			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;
@@ -389,6 +409,7 @@ void			*cast_ray_thread(void *e)
 
 int				main(int ac, char **av)
 {
+
 	t_env			*original;
 	t_env			*copy;
 	int				fd;
@@ -402,9 +423,6 @@ int				main(int ac, char **av)
 		//error message?
 		return (0);
 	}
-
-
-
 	arg.i = 0;
 		//ft_putendl("alive1");
 	while (arg.i < MAX_THREAD)

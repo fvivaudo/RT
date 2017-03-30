@@ -31,6 +31,13 @@
 # include <SDL2/SDL.h>
 # include <stdbool.h>
 
+
+# define EFFECT 				1
+# define RED 					30
+# define GREEN 					15
+# define BLUE 					5
+
+
 # define TRUE					1
 # define FALSE					0
 # define C						255.0
@@ -47,7 +54,7 @@
 
 # define MAX_THREAD				16
 
-# define TYPE_SPHERE			1
+# define TYPE_SPHERE			11
 # define TYPE_PLANE				2
 # define TYPE_CYLINDER			3
 # define TYPE_CONE				4
@@ -206,6 +213,7 @@ typedef struct		s_obj
 	struct s_obj 	*normobj;
 }					t_obj;
 
+
 typedef struct 		s_cam
 {
 	t_vec			xincvector;
@@ -220,6 +228,7 @@ typedef struct		s_env
 {
 	void			*win;
 	void			*ima;
+	double			effect;
 
 	t_color			col;
 
