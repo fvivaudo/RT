@@ -31,7 +31,7 @@ void			reset(t_env *e, int x, int y)
 	e->r.start = e->cam.eyepoint;
 	e->vdir = e->r.dir;
 	e->crefraction = 1.0;
-	e->refracoef = 0;
+	e->transcoef = 0;
 	e->reflecoef = 0;
 //	e->r.start.x = e->eyepoint.x + x;
 //	e->r.start.y = e->eyepoint.y + y;
@@ -66,7 +66,7 @@ void		refract(t_env *e)
 	double	ViewProjection = vectordot(e->r.dir, e->n);
 	double coef = 1;
 	double fCosThetaT;
-	double 	fdensity1 = e->refracoef;
+	double 	fdensity1 = 1;
 	double 	fdensity2 = e->cmat.refraction;
 	double reflectance;
 	double	fCosThetaI = fabs(ViewProjection);
@@ -159,6 +159,7 @@ t_color			reflect_and_refract(t_env e)
 //		if (e.id == 2)
 //			printf("ok\n");
 		deal_shadow(&e);
+	//	e.obj = NULL;
 	}//there is no shadow on the reflected surface, need to fix later
 	//e.blue += 1;
 
@@ -175,16 +176,16 @@ t_color			reflect_and_refract(t_env e)
 	//ft_putendl("ok1");
 	//shlick's approximation
 	e.reflecoef = R0 + (1.0 - R0) * pow((1.0 - angle), 5);
-	e.refracoef = 1.0 - e.reflecoef;
+	e.transcoef = 1.0 - e.reflecoef;
 
 	//ft_putendl("ok2");
 	e.reflecoef *= e.cmat.reflection; //is it only reflection or diffusion too?
-	e.refracoef *= e.cmat.refraction;
+	e.transcoef *= e.cmat.transparency;
 
 	//ft_putendl("ok3");
-	originalcoef = e.coef;
+	originalcoef = e.coef /*  (1.0 - e.cmat.transparency)*/;
 	tmpcoef1 = e.coef * e.reflecoef;
-	tmpcoef2 = e.coef * e.refracoef;
+	tmpcoef2 = e.coef * e.transcoef;
 
 	refracolor = colorinit(0, 0, 0);
 	reflecolor = colorinit(0, 0, 0);
@@ -196,7 +197,7 @@ t_color			reflect_and_refract(t_env e)
 //	if (e.level != 0)
 //	{
 //		if (e.reflecoef)
-//		if (e.refracoef)
+//		if (e.transcoef)
 //		printf("e.level = %d\n", e.level);
 //	}
 		//reflected ray = dir−2(dir⋅n )n
@@ -207,7 +208,7 @@ t_color			reflect_and_refract(t_env e)
 		vectornormalize(&e.r.dir);
 		reflecolor = reflect_and_refract(e);
 	}
-	if (e.level < MAX_DEPTH_LEVEL && e.refracoef > 0)
+	if (e.level < MAX_DEPTH_LEVEL && e.transcoef > 0)
 	{//only refraction
 		e.coef = tmpcoef2;
 	//ft_putendl("ok6");
@@ -228,9 +229,9 @@ t_color			reflect_and_refract(t_env e)
 	//	printf("refracolor.red = %g, refracolor.green = %g, refracolor.blue = %g\n", refracolor.red, refracolor.green, refracolor.blue);
 	//	printf("reflecolor.red = %g, reflecolor.green = %g, reflecolor.blue = %g\n", reflecolor.red, reflecolor.green, reflecolor.blue);
 //}
-	res.red = originalcoef * (e.reflecoef * reflecolor.red + e.refracoef * refracolor.red + e.col.red);
-	res.green = originalcoef * (e.reflecoef * reflecolor.green + e.refracoef * refracolor.green + e.col.green);
-	res.blue = originalcoef * (e.reflecoef * reflecolor.blue + e.refracoef * refracolor.blue + e.col.blue);
+	res.red = originalcoef * (e.reflecoef * reflecolor.red + e.transcoef * refracolor.red + e.col.red);
+	res.green = originalcoef * (e.reflecoef * reflecolor.green + e.transcoef * refracolor.green + e.col.green);
+	res.blue = originalcoef * (e.reflecoef * reflecolor.blue + e.transcoef * refracolor.blue + e.col.blue);
 //	if (e.id == 2)
 //		printf("res.red = %g, res.green = %g, res.blue = %g\n", res.red, res.green, res.blue);
 
