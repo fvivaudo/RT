@@ -21,7 +21,7 @@ void			reset(t_env *e, int x, int y)
 	vectorscale(y, e->cam.yincvector));
 	e->r.dir = vectorsub(viewplanepoint, e->cam.eyepoint);
 	vectornormalize(&e->r.dir);
-	e->id = 0;
+	e->id = -1;
 	e->col.red = 0;
 	e->col.green = 0;
 	e->col.blue = 0;
@@ -66,7 +66,7 @@ void		refract(t_env *e)
 	double	ViewProjection = vectordot(e->r.dir, e->n);
 	double coef = 1;
 	double fCosThetaT;
-	double 	fdensity1 = 1;
+	double 	fdensity1 = e->crefraction;
 	double 	fdensity2 = e->cmat.refraction;
 	double reflectance;
 	double	fCosThetaI = fabs(ViewProjection);
@@ -154,13 +154,6 @@ t_color			reflect_and_refract(t_env e)
 
 //	if (e.id == 2)
 //		printf("e.cmat.transparency = %g\n", e.cmat.transparency);
-	if (e.cmat.transparency < 1.0 && e.cmat.reflection < 1.0) // transparency and reflection could be color specific, may implement later
-	{
-//		if (e.id == 2)
-//			printf("ok\n");
-		deal_shadow(&e);
-	//	e.obj = NULL;
-	}//there is no shadow on the reflected surface, need to fix later
 	//e.blue += 1;
 
 	//e.cmat.reflection = 1.0;
@@ -169,18 +162,28 @@ t_color			reflect_and_refract(t_env e)
 	double tmpcoef1;
 	double tmpcoef2;
 
-	double angle = cos(vectordot(e.r.dir, e.n));
+	double angle = cos(vectordot(e.r.dir, vectorscale(1.0, e.n)));
 	//ft_putendl("ok0");
 	double R0 = pow((e.crefraction - e.cmat.refraction) / (e.crefraction + e.cmat.refraction), 2);
 
 	//ft_putendl("ok1");
 	//shlick's approximation
-	e.reflecoef = R0 + (1.0 - R0) * pow((1.0 - angle), 5);
-	e.transcoef = 1.0 - e.reflecoef;
+	
+	//double kr = R0 + (1.0 - R0) * pow((1.0 - angle), 5);
 
+	//printf("angle  ==   %g ||| R0  ==    %g    |||   e.reflecoef  ==   %g\n", angle, R0, e.reflecoef);
+
+	e.reflecoef = R0 + (1.0 - R0) * pow((1.0 - angle), 5) * (1.0 - e.cmat.transparency);
+	e.transcoef = 1.0 - e.reflecoef; // how much light is reflected, computed by Fresnel equation 
 	//ft_putendl("ok2");
-	e.reflecoef *= e.cmat.reflection; //is it only reflection or diffusion too?
-	e.transcoef *= e.cmat.transparency;
+//	e.reflecoef *= e.cmat.reflection; //is it only reflection or diffusion too?
+//	e.transcoef *= e.cmat.transparency;
+
+	//printf("e.transcoef == %g\n", e.transcoef);
+	//printf(" e.reflecoef == %g\n", e.reflecoef);
+	//printf(" sum == %g\n", e.reflecoef + e.transcoef);
+	//if (e.transcoef)
+	//printf(" e.transcoef == %g\n", e.transcoef);
 
 	//ft_putendl("ok3");
 	originalcoef = e.coef /*  (1.0 - e.cmat.transparency)*/;
@@ -192,7 +195,7 @@ t_color			reflect_and_refract(t_env e)
 	//ft_putendl("ok4");
 
 	++e.level;
-	if (e.level < MAX_DEPTH_LEVEL && e.reflecoef > 0)
+	if (e.level < MAX_DEPTH_LEVEL && e.cmat.reflection > 0)
 	{//only reflection
 //	if (e.level != 0)
 //	{
@@ -208,7 +211,7 @@ t_color			reflect_and_refract(t_env e)
 		vectornormalize(&e.r.dir);
 		reflecolor = reflect_and_refract(e);
 	}
-	if (e.level < MAX_DEPTH_LEVEL && e.transcoef > 0)
+	if (e.level < MAX_DEPTH_LEVEL && e.transcoef > 0/* && e.cmat.transparency > 0*/)
 	{//only refraction
 		e.coef = tmpcoef2;
 	//ft_putendl("ok6");
@@ -228,13 +231,38 @@ t_color			reflect_and_refract(t_env e)
 	//	printf("e.level = %d\n", e.level);
 	//	printf("refracolor.red = %g, refracolor.green = %g, refracolor.blue = %g\n", refracolor.red, refracolor.green, refracolor.blue);
 	//	printf("reflecolor.red = %g, reflecolor.green = %g, reflecolor.blue = %g\n", reflecolor.red, reflecolor.green, reflecolor.blue);
-//}
-	res.red = originalcoef * (e.reflecoef * reflecolor.red + e.transcoef * refracolor.red + e.col.red);
-	res.green = originalcoef * (e.reflecoef * reflecolor.green + e.transcoef * refracolor.green + e.col.green);
-	res.blue = originalcoef * (e.reflecoef * reflecolor.blue + e.transcoef * refracolor.blue + e.col.blue);
+//	}
+	if (e.cmat.transparency < 1.0 && e.cmat.reflection < 1.0) // transparency and reflection could be color specific, may implement later
+	{
+//		if (e.id == 2)
+//			printf("ok\n");
+		deal_shadow(&e);
+	//	e.obj = NULL;
+	}
+/*	if (e.transcoef != 0.0)
+	{
+		res.red =  e.col.red;
+		res.green =  e.col.green ;
+		res.blue = e.col.blue;
+	}	reflectionColor * kr + refractionColor * (1 - kr)
+	else
+	{*/
+		res.red = reflecolor.red * e.reflecoef + refracolor.red * (1 - e.reflecoef) + e.col.red;
+		res.green = reflecolor.green * e.reflecoef + refracolor.green * (1 - e.reflecoef) + e.col.green;
+		res.blue = reflecolor.blue * e.reflecoef + refracolor.blue * (1 - e.reflecoef) + e.col.blue;
+//	}
+	if (collide->type == TYPE_SPHERE)
+	{
+		printf("e.reflecoef  ==   %g  |||   reflecolor.red == %g |||  reflecolor.green   == %g  |||  reflecolor.blue ==  %g\n", e.reflecoef, reflecolor.red,  reflecolor.green,  reflecolor.blue);
+		printf("e.transcoef  ==   %g  |||   refracolor.red == %g |||  refracolor.green   == %g  |||  refracolor.blue ==  %g\n", e.transcoef, refracolor.red, refracolor.green,  refracolor.blue);
+		printf("e.col.red  == %g  |||   e.col.green  == %g   |||  e.col.blue  == %g \n\n\n",e.col.red, e.col.green, e.col.blue);
+		printf("res.red  == %g  |||   res.green  == %g   |||  res.blue  == %g \n\n\n",res.red, res.green, res.blue);
+	}
+	//printf("res.blue = %g\n", res.blue);
 //	if (e.id == 2)
 //		printf("res.red = %g, res.green = %g, res.blue = %g\n", res.red, res.green, res.blue);
-
+	//there is no shadow on the reflected surface, need to fix later
+	
 	/*if ((e.coef > 0) && (e.level < MAX_DEPTH_LEVEL))
 	{
 		++e.level;
@@ -245,6 +273,7 @@ t_color			reflect_and_refract(t_env e)
 		vectornormalize(&e.r.dir);
 		reflect_and_refract(e);
 	}
+	
 	else
 	{
 

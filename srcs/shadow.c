@@ -85,28 +85,30 @@ int		deal_shadow(t_env *e)
 		printf("e->n.x = %g, e->n.y = %g, e->n.z = %g\n", e->n.x, e->n.y, e->n.z);
 		printf("e->dist.x = %g, e->dist.y = %g, e->dist.z = %g\n", e->dist.x, e->dist.y, e->dist.z);
 		printf("e->t = %g\n", e->t);*/
-		/*if (cursor->type == TYPE_SPHERE)
-		{
-			printf("Transparency == %g\n",cursor->material.transparency);
-		}*/
+		
+		
+		//	printf("Transparency == %g\n",e->transcoef);
+		
 		//if the vector dot is negative, then both vectors are going in opposite directions
 		vectornormalize(&e->dist);
 		//printf("type == %d\n", cursor->type);
-		if ((tmpdot = vectordot(e->n, e->dist)) <= 0.0f)
-			continue;
-		
+		//if (e->transcoef == 0.0)
+	//	{
+			if ((tmpdot = vectordot(e->n, e->dist)) <= 0.0f)
+				continue;
+	//	}
 	//	while (cursor)
 		//{/ 
 		//	if (cursor->type == TYPE_SPHERE)
 		//		printf("Transparency computeshadow 1 == %g\n",cursor->material.transparency);
 		//	cursor = cursor->nextitem;
 		//}	
-//		if (cursor->material.transparency == 0)
-//		{
+		if (e->transcoef == 0.0)
+		{
 			e->t = vectormagnitude(e->dist);
 			if (e->t <= 0.0f)
 				continue; // delete later, eventually
-	//	}
+		}
 		//Check if there is something between point and light
 		//limits light range, or does it?
 	//	lightray.dir = vectorscale((1 / e->t), e->dist); //alternative to normalization?
@@ -135,8 +137,10 @@ int		deal_shadow(t_env *e)
 
 	//	lambert diffusion
 		//if (cursor->material.transparency == 0)
-
-		e->lambert = tmpdot * e->coef;;
+	//	if (e->transcoef == 0.0)
+			e->lambert = tmpdot * e->coef;
+	//	else
+	//		e->lambert = 1;
 		e->col.red += e->lambert * e->clight.intensity.red * e->cmat.diffuse.red * light;
 		e->col.green += e->lambert * e->clight.intensity.green * e->cmat.diffuse.green * light;
 		e->col.blue += e->lambert * e->clight.intensity.blue * e->cmat.diffuse.blue * light;
@@ -144,7 +148,7 @@ int		deal_shadow(t_env *e)
 		//check collision with objects between object and light
 
 		// Blinn Phong model
-	//	blinn_phong(e, lightray.dir);
+		blinn_phong(e, lightray.dir);
 	}
 	if (e->col.red == 0 && e->col.green == 0 && e->col.red == 0)
 		return (FALSE);
