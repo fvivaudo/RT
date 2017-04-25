@@ -32,7 +32,7 @@
 # include <stdbool.h>
 
 
-# define EFFECT 				1
+# define EFFECT 				0
 # define RED 					30
 # define GREEN 					15
 # define BLUE 					5
@@ -52,7 +52,7 @@
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 
-# define MAX_THREAD				16
+# define MAX_THREAD				1
 
 # define TYPE_SPHERE			11
 # define TYPE_PLANE				2
@@ -265,7 +265,7 @@ typedef struct		s_env
 	int				available_ressource;
 
 	double			crefraction;
-	double			refracoef;
+	double			transcoef;
 	double			reflecoef;
 }					t_env;
 
