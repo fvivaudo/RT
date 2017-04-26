@@ -69,6 +69,11 @@ t_env			*readConfig(int fd)
 			{
 				init_object(&e->obj, buffer_line, FALSE);
 			}
+			else if (!(ft_strcmp(buffer_line[0], "EFFECT")))
+			{
+				init_effect(e, buffer_line);
+			//	printf("\neffect %g, red %g , green %g ,  blue %g\n", e->col.effect, e->col.ered, e->col.egreen, e->col.eblue);
+			}
 		}
 		free(buffer_gnl);
 		ft_doubletabfree(&buffer_line);
@@ -78,6 +83,18 @@ t_env			*readConfig(int fd)
 	return (e);
 }
 
+int 			init_effect(t_env *e, char **buffer)
+{
+	if (buffer[1] && buffer[2] && buffer[3] && buffer[4])
+	{
+		
+		e->effect = ft_datoi(buffer[1]);
+		e->ered = ft_datoi(buffer[2]);
+		e->egreen = ft_datoi(buffer[3]);
+		e->eblue = ft_datoi(buffer[4]);
+	}
+	return (0);
+}
 
 int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 {

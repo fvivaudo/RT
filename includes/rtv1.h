@@ -32,10 +32,6 @@
 # include <stdbool.h>
 
 
-# define EFFECT 				0
-# define RED 					30
-# define GREEN 					15
-# define BLUE 					5
 
 
 # define TRUE					1
@@ -155,6 +151,8 @@ typedef struct		s_color
 	double			red;
 	double			green;
 	double			blue;
+	
+
 }					t_color;
 
 typedef struct		s_light
@@ -197,7 +195,7 @@ typedef struct		s_obj
 	double			height;
 	double			alpha;
 	t_quadric		quad;
-
+	
 	bool			isneg;
 	bool			reversen; //useful if we collide with the inside of an object
 
@@ -228,7 +226,11 @@ typedef struct		s_env
 {
 	void			*win;
 	void			*ima;
-	double			effect;
+
+	double 			effect;
+	double			ered;
+	double			egreen;
+	double			eblue;
 
 	t_color			col;
 
@@ -258,7 +260,7 @@ typedef struct		s_env
 	t_cam			cam;
 	int				x;
 	int				y;
-
+	
 	pthread_cond_t	cond;
 	pthread_mutex_t	mutex;
 	pthread_mutex_t	mutex2;
@@ -274,7 +276,7 @@ t_color				colorinit(double red, double green, double blue);
 t_obj				*computeray(t_env *e);
 int					deal_shadow(t_env *e);
 
-
+int 			init_effect(t_env *e,char **buffer);
 t_env				*readConfig(int fd);
 t_obj 				*init_null(void);
 bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);

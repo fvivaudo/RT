@@ -251,13 +251,7 @@ t_color			reflect_and_refract(t_env e)
 		res.green = reflecolor.green * e.reflecoef + refracolor.green * (1 - e.reflecoef) + e.col.green;
 		res.blue = reflecolor.blue * e.reflecoef + refracolor.blue * (1 - e.reflecoef) + e.col.blue;
 //	}
-	if (collide->type == TYPE_SPHERE)
-	{
-		printf("e.reflecoef  ==   %g  |||   reflecolor.red == %g |||  reflecolor.green   == %g  |||  reflecolor.blue ==  %g\n", e.reflecoef, reflecolor.red,  reflecolor.green,  reflecolor.blue);
-		printf("e.transcoef  ==   %g  |||   refracolor.red == %g |||  refracolor.green   == %g  |||  refracolor.blue ==  %g\n", e.transcoef, refracolor.red, refracolor.green,  refracolor.blue);
-		printf("e.col.red  == %g  |||   e.col.green  == %g   |||  e.col.blue  == %g \n\n\n",e.col.red, e.col.green, e.col.blue);
-		printf("res.red  == %g  |||   res.green  == %g   |||  res.blue  == %g \n\n\n",res.red, res.green, res.blue);
-	}
+	
 	//printf("res.blue = %g\n", res.blue);
 //	if (e.id == 2)
 //		printf("res.red = %g, res.green = %g, res.blue = %g\n", res.red, res.green, res.blue);
@@ -356,19 +350,20 @@ t_obj	*copyallobj(t_obj *obj)
 	return (camcopy);
 }*/
 
-static void		effect(t_env *new)
+void		effect(t_env *new, t_env *e)
 {
 	double	tmpred;
 	double	tmpgreen;
 	double	tmpblue;
+	printf("biss     === = =e->effect = %g, e->ered = %g, e->egreen = %g, e->eblue= %g\n", e->effect, e->ered, e->egreen, e->eblue);
 
 	
-		tmpred = new->col.red;
-		tmpgreen = new->col.green;
-		tmpblue = new->col.blue;
-		new->col.red = (tmpred + tmpgreen + tmpblue) * RED / 100;
-		new->col.green = (tmpred + tmpgreen + tmpblue) * GREEN / 100;
-		new->col.blue = (tmpred + tmpgreen + tmpblue) * BLUE / 100;
+	tmpred = new->col.red;
+	tmpgreen = new->col.green;
+	tmpblue = new->col.blue;
+	new->col.red = (tmpred + tmpgreen + tmpblue) * e->ered / 100;
+	new->col.green = (tmpred + tmpgreen + tmpblue) * e->egreen / 100;
+	new->col.blue = (tmpred + tmpgreen + tmpblue) * e->eblue / 100;
 }
 
 
@@ -404,6 +399,7 @@ void			*cast_ray_thread(void *e)
 	new.x = 0;
 	new.y = 0;
 	get_img_pos(&new.x, &new.y, interval);
+	//printf("effect %g, red %g , green %g ,  blue %g\n", env->col.effect, env->col.ered, env->col.egreen, env->col.eblue);
 
 //	new.obj = copyallobj(*env->obj);
 //	new.cam = env->cam;
@@ -414,8 +410,9 @@ void			*cast_ray_thread(void *e)
 		reset(&new, new.x, new.y);
 		new.col = reflect_and_refract(new);
 	
-		if (EFFECT == 1)
-			effect(&new);
+		printf("env->effect = %g, env->ered = %g, env->egreen = %g, env->eblue= %g\n", env->effect, env->ered, env->egreen, env->eblue);
+		if (env->effect == 1)
+			effect(&new, env);
 		if (new.id != -1) //Ambient shading has to take place after every reflection took place
 		{
 			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;
@@ -426,6 +423,8 @@ void			*cast_ray_thread(void *e)
 			new.col.blue = 1.0 - exp(new.col.blue * EXPOSURE);
 			new.col.green = 1.0 - exp(new.col.green * EXPOSURE);
 		}
+
+
 		update_img(&new, new.x, new.y);
 		if (new.x >= WIDTH && new.y >= HEIGHT)
 		{
@@ -460,6 +459,11 @@ int				main(int ac, char **av)
 		++arg.i;
 	//	ft_putendl("alive2");
 		copy = (t_env*)malloc(sizeof(t_env));
+		copy->effect = original->effect;
+		copy->ered = original->ered;
+		copy->egreen = original->egreen;
+		copy->eblue = original->eblue;
+
 		copy->obj = copyallobj(original->obj);
 		copy->cam = original->cam;
 		copy->lights = original->lights; // maybe copy a malloced version for each thread?
