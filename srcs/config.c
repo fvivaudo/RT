@@ -413,13 +413,16 @@ t_quadric initquad(double param[10])
 	return (quad);
 }
 
+//should grab one or several object with same id in the scene and add em all to a list of children
 //init compose only sets up components and remove them from the scene, making it and invisible object
 void		init_compose(t_obj **lstobj, char **buffer)
 {
 	int 		y;
 	t_obj		*obj;
+	t_obj		*tmp;
 
 	y = 1;
+	//create new parent
 	obj = init_null();
 
 	while (buffer[y] != NULL)
@@ -439,7 +442,19 @@ void		init_compose(t_obj **lstobj, char **buffer)
 		else
 		{
 			//remove from object list and add to composed object
-			lstaddobj(&obj->nextchild, lstremoveoneobj(lstobj, ft_atoi(buffer[y])));
+			//printf("ID = %d\n", ft_atoi(buffer[y]));
+
+			while (*lstobj && (tmp = lstremoveoneobj(lstobj, ft_atoi(buffer[y]))))
+			{
+				lstaddobj(&obj->nextchild, tmp);
+			}
+			/*t_obj *cursor = (obj->nextchild);
+			printf("reset\n");
+			while (cursor)
+			{
+				printf("cursor->id = %d\n", cursor->id);
+				cursor = cursor->nextitem;
+			}*/
 			++y;
 		}
 	}
@@ -651,7 +666,6 @@ void		init_cam(t_env *e, char **buffer)
 	e->cam.yincvector = vectorscale(1 / (double)HEIGHT,
 	(vectorscale(2 * HEIGHT / 2, v)));
 }
-
 //init object will set up the composed object rotation and position and allow it to be rendered
 // by copying its component into the scene
 int			init_object(t_obj **lstobj, char **buffer, bool neg)
@@ -659,9 +673,11 @@ int			init_object(t_obj **lstobj, char **buffer, bool neg)
 	int 		y;
 	t_obj		*obj;
 	t_obj		*cursor;
+	int 		id; // id of object(s) added to the scene
 
 	obj = NULL;
 	y = 2;
+	id = 0;
 	//obj = (t_obj*)malloc(sizeof(t_obj));
 
 	if (buffer[1])
@@ -682,7 +698,17 @@ int			init_object(t_obj **lstobj, char **buffer, bool neg)
 	}
 	while (buffer[y] != NULL)
 	{
-		if (!ft_strcmp("POSITION", buffer[y]))
+		if (!ft_strcmp("ID", buffer[y]))
+		{ //segfault
+			if (buffer[y + 1])
+			{
+				id = ft_atoi(buffer[y + 1]);
+				y += 2;
+			}
+			else
+				return (y);
+		}
+		else if (!ft_strcmp("POSITION", buffer[y]))
 		{
 			//ft_putendl("typestart2");
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3])
@@ -712,8 +738,8 @@ int			init_object(t_obj **lstobj, char **buffer, bool neg)
 			++y;
 		}
 	}
-	//ft_putendl("ok2");
-	extractobj(lstobj, obj);
+		printf("extractobj\n");
+	extractobj(lstobj, obj, id);
 	return (y);
 }
 
@@ -756,30 +782,80 @@ void	init_light(t_env *e, char **buffer)
 
 
 
-t_obj	*copyobj(t_obj obj)
+t_obj	*copyobj(t_obj *obj)
 {
 	t_obj *copy;
 
 	copy = (t_obj*)malloc(sizeof(t_obj));
-	copy->id = 0;
+	copy->id = obj->id;
 	//copy->id = obj->id;
 	//copy->parent = obj->parent;
-	copy->type = obj.type;
-	copy->material = obj.material;
-	copy->pos = obj.pos;
-	copy->dir = obj.dir;
-	copy->rad = obj.rad;
-	copy->height = obj.height;
-	copy->alpha = obj.alpha;
-	copy->quad = obj.quad;
-	copy->isneg = obj.isneg;
-	copy->rotation = obj.rotation;
-	copy->nextneg = obj.nextneg;
-	copy->nextslice = obj.nextslice;
+	copy->type = obj->type;
+	copy->material = obj->material;
+	copy->pos = obj->pos;
+	copy->dir = obj->dir;
+	copy->rad = obj->rad;
+	copy->height = obj->height;
+	copy->alpha = obj->alpha;
+	copy->quad = obj->quad;
+	copy->isneg = obj->isneg;
+	copy->rotation = obj->rotation;
+	if (obj->nextneg)
+	{
+		copy->nextneg = copyobj(obj->nextneg);
+	}
+	else
+	{
+		copy->nextneg = NULL;
+	}
+	if (obj->nextslice)
+	{
+		copy->nextslice = copyobj(obj->nextslice);
+	}
+	else
+	{
+		copy->nextslice = NULL;
+	}
+	if (obj->nextitem)
+	{
+		copy->nextitem = copyobj(obj->nextitem);
+	}
+	else
+	{
+		copy->nextitem = NULL;
+	}
 	return (copy);
 }
 
-void		extractobj(t_obj **lstobj, t_obj *obj)
+void 		rotateinnercomponents(t_obj *obj, t_obj *child)
+{
+	t_obj *cursor;
+
+	cursor = child->nextneg;
+	/*
+	not taking into accound complex negative objects (need extra levels of recursion for this)
+	*/
+	while (cursor)
+	{
+		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
+		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
+		cursor->dir = vectorsub(cursor->dir, cursor->pos);
+		cursor = cursor->nextitem;
+	}
+
+	cursor = child->nextslice;
+	while (cursor)
+	{
+		printf("obj->rotation2 = %g\n", obj->rotation);
+		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
+		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
+		cursor->dir = vectorsub(cursor->dir, cursor->pos);
+		cursor->rotation = 0;
+		cursor = cursor->nextslice;
+	}
+}
+
+void		extractobj(t_obj **lstobj, t_obj *obj, int id)
 {
 	t_obj *tmp;
 	t_obj *cursor;
@@ -787,39 +863,65 @@ void		extractobj(t_obj **lstobj, t_obj *obj)
 	cursor = obj->nextchild;
 	while (cursor)
 	{
-		//printf("cursor id = %d\n", cursor->id);
+	//	printf("cursor->id = %d\n", cursor->id);
+	//	printf("cursor->type =%d\n", cursor->type);
 		if (cursor->nextchild)
 		{
-			cursor->rotation = obj->rotation;
-			cursor->pos = obj->pos;
-			cursor->dir = obj->dir;
+			if (cursor->type == 0)// if there is a child of another object containing children, add their coordinates
+			{
+				cursor->pos = vectoradd(cursor->pos, obj->pos);
+			}
+		//	printf("cursor->dir.x = %g, cursor->dir.y = %g, cursor->dir.z = %g\n", cursor->dir.x, cursor->dir.y, cursor->dir.z);
+		//	cursor->rotation = obj->rotation;
+		//	cursor->pos = obj->pos;
+		//	cursor->dir = obj->dir;
 			//sub composed objects inherit rotation, position and attributes for now, needs to be changed
-			extractobj(lstobj, cursor);
+			// Im using assigning parent values, but shouldn't I combine them with child values?
+//			printf("innerextractobj\n");
+			extractobj(lstobj, cursor, id);
 		}
-		else
+		else if (cursor->type > 0) //if type == 0, it only contains chidren
 		{
-			tmp = copyobj(*cursor);
-			t_vec worldfd = vectorinit(0, 0, 1); //forward of world, forward of object is dir
+			tmp = copyobj(cursor);
+			tmp->id = id;
+			t_vec worldfd = vectorinit(0, 0, -1); //forward of world, forward of object is dir
 
-			double rot_angle = acos(vectordot(worldfd,  obj->dir));
-			t_vec rot_axis = vectorproduct(worldfd,  obj->dir);
+			double rot_angle;
+			t_vec rot_axis;
 			//get rotation between world and object direction
 			vectornormalize(&rot_axis);
 
-			tmp->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, tmp->pos, obj->rotation);
-			tmp->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, tmp->dir, obj->rotation);
+//			printf("tmp->id = %d\n", tmp->id);
+//			printf("obj->rotation = %g\n", obj->rotation);
+
+			tmp->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(tmp->dir, tmp->pos), obj->rotation);
+//rotating the point (x,y,z) about the line through (a,b,c) with direction vector ⟨u,v,w⟩ (where u2 + v2 + w2 = 1) by the angle θ.
+			tmp->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, tmp->pos), obj->rotation);
+			tmp->dir = vectorsub(tmp->dir, tmp->pos);
+
+			if (obj->rotation && (tmp->nextneg || tmp->nextslice))
+			{
+				printf("obj->rotation1 = %g\n", obj->rotation);
+				rotateinnercomponents(obj, tmp);
+			}
+
+			vectornormalize(&tmp->dir);
+			//tmp->dir = vectorrotate(tmp->pos, rot_axis, rot_angle);
+
 			rot_angle = acos(vectordot(worldfd, obj->dir));
 			rot_axis = vectorproduct(worldfd, obj->dir);
-			//tmp->dir = vectorrotate(tmp->dir, rot_axis, rot_angle);
+		//	tmp->dir = vectorrotate(tmp->dir, rot_axis, rot_angle);
 
-		//	printf("obj->dir.x = %g, obj->dir.y = %g, obj->dir.z = %g\n", obj->dir.x, obj->dir.y, obj->dir.z);
-			if (rot_axis.x || rot_axis.y || rot_axis.z)
+			if (rot_axis.x || rot_axis.y || rot_axis.z) // if ROTATE
 			{
-		//		printf("0 tmp->pos.x = %g, tmp->pos.y = %g, tmp->pos.z = %g\n", tmp->pos.x, tmp->pos.y, tmp->pos.z);
+				//	printf("ok\n");
+				/*if (tmp->nextneg || tmp->nextslice)
+				{
+					printf("ok1\n");
+					rotateinnercomponents(tmp, rot_axis, rot_angle);
+				}*/
 				tmp->pos = vectorrotate(tmp->pos, rot_axis, rot_angle);
-		//		printf("1 tmp->pos.x = %g, tmp->pos.y = %g, tmp->pos.z = %g\n", tmp->pos.x, tmp->pos.y, tmp->pos.z);
 				tmp->pos = vectoradd(tmp->pos, obj->pos);
-		//		printf("2 tmp->pos.x = %g, tmp->pos.y = %g, tmp->pos.z = %g\n", tmp->pos.x, tmp->pos.y, tmp->pos.z);
 			}
 			else
 			{

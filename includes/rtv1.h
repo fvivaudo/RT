@@ -276,14 +276,14 @@ t_color				colorinit(double red, double green, double blue);
 t_obj				*computeray(t_env *e);
 int					deal_shadow(t_env *e);
 
-int 			init_effect(t_env *e,char **buffer);
+int 				init_effect(t_env *e,char **buffer);
 t_env				*readConfig(int fd);
 t_obj 				*init_null(void);
 bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
 bool				setslice(char **buffer, int *y, t_obj *obj);
 bool				setorient(char **buffer, int *y, t_obj *obj);
 bool			 	setmat(char **buffer, int *y, t_mat *mat);
-void				extractobj(t_obj **lstobj, t_obj *obj);
+void				extractobj(t_obj **lstobj, t_obj *obj, int id);
 
 void				init_cam(t_env *e, char **buffer);
 int					init_cone(t_obj **lstobj, char **buffer, bool neg);

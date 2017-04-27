@@ -15,6 +15,38 @@
 /*
 **		Simple removal, doesn't free anything
 */
+
+//t_obj	*RemoveNode(t_obj **alst, int id)
+t_obj	*lstremoveoneobj(t_obj **alst, int id)
+{
+	t_obj *temp;
+	t_obj *current;
+	t_obj *previous;
+
+	if (id == ((*alst)->id))
+	{
+		temp = *alst;
+		*alst = (*alst)->nextitem; //set nextchild to null too?
+		temp->nextitem = NULL;
+		return (temp);
+	}
+	current = (*alst)->nextitem;
+	previous = *alst;
+	while (current != NULL && previous != NULL)
+	{
+		if (id == current->id)
+		{
+			temp = current;
+			previous->nextitem = current->nextitem;
+			temp->nextitem = NULL;
+			return (temp);
+		}
+		previous = current;
+		current = current->nextitem;
+	}
+	return (NULL);
+}
+/*
 t_obj	*lstremoveoneobj(t_obj **alst, int id)
 {
 	t_obj	*prev;
@@ -26,19 +58,29 @@ t_obj	*lstremoveoneobj(t_obj **alst, int id)
 	{
 		cursor = *alst;
 		prev = cursor;
+	//	if (cursor->id == 10)
+	//		printf("ok1\n");
 		if (cursor->id == id)
+		{
 			(*alst = (*alst)->nextitem);
+			cursor->nextitem = NULL;
+			return (cursor);
+		}
 		while (cursor->nextitem && cursor->id != id)
 		{
 			prev = cursor;
 			cursor = cursor->nextitem;
+			if (cursor->nextitem)
 			next = cursor->nextitem;
 		}
+	//	if (cursor->id == 10)
+	//		printf("ok2\n");
 		prev->nextitem = next;
+		cursor->nextitem = NULL;
 		return (cursor);
 	}
 	return (NULL);
-}
+}*/
 
 void	lstaddobj(t_obj **alst, t_obj *new)
 {
