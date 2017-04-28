@@ -21,11 +21,20 @@ t_env			*readConfig(int fd)
 	char			*buffer_gnl;
 	char			**buffer_line;
 	t_env			*e;
+	int 			i;
 
 	e = (t_env*)malloc(sizeof(t_env));
 	reset(e, 0, 0);
 	e->obj = NULL;
-	e->lights = NULL;
+
+
+	i = 0;
+	while (i < LIMIT_LIGHT)
+	{
+		e->lights[i].set = FALSE;
+		++i;
+	}
+	//e->lights = NULL;
 	e->id = 0;
 	while (get_next_line(fd, &buffer_gnl) == 1)
 	{
@@ -35,23 +44,23 @@ t_env			*readConfig(int fd)
 		{
 			if (!(ft_strcmp(buffer_line[0], "SPHERE")))
 			{
-				init_sphere(&e->obj, buffer_line, FALSE);
+				init_sphere(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CONE")))
 			{
-				init_cone(&e->obj, buffer_line, FALSE);
+				init_cone(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
 			{
-				init_cyl(&e->obj, buffer_line, FALSE);
+				init_cyl(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "PLANE")))
 			{
-				init_plane(&e->obj, buffer_line, FALSE);
+				init_plane(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
 			{
-				init_quadric(&e->obj, buffer_line, FALSE);
+				init_quadric(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
 			{
@@ -67,7 +76,7 @@ t_env			*readConfig(int fd)
 			}
 			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
 			{
-				init_object(&e->obj, buffer_line, FALSE);
+				init_object(&e->obj, buffer_line);
 			}
 			else if (!(ft_strcmp(buffer_line[0], "EFFECT")))
 			{
@@ -96,7 +105,7 @@ int 			init_effect(t_env *e, char **buffer)
 	return (0);
 }
 
-int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
+int				init_cyl(t_obj **lstobj, char **buffer)
 {
 	int			y;
 	t_obj		*obj;
@@ -134,8 +143,7 @@ int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 		}
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
+		else if (setnegative(buffer, &y, obj));
 		else if (!ft_strcmp("HEIGHT", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -158,7 +166,7 @@ int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 	return (y);
 }
 
-int		init_cone(t_obj **lstobj, char **buffer, bool neg)
+int		init_cone(t_obj **lstobj, char **buffer)
 {
 	int			y;
 	t_obj		*obj;
@@ -197,8 +205,7 @@ int		init_cone(t_obj **lstobj, char **buffer, bool neg)
 		}
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
+		else if (setnegative(buffer, &y, obj));
 		else
 			++y;
 	}
@@ -209,7 +216,7 @@ int		init_cone(t_obj **lstobj, char **buffer, bool neg)
 	return (y);
 }
 
-int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
+int		init_sphere(t_obj **lstobj, char **buffer)
 {
 	int			y;
 	t_obj		*obj;
@@ -237,8 +244,7 @@ int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
 		}
 		else if (setmat(buffer, &y, &material));
 		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
+		else if (setnegative(buffer, &y, obj));
 		else if (!ft_strcmp("RADIUS", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -262,7 +268,7 @@ int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
 	return (y);
 }
 
-int		init_plane(t_obj **lstobj, char **buffer, bool neg)
+int		init_plane(t_obj **lstobj, char **buffer)
 {
 	int			y;
 	t_obj		*obj;
@@ -292,8 +298,7 @@ int		init_plane(t_obj **lstobj, char **buffer, bool neg)
 		else if (setmat(buffer, &y, &material));
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
+		else if (setnegative(buffer, &y, obj));
 		else
 		{
 			++y;
@@ -307,7 +312,7 @@ int		init_plane(t_obj **lstobj, char **buffer, bool neg)
 	return (y);
 }
 
-int		init_quadric(t_obj **lstobj, char **buffer, bool neg)
+int		init_quadric(t_obj **lstobj, char **buffer)
 {
 	int			y;
 	t_obj		*obj;
@@ -338,8 +343,7 @@ int		init_quadric(t_obj **lstobj, char **buffer, bool neg)
 		else if (setmat(buffer, &y, &material));
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
+		else if (setnegative(buffer, &y, obj));
 		else if (!ft_strcmp("PARAM", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8] && buffer[y + 9] && buffer[y + 10])
@@ -463,17 +467,30 @@ void		init_compose(t_obj **lstobj, char **buffer)
 
 t_obj 				*init_null(void)
 {
+	int i;
+
+	i = 0;
 	t_obj * obj;
 
 	obj = (t_obj*)malloc(sizeof(t_obj));
 	obj->id = 0;
 	obj->nextitem = NULL;
 	obj->nextchild = NULL;
-	obj->nextslice = NULL;
-	obj->nextneg = NULL;
+	obj->normobj.set = FALSE;
+	while (i < LIMIT_SLICE)
+	{
+		obj->nextslice[i].set = FALSE;
+		++i;
+	}
+//	obj->nextslice = NULL;
+	while (i < LIMIT_NEG)
+	{
+		obj->nextneg[i].set = FALSE;
+		++i;
+	}
+	//obj->nextneg = NULL;
 	obj->rotation = 0;
-	obj->isneg = FALSE;
-	return(obj);
+	return (obj);
 }
 
 bool			 	setmat(char **buffer, int *y, t_mat *mat)
@@ -514,20 +531,21 @@ bool				setorient(char **buffer, int *y, t_obj *obj)
 
 bool				setslice(char **buffer, int *y, t_obj *obj)
 {
-	t_obj *slice;
+	t_slice slice;
 
 	if (!ft_strcmp("SLICE", buffer[*y]))
 	{
 		if (buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3] && buffer[*y + 4] && buffer[*y + 5] && buffer[*y + 6])
 		{
-			slice = (t_obj*)malloc(sizeof(t_obj));
-			slice->pos = vectorinit(ft_datoi(buffer[*y + 1]),
+			//slice = (t_obj*)malloc(sizeof(t_obj));
+			slice.pos = vectorinit(ft_datoi(buffer[*y + 1]),
 			ft_datoi(buffer[*y + 2]), ft_datoi(buffer[*y + 3]));
-			slice->dir = vectorinit(ft_datoi(buffer[*y + 4]),
+			slice.dir = vectorinit(ft_datoi(buffer[*y + 4]),
 			ft_datoi(buffer[*y + 5]), ft_datoi(buffer[*y + 6]));
 			//printf("slice->dir.x = %g slice->dir.y = %g slice->dir.z = %g\n", slice->dir.x, slice->dir.y, slice->dir.z);
-			vectornormalize(&slice->dir);
-			lstaddslice(&obj->nextslice, slice);
+			vectornormalize(&slice.dir);
+			*obj = addslice(*obj, slice); //modifying the array is enough?
+
 			*y += 7;
 			return (TRUE);
 		}
@@ -535,49 +553,6 @@ bool				setslice(char **buffer, int *y, t_obj *obj)
 	return (FALSE);
 }
 
-bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj)
-{
-	static t_obj* parentsave = NULL;
-
-	if (parent)
-		parentsave = parent;
-	if (!ft_strcmp("NEGATIVE", buffer[*y]))
-	{
-		if (!(ft_strcmp(buffer[*y + 1], "SPHERE")))
-		{
-			*y += init_sphere(lstobj, &(*(buffer + *y + 1)), TRUE);
-			(*lstobj)->normal = normalsphere;
-		}
-		else if (!(ft_strcmp(buffer[*y + 1], "CONE")))
-		{
-			*y += init_cone(lstobj, &(*(buffer + *y + 1)), TRUE);
-			(*lstobj)->normal = normalcone;
-		}
-		else if (!(ft_strcmp(buffer[*y + 1], "CYLINDER")))
-		{
-			*y += init_cyl(lstobj, &(*(buffer + *y + 1)), TRUE);
-			(*lstobj)->normal = normalcylinder;
-		}
-		else if (!(ft_strcmp(buffer[*y + 1], "PLANE")))
-		{
-			*y += init_plane(lstobj, &(*(buffer + *y + 1)), TRUE);
-			(*lstobj)->normal = normalplane;
-		}
-		else if (!(ft_strcmp(buffer[*y + 1], "QUADRIC")))
-		{
-			*y += init_quadric(lstobj, &(*(buffer + *y + 1)), TRUE);
-			(*lstobj)->normal = normalquadric;
-		}
-		else if (!(ft_strcmp(buffer[*y + 1], "OBJECT")))
-		{
-			*y += init_object(lstobj, &(*(buffer + *y + 1)), TRUE);
-		}
-		(*lstobj)->pos = vectoradd(parentsave->pos, (*lstobj)->pos); // add something for direction too?
-		(*lstobj)->isneg = TRUE;
-		return (TRUE);
-	}
-	return (FALSE);
-}
 
 void		init_cam(t_env *e, char **buffer)
 {
@@ -668,7 +643,7 @@ void		init_cam(t_env *e, char **buffer)
 }
 //init object will set up the composed object rotation and position and allow it to be rendered
 // by copying its component into the scene
-int			init_object(t_obj **lstobj, char **buffer, bool neg)
+int			init_object(t_obj **lstobj, char **buffer)
 {
 	int 		y;
 	t_obj		*obj;
@@ -723,8 +698,7 @@ int			init_object(t_obj **lstobj, char **buffer, bool neg)
 		}
 		else if (setorient(buffer, &y, obj));
 		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
+		else if (setnegative(buffer, &y, obj));
 		else if (!ft_strcmp("ROTATE", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -746,12 +720,12 @@ int			init_object(t_obj **lstobj, char **buffer, bool neg)
 void	init_light(t_env *e, char **buffer)
 {
 	int			y;
-	t_light		*light;
+	t_light		light;
 
-	light = (t_light*)malloc(sizeof(t_light));
+	//light = (t_light*)malloc(sizeof(t_light));
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
-		light->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		light.pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
 	{
 		return;
@@ -762,7 +736,7 @@ void	init_light(t_env *e, char **buffer)
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3])
 			{
-				light->intensity = colorinit(ft_datoi(buffer[y + 1]),
+				light.intensity = colorinit(ft_datoi(buffer[y + 1]),
 				ft_datoi(buffer[y + 2]), ft_datoi(buffer[y + 3]));
 				y += 4;
 			}
@@ -776,8 +750,7 @@ void	init_light(t_env *e, char **buffer)
 			++y;
 		}
 	}
-	light->next = NULL;
-	lstaddlight(&e->lights, light);
+	*e = addlight(*e, light);
 }
 
 
@@ -798,24 +771,19 @@ t_obj	*copyobj(t_obj *obj)
 	copy->height = obj->height;
 	copy->alpha = obj->alpha;
 	copy->quad = obj->quad;
-	copy->isneg = obj->isneg;
 	copy->rotation = obj->rotation;
-	if (obj->nextneg)
-	{
-		copy->nextneg = copyobj(obj->nextneg);
-	}
-	else
-	{
-		copy->nextneg = NULL;
-	}
-	if (obj->nextslice)
-	{
-		copy->nextslice = copyobj(obj->nextslice);
-	}
-	else
-	{
-		copy->nextslice = NULL;
-	}
+		ft_memcpy(copy->nextneg, obj->nextneg, sizeof(t_neg) * LIMIT_NEG);
+
+//	if (obj->nextslice)
+//	{
+		ft_memcpy(copy->nextslice, obj->nextslice, sizeof(t_slice) * LIMIT_SLICE);
+//	printf("obj->nexslice[0].set = %d\n", obj->nextslice[0].set);
+//	printf("copy->nexslice[0].set = %d\n", copy->nextslice[0].set);
+//	}
+//	else
+//	{
+//		copy->nextslice = NULL;
+//	}
 	if (obj->nextitem)
 	{
 		copy->nextitem = copyobj(obj->nextitem);
@@ -829,30 +797,42 @@ t_obj	*copyobj(t_obj *obj)
 
 void 		rotateinnercomponents(t_obj *obj, t_obj *child)
 {
-	t_obj *cursor;
-
-	cursor = child->nextneg;
+	int i;
 	/*
 	not taking into accound complex negative objects (need extra levels of recursion for this)
 	*/
-	while (cursor)
+
+	i = 0;
+	while (child->nextneg[i].set == TRUE)
 	{
-		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
-		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
-		cursor->dir = vectorsub(cursor->dir, cursor->pos);
-		cursor = cursor->nextitem;
+	//		printf("0child->nextneg[0].dir.x = %g child->nextneg[0].dir.y = %g child->nextneg[0].dir.z = %g\n", child->nextneg[0].dir.x, child->nextneg[0].dir.y, child->nextneg[0].dir.z);
+		child->nextneg[i].dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(child->nextneg[i].dir, child->nextneg[i].pos), obj->rotation);
+		child->nextneg[i].pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, child->nextneg[i].pos), obj->rotation);
+		child->nextneg[i].dir = vectorsub(child->nextneg[i].dir, child->nextneg[i].pos);
+	//		printf("1child->nextslice[0].dir.x = %g child->nextslice[0].dir.y = %g child->nextslice[0].dir.z = %g\n", child->nextslice[0].dir.x, child->nextslice[0].dir.y, child->nextslice[0].dir.z);
+		++i;
 	}
 
-	cursor = child->nextslice;
-	while (cursor)
+
+	i = 0;
+	while (child->nextslice[i].set == TRUE)
 	{
-		printf("obj->rotation2 = %g\n", obj->rotation);
+	//		printf("0child->nextslice[0].dir.x = %g child->nextslice[0].dir.y = %g child->nextslice[0].dir.z = %g\n", child->nextslice[0].dir.x, child->nextslice[0].dir.y, child->nextslice[0].dir.z);
+		child->nextslice[i].dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(child->nextslice[i].dir, child->nextslice[i].pos), obj->rotation);
+		child->nextslice[i].pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, child->nextslice[i].pos), obj->rotation);
+		child->nextslice[i].dir = vectorsub(child->nextslice[i].dir, child->nextslice[i].pos);
+	//		printf("1child->nextslice[0].dir.x = %g child->nextslice[0].dir.y = %g child->nextslice[0].dir.z = %g\n", child->nextslice[0].dir.x, child->nextslice[0].dir.y, child->nextslice[0].dir.z);
+		++i;
+	}
+	/*cursor = child->nextslice;
+	while (cursor)obj->nextslice[i].{
+//		printf("obj->rotation2 = %g\n", obj->rotation);
 		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
 		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
 		cursor->dir = vectorsub(cursor->dir, cursor->pos);
 		cursor->rotation = 0;
 		cursor = cursor->nextslice;
-	}
+	}*/
 }
 
 void		extractobj(t_obj **lstobj, t_obj *obj, int id)
@@ -899,10 +879,11 @@ void		extractobj(t_obj **lstobj, t_obj *obj, int id)
 			tmp->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, tmp->pos), obj->rotation);
 			tmp->dir = vectorsub(tmp->dir, tmp->pos);
 
-			if (obj->rotation && (tmp->nextneg || tmp->nextslice))
+			if (obj->rotation && ( tmp->nextneg[0].set == TRUE || tmp->nextslice[0].set == TRUE))
 			{
-				printf("obj->rotation1 = %g\n", obj->rotation);
+			//	printf("obj->rotation1 = %g\n", obj->rotation);
 				rotateinnercomponents(obj, tmp);
+		//		printf("2obj->nextslice[0].dir.x = %g obj->nextslice[0].dir.y = %g obj->nextslice[0].dir.z = %g\n", obj->nextslice[0].dir.x, obj->nextslice[0].dir.y, obj->nextslice[0].dir.z);
 			}
 
 			vectornormalize(&tmp->dir);

@@ -319,16 +319,14 @@ t_obj	*copyallobj(t_obj *obj)
 	copy->height = obj->height;
 	copy->alpha = obj->alpha;
 	copy->quad = obj->quad;
-	copy->isneg = obj->isneg;
 	copy->rotation = obj->rotation;
-	if (obj->nextneg)
-	{
-		copy->nextneg = copyallobj(obj->nextneg);
-	}
-	if (obj->nextslice)
+
+	ft_memcpy(copy->nextneg, obj->nextneg, sizeof(t_neg) * LIMIT_NEG);
+	ft_memcpy(copy->nextslice, obj->nextslice, sizeof(t_slice) * LIMIT_SLICE);
+	/*if (obj->nextslice)
 	{
 		copy->nextslice = copyallobj(obj->nextslice);
-	}
+	}*/
 	if (obj->nextitem)
 	{
 		copy->nextitem = copyallobj(obj->nextitem);
@@ -355,7 +353,7 @@ void		effect(t_env *new, t_env *e)
 	double	tmpred;
 	double	tmpgreen;
 	double	tmpblue;
-	printf("biss     === = =e->effect = %g, e->ered = %g, e->egreen = %g, e->eblue= %g\n", e->effect, e->ered, e->egreen, e->eblue);
+//	printf("biss     === = =e->effect = %g, e->ered = %g, e->egreen = %g, e->eblue= %g\n", e->effect, e->ered, e->egreen, e->eblue);
 
 	
 	tmpred = new->col.red;
@@ -364,23 +362,6 @@ void		effect(t_env *new, t_env *e)
 	new->col.red = (tmpred + tmpgreen + tmpblue) * e->ered / 100;
 	new->col.green = (tmpred + tmpgreen + tmpblue) * e->egreen / 100;
 	new->col.blue = (tmpred + tmpgreen + tmpblue) * e->eblue / 100;
-}
-
-
-t_light	*copyalllights(t_light *light)
-{
-	t_light *copy;
-
-	copy = (t_light*)malloc(sizeof(t_light));
-
-	copy->pos = light->pos;
-	copy->intensity = light->intensity;
-
-	if (light->next)
-	{
-		copy->next = copyalllights(light->next);
-	}
-	return (copy);
 }
 
 void			*cast_ray_thread(void *e)
@@ -395,7 +376,8 @@ void			*cast_ray_thread(void *e)
 
 	new.obj = env->obj;
 	new.cam = env->cam;
-	new.lights = env->lights;
+	ft_memcpy(&new.lights, &env->lights, sizeof(t_light) * LIMIT_LIGHT);
+//	new.lights = env->lights;
 	new.x = 0;
 	new.y = 0;
 	get_img_pos(&new.x, &new.y, interval);
@@ -410,7 +392,7 @@ void			*cast_ray_thread(void *e)
 		reset(&new, new.x, new.y);
 		new.col = reflect_and_refract(new);
 	
-		printf("env->effect = %g, env->ered = %g, env->egreen = %g, env->eblue= %g\n", env->effect, env->ered, env->egreen, env->eblue);
+	//	printf("env->effect = %g, env->ered = %g, env->egreen = %g, env->eblue= %g\n", env->effect, env->ered, env->egreen, env->eblue);
 		if (env->effect == 1)
 			effect(&new, env);
 		if (new.id != -1) //Ambient shading has to take place after every reflection took place
@@ -466,7 +448,8 @@ int				main(int ac, char **av)
 
 		copy->obj = copyallobj(original->obj);
 		copy->cam = original->cam;
-		copy->lights = original->lights; // maybe copy a malloced version for each thread?
+	//	copy->lights = original->lights; // maybe copy a malloced version for each thread?
+		ft_memcpy(&copy->lights, &original->lights, sizeof(t_light) * LIMIT_LIGHT);
 		arg.arg = (void*)copy;
 		pthread_create(&pth[arg.i - 1], NULL, cast_ray_thread, (void *)&arg);
 		usleep(100); //better way to do things?

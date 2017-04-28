@@ -28,7 +28,6 @@ t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
 
 	while (cursor)
 	{
-
 		if (cursor->id == id_ignore)
 		{
 		//	cursor = cursor->nextitem;
@@ -60,13 +59,31 @@ t_obj	*computeray(t_env *e)
 		e->scaled = vectorscale(e->t, e->r.dir);
 		//e->newstart = object intersection
 		e->newstart = vectoradd(e->r.start, e->scaled);
-		if (res->normobj)
+		if (res->normobj.set == TRUE) //set it somewhere to 0 somewhere
 		{
-			res->normal(e, res->normobj);
+			if (res->normobj.specificnormal == TYPE_SPHERE)
+				normalsphere(e, (t_obj*)&res->normobj);//add reversen somewhere
+			else if (res->normobj.specificnormal == TYPE_PLANE)
+				normalplane(e, (t_obj*)&res->normobj);
+			else if (res->normobj.specificnormal == TYPE_CYLINDER)
+				normalcylinder(e, (t_obj*)&res->normobj);
+			else if (res->normobj.specificnormal == TYPE_CONE)
+				normalcone(e, (t_obj*)&res->normobj);
+			else if (res->normobj.specificnormal == TYPE_QUADRIC)
+				normalquadric(e, (t_obj*)&res->normobj);
 		}
 		else
 		{
-			res->normal(e, res);
+			if (res->type == TYPE_SPHERE)
+				normalsphere(e, res);//add reversen somewhere
+			else if (res->type == TYPE_PLANE)
+				normalplane(e, res);
+			else if (res->type == TYPE_CYLINDER)
+				normalcylinder(e, res);
+			else if (res->type == TYPE_CONE)
+				normalcone(e, res);
+			else if (res->type == TYPE_QUADRIC)
+				normalquadric(e, res);
 		}
 	}
 	return (res);

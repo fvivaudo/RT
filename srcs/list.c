@@ -93,36 +93,55 @@ void	lstaddobj(t_obj **alst, t_obj *new)
 		*alst = new;
 }
 
-//lstaddslice not used
-void	lstaddslice(t_obj **alst, t_obj *new)
+t_obj	addslice(t_obj obj, t_slice new)
 {
-	if (alst && *alst && new)
+	int i;
+
+	i = 0;
+	while (obj.nextslice[i].set == TRUE && i < LIMIT_SLICE)
 	{
-		new->nextslice = *alst;
-		*alst = new;
+		++i;
 	}
-	else if (alst)
-		*alst = new;
+	if (i < LIMIT_SLICE)
+	{
+		obj.nextslice[i].pos = new.pos;
+		obj.nextslice[i].dir = new.dir;
+		obj.nextslice[i].set = TRUE;
+	}
+	return (obj);
 }
 
-void	lstaddneg(t_obj **alst, t_obj *new)
+t_obj	addneg(t_obj obj, t_neg new)
 {
-	if (alst && *alst && new)
+	int i;
+
+	i = 0;
+	while (obj.nextneg[i].set == TRUE && i < LIMIT_NEG)
 	{
-		new->nextneg = *alst;
-		*alst = new;
+		++i;
 	}
-	else if (alst)
-		*alst = new;
+	if (i < LIMIT_NEG)
+	{
+		memcpy(&obj.nextneg[i], &new, sizeof(t_neg));
+		obj.nextneg[i].pos = vectoradd(obj.pos, obj.nextneg[i].pos); // add something for direction too?
+		obj.nextneg[i].set = TRUE;
+	}
+	return (obj);
 }
 
-void	lstaddlight(t_light **alst, t_light *new)
+t_env	addlight(t_env e, t_light new)
 {
-	if (alst && *alst && new)
+	int i;
+
+	i = 0;
+	while (e.lights[i].set == TRUE && i < LIMIT_NEG)
 	{
-		new->next = *alst;
-		*alst = new;
+		++i;
 	}
-	else if (alst)
-		*alst = new;
+	if (i < LIMIT_NEG)
+	{
+		memcpy(&e.lights[i], &new, sizeof(t_light));
+		e.lights[i].set = TRUE;
+	}
+	return (e);
 }

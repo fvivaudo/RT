@@ -32,7 +32,10 @@
 # include <stdbool.h>
 
 
-
+# define LIMIT_SLICE	20
+# define LIMIT_NEG		20
+# define LIMIT_OBJ		500
+# define LIMIT_LIGHT	100
 
 # define TRUE					1
 # define FALSE					0
@@ -50,7 +53,7 @@
 
 # define MAX_THREAD				1
 
-# define TYPE_SPHERE			11
+# define TYPE_SPHERE			1
 # define TYPE_PLANE				2
 # define TYPE_CYLINDER			3
 # define TYPE_CONE				4
@@ -159,7 +162,7 @@ typedef struct		s_light
 {
 	t_vec			pos;
 	t_color			intensity;
-	struct s_light	*next;
+	bool			set;
 }					t_light;
 
 typedef struct		s_mat
@@ -175,19 +178,41 @@ typedef struct		s_mat
 	double			bump;
 }					t_mat;
 
+typedef struct		s_slice
+{
+	t_vec			pos;
+	t_vec			dir;
+	bool			set;
+}					t_slice;
+
+typedef struct		s_neg
+{
+	int				type;
+	t_mat			material;
+	t_vec			pos;
+	t_vec			dir;
+	double			rad;
+	double			height;
+	double			alpha;
+	t_quadric		quad;
+
+	bool			reversen;
+	double 			rotation; // rotation degree on axis
+	double			t[2]; //storage needed for negative objects
+	t_slice			nextslice[LIMIT_SLICE];
+	int 			specificnormal;
+
+	bool			set;
+}					t_neg;
+
+// /!\ Conserve object order similar to t_neg /!\
 //parent is an object containing only a position, orientation, and child objects
 //orientation and position of child objects become local
 typedef struct		s_obj
 {
-	int				id;
 	//int 			parent;
 
 	int				type;
-
-	struct s_obj	*nextitem;
-	struct s_obj	*nextchild;
-	struct s_obj	*nextslice;
-	struct s_obj	*nextneg;
 	t_mat			material;
 	t_vec			pos;
 	t_vec			dir;
@@ -196,19 +221,24 @@ typedef struct		s_obj
 	double			alpha;
 	t_quadric		quad;
 	
-	bool			isneg;
 	bool			reversen; //useful if we collide with the inside of an object
-
 	double 			rotation; // rotation degree on axis
-
 	double			t[2]; //storage needed for negative objects
+	t_slice			nextslice[LIMIT_SLICE];
+	int 			specificnormal;
 
 	//in the case of a negative object (or eventually a composed one)
 	//we need to have a varaible normal function
 	//ex : negative sphere in cylinder will need
 	//sphere normal calculation and object information
-	void 			(*normal)(struct s_env *, struct s_obj *obj);
-	struct s_obj 	*normobj;
+
+	//void 			(*normal)(struct s_env *, struct s_obj *obj);
+	t_neg 			normobj;
+	t_neg			nextneg[LIMIT_NEG];
+
+	int				id;
+	struct s_obj	*nextitem;
+	struct s_obj	*nextchild;
 }					t_obj;
 
 
@@ -243,7 +273,7 @@ typedef struct		s_env
 	unsigned int	i;
 	unsigned int	j;
 	t_ray			r;
-	t_light			*lights;
+	t_light			lights[LIMIT_LIGHT];
 	t_light			clight;
 	t_vec			dist; //temporary
 	t_ray			lightray;
@@ -279,21 +309,21 @@ int					deal_shadow(t_env *e);
 int 				init_effect(t_env *e,char **buffer);
 t_env				*readConfig(int fd);
 t_obj 				*init_null(void);
-bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
+//bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
 bool				setslice(char **buffer, int *y, t_obj *obj);
 bool				setorient(char **buffer, int *y, t_obj *obj);
 bool			 	setmat(char **buffer, int *y, t_mat *mat);
 void				extractobj(t_obj **lstobj, t_obj *obj, int id);
 
 void				init_cam(t_env *e, char **buffer);
-int					init_cone(t_obj **lstobj, char **buffer, bool neg);
-int					init_cyl(t_obj **lstobj, char **buffer, bool neg);
+int					init_cone(t_obj **lstobj, char **buffer);
+int					init_cyl(t_obj **lstobj, char **buffer);
 void				init_light(t_env *e, char **buffer);
-int					init_plane(t_obj **lstobj, char **buffer, bool neg);
-int					init_sphere(t_obj **lstobj, char **buffer, bool neg);
-int					init_quadric(t_obj **lstobj, char **buffer, bool neg);
+int					init_plane(t_obj **lstobj, char **buffer);
+int					init_sphere(t_obj **lstobj, char **buffer);
+int					init_quadric(t_obj **lstobj, char **buffer);
 void				init_compose(t_obj **lstobj, char **buffer);
-int					init_object(t_obj **lstobj, char **buffer, bool neg);
+int					init_object(t_obj **lstobj, char **buffer);
 t_obj				*intersection(t_env *e, t_ray *r, int id_ignore);
 int					iraycone(t_ray *r, t_obj *co, double *t0);
 int					iraycone2(double abcd[4], double t[2], double *t0);
@@ -323,10 +353,10 @@ double				computeshadow(t_env *e, t_ray *r, double light, double dist);
 double				noise(double x, double y, double z);
 t_quadric			quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos);
 
-void				lstaddneg(t_obj **alst, t_obj *new);
+t_obj				addneg(t_obj obj, t_neg new);
 void				lstaddobj(t_obj **alst, t_obj *new);
-void				lstaddslice(t_obj **alst, t_obj *new);
-void				lstaddlight(t_light **alst, t_light *new);
+t_obj				addslice(t_obj obj, t_slice new);
+t_env				addlight(t_env e, t_light new);
 t_obj				*lstremoveoneobj(t_obj **alst, int id);
 
 void				normalsphere(t_env *e, t_obj *obj);
@@ -343,4 +373,5 @@ void				swapdouble(double *a, double *b);
 t_vec				bump_mapping(t_env *e);
 void				blinn_phong(t_env *e, t_vec lightray_dir);
 
+bool				setnegative(char **buffer, int *y, t_obj *parent);
 #endif

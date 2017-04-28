@@ -58,15 +58,17 @@ double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 int		deal_shadow(t_env *e)
 {
 	t_ray			lightray;
-	t_light			*tmplight;
+//	t_light			*tmplight;
+	int 			i;
 	double			tmpdot;
 	double			distancetolight;
 //	t_obj			*cursor;
 
-	tmplight = e->lights;
+	i = 0;
+//	tmplight = e->lights;
 //	cursor = e->obj;
 
-	while (tmplight)
+	while (e->lights[i].set == TRUE)
 	{
 		if (e->cmat.bump)
 		{
@@ -74,8 +76,8 @@ int		deal_shadow(t_env *e)
 		}
 		//if (cursor->type == TYPE_SPHERE)
 		//	printf("Transparency computeshadow 2 == %g\n",cursor->material.transparency);
-		e->clight = *tmplight;
-		tmplight = tmplight->next;
+		e->clight = e->lights[i];
+		++i;
 		//distance between intersection point and light
 		e->dist = vectorsub(e->clight.pos, e->newstart);
 		distancetolight = vectormagnitude(e->dist);

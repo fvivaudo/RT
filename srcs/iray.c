@@ -67,10 +67,10 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0)
 		{
 			return(FALSE);
 		}
-		obj->normal = normalcone;
+		obj->specificnormal = TYPE_CONE;
 
 		//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
-		if (obj->nextslice)
+		if (obj->nextslice[0].set == TRUE)
 		{
 			ret = irayslice(r, obj, t0);
 			if (!ret)
@@ -78,7 +78,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0)
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg)
+		if (obj->nextneg[0].set == TRUE)
 		{
 			ret = irayneg(r, obj, t0);
 			if (!ret)
@@ -123,10 +123,10 @@ int		irayplane(t_ray *r, t_obj *obj, double *t0)
 	{
 		return (FALSE);
 	}
-	obj->normal = normalplane;
 
 	//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
-	if (obj->nextslice)
+	obj->specificnormal = TYPE_PLANE;
+	if (obj->nextslice[0].set == TRUE)
 	{
 		ret = irayslice(r, obj, t0);
 		if (!ret)
@@ -134,7 +134,7 @@ int		irayplane(t_ray *r, t_obj *obj, double *t0)
 			return (FALSE);
 		}
 	}
-	if (obj->nextneg)
+	if (obj->nextneg[0].set == TRUE)
 	{
 		ret = irayneg(r, obj, t0);
 		if (!ret)
@@ -234,8 +234,8 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0)
 		{
 			return(FALSE);
 		}
-		obj->normal = normalquadric;
-		if (obj->nextslice)
+		obj->specificnormal = TYPE_QUADRIC;
+		if (obj->nextslice[0].set == TRUE)
 		{
 			ret = irayslice(r, obj, t0);
 			if (!ret)
@@ -243,7 +243,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0)
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg)
+		if (obj->nextneg[0].set == TRUE)
 		{
 			ret = irayneg(r, obj, t0);
 			if (!ret)
@@ -301,7 +301,9 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0)
 	abcd[3] = ft_pow(abcd[1], 2) - (4 * abcd[0] * abcd[2]);
 
 	if (abcd[3] < 0)
+	{
 		return (FALSE);
+	}
 	else
 	{
 		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
@@ -315,8 +317,8 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0)
 		{
 			return(FALSE);
 		}
-		obj->normal = normalcylinder;
-		if (obj->nextslice)
+		obj->specificnormal = TYPE_CYLINDER;
+		if (obj->nextslice[0].set == TRUE)
 		{
 			ret = irayslice(r, obj, t0);
 			if (!ret)
@@ -324,7 +326,7 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0)
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg)
+		if (obj->nextneg[0].set == TRUE)
 		{
 			ret = irayneg(r, obj, t0);
 			if (!ret)
@@ -353,25 +355,18 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 {
 	t_vec	tmp;
 	double	tmpt;
-	t_obj	*cursor;
+	int 	i;
 	double	dot;
 
 	t_vec relativepos; //position of intersection
 	t_vec relativedir;
 //	t_vec sliceinter;
 
-	cursor = obj->nextslice;
 //	printf("slice->pos.x = %g, slice->pos.y = %g, slice->pos.z = %g\n", slice->pos.x, slice->pos.y, slice->pos.z);
 	if (obj->t[0] < 0 && obj->t[1] < 0)
 	{
 		return (FALSE);
 	}
-/*	if (obj->t[0] > obj->t[1])
-	{
-		tmptswitch = obj->t[0];
-		obj->t[0] = obj->t[1];
-		obj->t[1] = tmptswitch;
-	}*/
 
 	if (obj->t[0] > 0)
 	{
@@ -386,7 +381,8 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 	vectornormalize(&relativedir);
 //relative dir should be a vector going from the slice toward emptiness/sliced part
 
-	while (cursor)
+	i = 0;
+	while (obj->nextslice[i].set == TRUE)
 	{
 //case 0 =  unreachable slice, 2 cases, touching object or touching void
 //case 1 =  intersection with plan, facing plan
@@ -395,36 +391,15 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 //case 3 =  no intersection with plan and good dir
 //case 3 =  no intersection with plan and wrong dir
 //		printf("cursor->dir.x = %g cursor->dir.y = %g cursor->dir.z = %g\n", cursor->dir.x, cursor->dir.y, cursor->dir.z);
-		tmp = vectorsub(vectoradd(cursor->pos, obj->pos), r->start);
-		dot = vectordot(cursor->dir, r->dir);
+		tmp = vectorsub(vectoradd(obj->nextslice[i].pos, obj->pos), r->start);
+		dot = vectordot(obj->nextslice[i].dir, r->dir);
 		if (dot)
 		{
-		//ft_putendl("ok0");
-			tmpt = vectordot(cursor->dir, tmp) / dot;
-
-//			sliceinter = vectoradd(r->start, vectorscale(tmpt, r->dir));
-//			relativedir = vectorsub(relativepos, sliceinter); //from slice intersection toward sphere intersection
-//	printf("relativedir.x = %g relativedir.y = %g relativedir.z = %g\n", relativedir.x, relativedir.y, relativedir.z);
-//			vectornormalize(&relativedir);
-//	printf("relativepos.x = %g relativepos.y = %g relativepos.z = %g\n", relativepos.x, relativepos.y, relativepos.z);
-//	printf("relativedir.x = %g relativedir.y = %g relativedir.z = %g\n", relativedir.x, relativedir.y, relativedir.z);
-			//printf("tmpt = %g\nt0 = %g\n obj->t[1] = %g, dot = %g\n", tmpt, obj->t[0], obj->t[1], dot);
+			tmpt = vectordot(obj->nextslice[i].dir, tmp) / dot;
 			//check if slice is inside the object
 			//if not, maybe we're hitting nothing, or we're hitting the object
 			if ((obj->t[0] > tmpt && obj->t[1] > tmpt) || (obj->t[0] < tmpt && obj->t[1] < tmpt))
 			{
-				//obj->t[0] will be the closest point
-				/*if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || (obj->t[0] < 0 && obj->t[1] > 0))
-				{
-					tmptswitch = obj->t[0];
-					obj->t[0] = obj->t[1];
-				}*/
-			//	else
-			//	{
-				//	return (FALSE); //no conceivable distance, i think
-			//	}
-
-
 				//object is fully in front of slice and slice is aligned on r->dir
 				if (obj->t[1] < tmpt && dot > 0)
 				{
@@ -432,20 +407,15 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				//	printf("obj->t[0] = %g, obj->t[1] = %g, tmpt = %g\n", obj->t[0], obj->t[1], tmpt);
 					if (obj->t[0] > 0 && obj->t[0] <= *dist)
 					{
-				//		printf("Outcome1 reached\n");
 						*dist = obj->t[0];
 					}
 					else if (obj->t[1] > 0 && obj->t[1] <= *dist)
 					{
-				//		printf("Outcome2 reached\n");
 						*dist = obj->t[1];
 					}
-				//	return (TRUE);
 				}//object is fully behind slice and slice is directed toward r->start
 				else if (obj->t[0] > tmpt && dot < 0)
 				{
-			//	ft_putendl("Alright2");
-
 					if (obj->t[0] > 0 && obj->t[0] <= *dist)
 					{
 						*dist = obj->t[0];
@@ -457,13 +427,11 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				}//object is sliced out, resulting in an absence of collision, I guess
 				else// if (obj->t[0] != *dist && obj->t[1] != *dist)
 				{
-				//	*dist = tmptswitch;
-				//	return (TRUE);
 					return (FALSE);
 				}
 				//	return (TRUE); //slice is out of object
 			}
-			else if (dot > 0 /*vectordot(relativedir, cursor->dir) > 0*/) // ray coming toward sliced surface
+			else if (dot > 0) // ray coming toward sliced surface
 			{
 				//obj->t[0] will be the farthest point
 
@@ -476,9 +444,6 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				{
 					*dist = obj->t[0];
 				}
-				//return (TRUE);
-				//				*dist = tmpt;
-				//obj->type = TYPE_PLANE;
 			}
 			else if (dot < 0 /*vectordot(relativedir, cursor->dir) < 0*/) // ray coming toward object untouched surface
 			{
@@ -496,31 +461,29 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 				//obj->type = TYPE_PLANE;
 			}
 		}
-		else
-		{
-//			return (FALSE);
-		}
-		cursor = cursor->nextslice;
+		++i;
 	}
-				//	*dist = t0;
 	return (TRUE);
 }
 
 //The problem lies in computeshadow, do my intersection works well when i go from the hole toward light?
 int		irayneg(t_ray *r, t_obj *obj, double *dist)
 {
-	t_obj	*cursor;
-	t_obj	*deepestobj;
+//	t_obj	*cursor;
+	int 	deepestobj;
 	double 	tmax;
 	double	current;
 	double  holet[2];
+	int i;
 //	t_vec sliceinter;
 
 			//	ft_putendl("unhandled case irayneg");
+	i = 0;
 	holet[0] = 0;
 	holet[1] = 0;
-	cursor = obj->nextneg;
-	obj->normobj = NULL;
+	deepestobj = -1;
+//	cursor = obj->nextneg;
+	obj->normobj.set = FALSE;
 //	printf("slice->pos.x = %g, slice->pos.y = %g, slice->pos.z = %g\n", slice->pos.x, slice->pos.y, slice->pos.z);
 	if (obj->t[0] < 0 && obj->t[1] < 0)
 	{
@@ -538,55 +501,57 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist)
 	}*/
 
 //printf("\n");
-	while (cursor)
+	while (obj->nextneg[i].set == TRUE)
 	{
 		//printf("type = %d, cursor->t[0] = %g, cursor->t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, cursor->t[0], cursor->t[1], holet[0], holet[1]);
+	//	printf("obj->nextneg[i].pos.x = %g, obj->nextneg[i].pos.y = %g, obj->nextneg[i].pos.z = %g\n", obj->nextneg[i].pos.x, obj->nextneg[i].pos.y, obj->nextneg[i].pos.z);
+	//	printf("obj->nextneg[i].dir.x = %g, obj->nextneg[i].dir.y = %g, obj->nextneg[i].dir.z = %g\n", obj->nextneg[i].dir.x, obj->nextneg[i].dir.y, obj->nextneg[i].dir.z);
 		tmax = MAX_RANGE;
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &tmax)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &tmax)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &tmax)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &tmax)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &tmax)))
+		if ((obj->nextneg[i].type == TYPE_SPHERE && iraysphere(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_PLANE && irayplane(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_CYLINDER && iraycylinder(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_CONE && iraycone(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_QUADRIC && irayquadric(r, (t_obj*)(&obj->nextneg[i]), &tmax)))
 		{
-			if (cursor->t[1] == DOESNOTEXIST)
+			if (obj->nextneg[i].t[1] == DOESNOTEXIST)
 			{
 				continue;
 			}
-			if (cursor->t[0] > cursor->t[1]) //doesnt matter if holet[0] is inferior to 0 here
+			if (obj->nextneg[i].t[0] > obj->nextneg[i].t[1]) //doesnt matter if holet[0] is inferior to 0 here
 			{
-				swapdouble(&cursor->t[0], &cursor->t[1]);
+				swapdouble(&obj->nextneg[i].t[0], &obj->nextneg[i].t[1]);
 			}
 			//first negative object
 			if (holet[0] == 0 && holet[1] == 0)
 			{
-				deepestobj = cursor;
-			//	obj->normobj = cursor;
-			//	obj->normal = cursor->normal;
-				holet[0] = cursor->t[0];
-				holet[1] = cursor->t[1];
+				deepestobj = i;
+			//	obj->normobj = obj->nextneg[i];
+			//	obj->normal = obj->nextneg[i]->normal;
+				holet[0] = obj->nextneg[i].t[0];
+				holet[1] = obj->nextneg[i].t[1];
 			//	if (holet[0] > holet[1]) //doesnt matter if holet[0] is inferior to 0 here
 			//	{
 			//		swapdouble(&holet[0], &holet[1]);
 			//	}
 			}
-			else if (holet[0] <= cursor->t[1] && cursor->t[0] <= holet[1]) // check for overlap
+			else if (holet[0] <= obj->nextneg[i].t[1] && obj->nextneg[i].t[0] <= holet[1]) // check for overlap
 			{
-				if (cursor->t[0] < holet[0])
+				if (obj->nextneg[i].t[0] < holet[0])
 				{
-					holet[0] = cursor->t[0];
+					holet[0] = obj->nextneg[i].t[0];
 				}
-				if (cursor->t[1] > holet[1])
+				if (obj->nextneg[i].t[1] > holet[1])
 				{
-					deepestobj = cursor;
-				//	obj->normobj = cursor;
-				//	obj->normal = cursor->normal;
-					holet[1] = cursor->t[1];
+					deepestobj = i;
+				//	obj->normobj = obj->nextneg[i];
+				//	obj->normal = obj->nextneg[i]->normal;
+					holet[1] = obj->nextneg[i].t[1];
 				}
 			}
 		}
-		//printf("type = %d, cursor->t[0] = %g, cursor->t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, cursor->t[0], cursor->t[1], holet[0], holet[1]);
+		//printf("type = %d, obj->nextneg[i]->t[0] = %g, obj->nextneg[i]->t[1] = %g, holet[0] = %g, holet[1] = %g\n", obj->nextneg[i]->type, obj->nextneg[i]->t[0], obj->nextneg[i]->t[1], holet[0], holet[1]);
 		//it should be nextitem and not nextneg
-		cursor = cursor->nextitem;
+		++i;
 	}
 		//case 1 hole going through object
 		//case 2 hole in front object
@@ -607,14 +572,12 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist)
 	//	ft_putendl("case 2");
 //	if (e->x == 355 && e->y == 263)
 //		printf("case 2 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
-		if (holet[1] > current)
+		if (holet[1] > current && deepestobj != -1)
 		{
-			obj->normobj = deepestobj;
-			obj->normal = deepestobj->normal;
-			if (obj->normobj)
-			{
-				obj->normobj->reversen = TRUE;
-			}
+			ft_memcpy(&obj->normobj, &obj->nextneg[deepestobj], sizeof(t_neg));
+		//	obj->normal = deepestobj->normal;
+			obj->normobj.set = TRUE;
+			obj->normobj.reversen = TRUE;
 			current = holet[1]; //we need the deepest hole
 		}
 	}
@@ -662,15 +625,14 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0)
 		{
 			return(FALSE);
 		}
+		obj->specificnormal = TYPE_SPHERE;
 /*		else if (t[0] < 0)
 		{
 			t[0] = t[1];
 		}*/
 
-		obj->normal = normalsphere;
-
 		//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
-		if (obj->nextslice)
+		if (obj->nextslice[0].set == TRUE)
 		{
 			ret = irayslice(r, obj, t0);
 
@@ -679,13 +641,16 @@ int		iraysphere(t_ray *r, t_obj *obj, double *t0)
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg)
+
+		if (obj->nextneg[0].set == TRUE)
 		{
+	//		printf("%d\n", obj->nextneg[0].set);
 			ret = irayneg(r, obj, t0);
 			if (!ret)
 			{
 				return (FALSE);
 			}
+	//		printf("%d\n", obj->nextneg[0].set);
 		}
 		if (ret)
 		{

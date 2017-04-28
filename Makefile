@@ -20,6 +20,7 @@ SRC = 	srcs/etc.c \
 		srcs/vector.c \
 		srcs/list.c \
 		srcs/normal.c \
+		srcs/initneg.c \
 		srcs/iray.c \
 		srcs/bump_mapping.c \
 		srcs/blinn_phong.c \
