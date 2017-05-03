@@ -16,29 +16,29 @@
 // transparency, refraction
 double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 {
-	t_obj			*cursor;
-	cursor = e->obj;
+	int 				i;
+	i = 0;
 //	double t = dist; // distance between point and light
 	//printf("type == %d\n", cursor->type);
 	//if (cursor->type == TYPE_SPHERE)
 	//	printf("Transparency computeshadow == %g\n",cursor->material.transparency);
-	while (cursor)
+	while (e->objgpu[i].set == TRUE)
 	{
 		//if (cursor->type == TYPE_SPHERE)
 		//	printf("type == %d\n", cursor->type);
 		//if (cursor->type == TYPE_SPHERE)
 		//	printf("Transparency computeshadow 1 == %g\n",cursor->material.transparency);
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &dist)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &dist)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &dist)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &dist)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &dist)))
+		if ((e->objgpu[i].type == TYPE_SPHERE && iraysphere(r, &e->objgpu[i], &dist)) ||
+			(e->objgpu[i].type == TYPE_PLANE && irayplane(r, &e->objgpu[i], &dist)) ||
+			(e->objgpu[i].type == TYPE_CYLINDER && iraycylinder(r, &e->objgpu[i], &dist)) ||
+			(e->objgpu[i].type == TYPE_CONE && iraycone(r, &e->objgpu[i], &dist)) ||
+			(e->objgpu[i].type == TYPE_QUADRIC && irayquadric(r, &e->objgpu[i], &dist)))
 		{
 		//	e->t = t;
 			//printf("e->cmat.transparency = %g\n", e->cmat.transparency);
-			light *= cursor->material.transparency; // is it accurate?
+			light *= e->objgpu[i].material.transparency; // is it accurate?
 		}
-		cursor = cursor->nextitem;
+		++i;
 	}
 	//if (cursor->type == TYPE_SPHERE)
 	//	printf("Transparency computeshadow 1 == %g\n", e->cmat.transparency);
@@ -62,7 +62,7 @@ int		deal_shadow(t_env *e)
 	int 			i;
 	double			tmpdot;
 	double			distancetolight;
-//	t_obj			*cursor;
+//	t_objgpu			*cursor;
 
 	i = 0;
 //	tmplight = e->lights;

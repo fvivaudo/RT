@@ -16,12 +16,12 @@
 **		Simple removal, doesn't free anything
 */
 
-//t_obj	*RemoveNode(t_obj **alst, int id)
-t_obj	*lstremoveoneobj(t_obj **alst, int id)
+//t_objconf	*RemoveNode(t_objconf **alst, int id)
+t_objconf	*lstremoveoneobj(t_objconf **alst, int id)
 {
-	t_obj *temp;
-	t_obj *current;
-	t_obj *previous;
+	t_objconf *temp;
+	t_objconf *current;
+	t_objconf *previous;
 
 	if (id == ((*alst)->id))
 	{
@@ -47,11 +47,11 @@ t_obj	*lstremoveoneobj(t_obj **alst, int id)
 	return (NULL);
 }
 /*
-t_obj	*lstremoveoneobj(t_obj **alst, int id)
+t_objconf	*lstremoveoneobj(t_objconf **alst, int id)
 {
-	t_obj	*prev;
-	t_obj	*next;
-	t_obj	*cursor;
+	t_objconf	*prev;
+	t_objconf	*next;
+	t_objconf	*cursor;
 
 	next = NULL;
 	if (alst && *alst)
@@ -82,7 +82,7 @@ t_obj	*lstremoveoneobj(t_obj **alst, int id)
 	return (NULL);
 }*/
 
-void	lstaddobj(t_obj **alst, t_obj *new)
+void	lstaddobj(t_objconf **alst, t_objconf *new)
 {
 	if (alst && *alst && new)
 	{
@@ -93,7 +93,7 @@ void	lstaddobj(t_obj **alst, t_obj *new)
 		*alst = new;
 }
 
-t_obj	addslice(t_obj obj, t_slice new)
+t_objconf	addslice(t_objconf obj, t_slice new)
 {
 	int i;
 
@@ -111,7 +111,7 @@ t_obj	addslice(t_obj obj, t_slice new)
 	return (obj);
 }
 
-t_obj	addneg(t_obj obj, t_neg new)
+t_objconf	addneg(t_objconf obj, t_neg new)
 {
 	int i;
 
@@ -129,19 +129,18 @@ t_obj	addneg(t_obj obj, t_neg new)
 	return (obj);
 }
 
-t_env	addlight(t_env e, t_light new)
+void	addlight(t_light *lights, t_light new)
 {
 	int i;
 
 	i = 0;
-	while (e.lights[i].set == TRUE && i < LIMIT_NEG)
+	while (lights[i].set == TRUE && i < LIMIT_LIGHT)
 	{
 		++i;
 	}
-	if (i < LIMIT_NEG)
+	if (i < LIMIT_LIGHT)
 	{
-		memcpy(&e.lights[i], &new, sizeof(t_light));
-		e.lights[i].set = TRUE;
+		memcpy(&lights[i], &new, sizeof(t_light));
+		lights[i].set = TRUE;
 	}
-	return (e);
 }

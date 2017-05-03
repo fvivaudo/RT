@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-int				init_negcyl(t_obj *obj, char **buffer)
+int				init_negcyl(t_objconf *obj, char **buffer)
 {
 	int			y;
 	t_neg		neg;
@@ -27,8 +27,8 @@ int				init_negcyl(t_obj *obj, char **buffer)
 			else
 				return (y);
 		}
-		else if (setorient(buffer, &y, (t_obj*)&neg));
-		else if (setslice(buffer, &y, (t_obj*)&neg));
+		else if (setorient(buffer, &y, (t_objconf*)&neg));
+		else if (setslice(buffer, &y, (t_objconf*)&neg));
 		else if (!ft_strcmp("HEIGHT", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -49,7 +49,7 @@ int				init_negcyl(t_obj *obj, char **buffer)
 	return (y);
 }
 
-int		init_negcone(t_obj *obj, char **buffer)
+int		init_negcone(t_objconf *obj, char **buffer)
 {
 	int			y;
 	t_neg		neg;
@@ -74,8 +74,8 @@ int		init_negcone(t_obj *obj, char **buffer)
 			else
 				return (y);
 		}
-		else if (setorient(buffer, &y, (t_obj*)&neg));
-		else if (setslice(buffer, &y, (t_obj*)&neg));
+		else if (setorient(buffer, &y, (t_objconf*)&neg));
+		else if (setslice(buffer, &y, (t_objconf*)&neg));
 		else
 			++y;
 	}
@@ -85,7 +85,7 @@ int		init_negcone(t_obj *obj, char **buffer)
 	return (y);
 }
 
-int		init_negsphere(t_obj *obj, char **buffer)
+int		init_negsphere(t_objconf *obj, char **buffer)
 {
 	int			y;
 	t_neg		neg;
@@ -99,7 +99,7 @@ int		init_negsphere(t_obj *obj, char **buffer)
 	while (buffer[y] != NULL && ft_strcmp(buffer[y], "NEGATIVE"))
 	{
 		if (setmat(buffer, &y, &material));
-		else if (setslice(buffer, &y, (t_obj*)&neg));
+		else if (setslice(buffer, &y, (t_objconf*)&neg));
 		else if (!ft_strcmp("RADIUS", buffer[y]))
 		{
 			if (buffer[y + 1])
@@ -125,7 +125,7 @@ int		init_negsphere(t_obj *obj, char **buffer)
 	return (y);
 }
 
-int		init_negquadric(t_obj *obj, char **buffer)
+int		init_negquadric(t_objconf *obj, char **buffer)
 {
 	int			y;
 	t_neg		neg;
@@ -142,8 +142,8 @@ int		init_negquadric(t_obj *obj, char **buffer)
 	while (buffer[y] != NULL && ft_strcmp(buffer[y], "NEGATIVE"))
 	{
 		if (setmat(buffer, &y, &material));
-		else if (setorient(buffer, &y, (t_obj *)&neg));
-		else if (setslice(buffer, &y, (t_obj *)&neg));
+		else if (setorient(buffer, &y, (t_objconf *)&neg));
+		else if (setslice(buffer, &y, (t_objconf *)&neg));
 		else if (!ft_strcmp("PARAM", buffer[y]))
 		{
 			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8] && buffer[y + 9] && buffer[y + 10])
@@ -198,7 +198,7 @@ int		init_negquadric(t_obj *obj, char **buffer)
 	return (y);
 }
 
-bool				setnegative(char **buffer, int *y, t_obj *parent)
+bool				setnegative(char **buffer, int *y, t_objconf *parent)
 {
 	if (!ft_strcmp("NEGATIVE", buffer[*y]))
 	{

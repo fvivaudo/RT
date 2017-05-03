@@ -12,7 +12,7 @@
 
 #include <rtv1.h>
 
-void	normalplane(t_env *e, t_obj *obj)
+void	normalplane(t_env *e, t_objgpu *obj)
 {
 	//vector dot > 0 check if both vectors are going in the same direction
 	//if they are not, get the reverse direction of the plane to get it's normal
@@ -26,7 +26,7 @@ void	normalplane(t_env *e, t_obj *obj)
 	}
 }
 
-void	normalsphere(t_env *e, t_obj *obj)
+void	normalsphere(t_env *e, t_objgpu *obj)
 {
 	//calcul de la normale d'une sphere
 	//get distance between new distant ray and object pos?
@@ -49,7 +49,7 @@ void	normalsphere(t_env *e, t_obj *obj)
 	}
 }
 
-void	normalcylinder(t_env *e, t_obj *obj)
+void	normalcylinder(t_env *e, t_objgpu *obj)
 {
 	t_vec	y_axis;
 	t_vec	rot_axis;
@@ -98,7 +98,7 @@ void	normalcylinder(t_env *e, t_obj *obj)
 //y = r
 //z = -r sin(rad)
 //n = e->newstart - magnitude(newstart - cone.pos) / cos(e->alpha) * cone.dir
-void	normalcone(t_env *e, t_obj *obj)
+void	normalcone(t_env *e, t_objgpu *obj)
 {
 	double tmp;
 
@@ -123,7 +123,7 @@ void	normalcone(t_env *e, t_obj *obj)
 //xn = 2*A*xi + D*yi + E*zi + G
 //yn = 2*B*yi + D*xi + F*zi + H
 //z n = 2*C*zi + E*xi + F*yi + I
-void	normalquadric(t_env *e, t_obj *obj)
+void	normalquadric(t_env *e, t_objgpu *obj)
 {
 	t_vec camdir = vectorsub(obj->pos, e->cam.eyepoint);
 	double tmpdist = vectormagnitude(camdir);

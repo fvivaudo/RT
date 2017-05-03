@@ -17,42 +17,38 @@ double	getdegree(double rad)
 	return (rad * 180 / M_PI);
 }
 
-t_obj	*intersection(t_env *e, t_ray *r, int id_ignore)
+t_objgpu	*intersection(t_env *e, t_ray *r)
 {
-	t_obj			*cursor;
-	t_obj			*res;
-	cursor = e->obj;
+	int 				i;
+	t_objgpu			*res;
+
+	i = 0;
 	res = NULL;
 	double t = MAX_RANGE;
 	//e->t is the current minimal distance to an object encountered
 
-	while (cursor)
+	while (e->objgpu[i].set == TRUE)
 	{
-		if (cursor->id == id_ignore)
-		{
-		//	cursor = cursor->nextitem;
-		//	continue;
-		}
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &t)) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &t)) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &t)) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &t)) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &t)))
+		if ((e->objgpu[i].type == TYPE_SPHERE && iraysphere(r, &e->objgpu[i], &t)) ||
+			(e->objgpu[i].type == TYPE_PLANE && irayplane(r, &e->objgpu[i], &t)) ||
+			(e->objgpu[i].type == TYPE_CYLINDER && iraycylinder(r, &e->objgpu[i], &t)) ||
+			(e->objgpu[i].type == TYPE_CONE && iraycone(r, &e->objgpu[i], &t)) ||
+			(e->objgpu[i].type == TYPE_QUADRIC && irayquadric(r, &e->objgpu[i], &t)))
 		{
 			e->t = t;
-			res = cursor;
+			res = &e->objgpu[i];
 		}
-		cursor = cursor->nextitem;
+		++i;
 	}
 	return (res);
 	// if an intersection was found
 }
 
-t_obj	*computeray(t_env *e)
+t_objgpu	*computeray(t_env *e)
 {
-	t_obj *res;
+	t_objgpu *res;
 
-	if ((res = intersection(e, &e->r, -1)))
+	if ((res = intersection(e, &e->r)))
 	{
 		e->id = res->id;
 		//e->scaled = distance between start of ray and object intersection
@@ -62,15 +58,15 @@ t_obj	*computeray(t_env *e)
 		if (res->normobj.set == TRUE) //set it somewhere to 0 somewhere
 		{
 			if (res->normobj.specificnormal == TYPE_SPHERE)
-				normalsphere(e, (t_obj*)&res->normobj);//add reversen somewhere
+				normalsphere(e, (t_objgpu*)&res->normobj);//add reversen somewhere
 			else if (res->normobj.specificnormal == TYPE_PLANE)
-				normalplane(e, (t_obj*)&res->normobj);
+				normalplane(e, (t_objgpu*)&res->normobj);
 			else if (res->normobj.specificnormal == TYPE_CYLINDER)
-				normalcylinder(e, (t_obj*)&res->normobj);
+				normalcylinder(e, (t_objgpu*)&res->normobj);
 			else if (res->normobj.specificnormal == TYPE_CONE)
-				normalcone(e, (t_obj*)&res->normobj);
+				normalcone(e, (t_objgpu*)&res->normobj);
 			else if (res->normobj.specificnormal == TYPE_QUADRIC)
-				normalquadric(e, (t_obj*)&res->normobj);
+				normalquadric(e, (t_objgpu*)&res->normobj);
 		}
 		else
 		{

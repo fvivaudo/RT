@@ -25,7 +25,7 @@ t_env			*readConfig(int fd)
 
 	e = (t_env*)malloc(sizeof(t_env));
 	reset(e, 0, 0);
-	e->obj = NULL;
+	e->objconf = NULL;
 
 
 	i = 0;
@@ -44,43 +44,63 @@ t_env			*readConfig(int fd)
 		{
 			if (!(ft_strcmp(buffer_line[0], "SPHERE")))
 			{
-				init_sphere(&e->obj, buffer_line);
+		//ft_putendl("ok0");
+				init_sphere(&e->objconf, buffer_line);
+		//ft_putendl("ok1");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CONE")))
 			{
-				init_cone(&e->obj, buffer_line);
+		//ft_putendl("ok2");
+				init_cone(&e->objconf, buffer_line);
+		//ft_putendl("ok3");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
 			{
-				init_cyl(&e->obj, buffer_line);
+		//ft_putendl("ok4");
+				init_cyl(&e->objconf, buffer_line);
+		//ft_putendl("ok5");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "PLANE")))
 			{
-				init_plane(&e->obj, buffer_line);
+		//ft_putendl("ok6");
+				init_plane(&e->objconf, buffer_line);
+		//ft_putendl("ok7");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
 			{
-				init_quadric(&e->obj, buffer_line);
+		//ft_putendl("ok8");
+				init_quadric(&e->objconf, buffer_line);
+		//ft_putendl("ok9");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
 			{
+		//ft_putendl("ok10");
 				init_light(e, buffer_line);
+		//ft_putendl("ok11");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "CAMERA")))
 			{
+		//ft_putendl("ok12");
 				init_cam(e, buffer_line);
+		//ft_putendl("ok13");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "COMPOSE")))
 			{
-				init_compose(&e->obj, buffer_line);
+		//ft_putendl("ok14");
+				init_compose(&e->objconf, buffer_line);
+		//ft_putendl("ok15");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
 			{
-				init_object(&e->obj, buffer_line);
+		//ft_putendl("ok16");
+				init_object(&e->objconf, buffer_line);
+		//ft_putendl("ok17");
 			}
 			else if (!(ft_strcmp(buffer_line[0], "EFFECT")))
 			{
+		//ft_putendl("ok18");
 				init_effect(e, buffer_line);
+		//ft_putendl("ok19");
 			//	printf("\neffect %g, red %g , green %g ,  blue %g\n", e->col.effect, e->col.ered, e->col.egreen, e->col.eblue);
 			}
 		}
@@ -105,10 +125,10 @@ int 			init_effect(t_env *e, char **buffer)
 	return (0);
 }
 
-int				init_cyl(t_obj **lstobj, char **buffer)
+int				init_cyl(t_objconf **lstobj, char **buffer)
 {
 	int			y;
-	t_obj		*obj;
+	t_objconf		*obj;
 	t_mat		material;
 
 	obj = init_null();
@@ -166,10 +186,10 @@ int				init_cyl(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_cone(t_obj **lstobj, char **buffer)
+int		init_cone(t_objconf **lstobj, char **buffer)
 {
 	int			y;
-	t_obj		*obj;
+	t_objconf		*obj;
 	t_mat		material;
 
 	obj = init_null();
@@ -216,10 +236,10 @@ int		init_cone(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_sphere(t_obj **lstobj, char **buffer)
+int		init_sphere(t_objconf **lstobj, char **buffer)
 {
 	int			y;
-	t_obj		*obj;
+	t_objconf		*obj;
 	t_mat		material;
 
 	obj = init_null();
@@ -268,10 +288,10 @@ int		init_sphere(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_plane(t_obj **lstobj, char **buffer)
+int		init_plane(t_objconf **lstobj, char **buffer)
 {
 	int			y;
-	t_obj		*obj;
+	t_objconf		*obj;
 	t_mat		material;
 
 
@@ -312,10 +332,10 @@ int		init_plane(t_obj **lstobj, char **buffer)
 	return (y);
 }
 
-int		init_quadric(t_obj **lstobj, char **buffer)
+int		init_quadric(t_objconf **lstobj, char **buffer)
 {
 	int			y;
-	t_obj		*obj;
+	t_objconf		*obj;
 	t_mat		material;
 	t_quadric	quad;
 
@@ -419,11 +439,11 @@ t_quadric initquad(double param[10])
 
 //should grab one or several object with same id in the scene and add em all to a list of children
 //init compose only sets up components and remove them from the scene, making it and invisible object
-void		init_compose(t_obj **lstobj, char **buffer)
+void		init_compose(t_objconf **lstobj, char **buffer)
 {
 	int 		y;
-	t_obj		*obj;
-	t_obj		*tmp;
+	t_objconf		*obj;
+	t_objconf		*tmp;
 
 	y = 1;
 	//create new parent
@@ -452,7 +472,7 @@ void		init_compose(t_obj **lstobj, char **buffer)
 			{
 				lstaddobj(&obj->nextchild, tmp);
 			}
-			/*t_obj *cursor = (obj->nextchild);
+			/*t_objconf *cursor = (obj->nextchild);
 			printf("reset\n");
 			while (cursor)
 			{
@@ -465,14 +485,14 @@ void		init_compose(t_obj **lstobj, char **buffer)
 	lstaddobj(lstobj, obj);
 }
 
-t_obj 				*init_null(void)
+t_objconf 				*init_null(void)
 {
 	int i;
 
 	i = 0;
-	t_obj * obj;
+	t_objconf * obj;
 
-	obj = (t_obj*)malloc(sizeof(t_obj));
+	obj = (t_objconf*)malloc(sizeof(t_objconf));
 	obj->id = 0;
 	obj->nextitem = NULL;
 	obj->nextchild = NULL;
@@ -513,7 +533,7 @@ bool			 	setmat(char **buffer, int *y, t_mat *mat)
 	return (FALSE);
 }
 
-bool				setorient(char **buffer, int *y, t_obj *obj)
+bool				setorient(char **buffer, int *y, t_objconf *obj)
 {
 	if (!ft_strcmp("ORIENTATION", buffer[*y]))
 	{
@@ -529,7 +549,7 @@ bool				setorient(char **buffer, int *y, t_obj *obj)
 	return (FALSE);
 }
 
-bool				setslice(char **buffer, int *y, t_obj *obj)
+bool				setslice(char **buffer, int *y, t_objconf *obj)
 {
 	t_slice slice;
 
@@ -537,7 +557,7 @@ bool				setslice(char **buffer, int *y, t_obj *obj)
 	{
 		if (buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3] && buffer[*y + 4] && buffer[*y + 5] && buffer[*y + 6])
 		{
-			//slice = (t_obj*)malloc(sizeof(t_obj));
+			//slice = (t_objconf*)malloc(sizeof(t_objconf));
 			slice.pos = vectorinit(ft_datoi(buffer[*y + 1]),
 			ft_datoi(buffer[*y + 2]), ft_datoi(buffer[*y + 3]));
 			slice.dir = vectorinit(ft_datoi(buffer[*y + 4]),
@@ -643,17 +663,17 @@ void		init_cam(t_env *e, char **buffer)
 }
 //init object will set up the composed object rotation and position and allow it to be rendered
 // by copying its component into the scene
-int			init_object(t_obj **lstobj, char **buffer)
+int			init_object(t_objconf **lstobj, char **buffer)
 {
 	int 		y;
-	t_obj		*obj;
-	t_obj		*cursor;
+	t_objconf	*obj;
+	t_objconf	*cursor;
 	int 		id; // id of object(s) added to the scene
 
 	obj = NULL;
 	y = 2;
 	id = 0;
-	//obj = (t_obj*)malloc(sizeof(t_obj));
+	//obj = (t_objconf*)malloc(sizeof(t_objconf));
 
 	if (buffer[1])
 	{
@@ -721,11 +741,12 @@ void	init_light(t_env *e, char **buffer)
 {
 	int			y;
 	t_light		light;
-
 	//light = (t_light*)malloc(sizeof(t_light));
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
+	{
 		light.pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+	}
 	else
 	{
 		return;
@@ -750,16 +771,16 @@ void	init_light(t_env *e, char **buffer)
 			++y;
 		}
 	}
-	*e = addlight(*e, light);
+	addlight(e->lights, light);
 }
 
 
 
-t_obj	*copyobj(t_obj *obj)
+t_objconf	*copyobj(t_objconf *obj)
 {
-	t_obj *copy;
+	t_objconf *copy;
 
-	copy = (t_obj*)malloc(sizeof(t_obj));
+	copy = (t_objconf*)malloc(sizeof(t_objconf));
 	copy->id = obj->id;
 	//copy->id = obj->id;
 	//copy->parent = obj->parent;
@@ -795,7 +816,7 @@ t_obj	*copyobj(t_obj *obj)
 	return (copy);
 }
 
-void 		rotateinnercomponents(t_obj *obj, t_obj *child)
+void 		rotateinnercomponents(t_objconf *obj, t_objconf *child)
 {
 	int i;
 	/*
@@ -835,10 +856,10 @@ void 		rotateinnercomponents(t_obj *obj, t_obj *child)
 	}*/
 }
 
-void		extractobj(t_obj **lstobj, t_obj *obj, int id)
+void		extractobj(t_objconf **lstobj, t_objconf *obj, int id)
 {
-	t_obj *tmp;
-	t_obj *cursor;
+	t_objconf *tmp;
+	t_objconf *cursor;
 
 	cursor = obj->nextchild;
 	while (cursor)

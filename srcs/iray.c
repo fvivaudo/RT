@@ -29,7 +29,7 @@ int		iraycone2(double abcd[4], double t[2], double *t0)
 	return (FALSE);
 }
 
-int		iraycone(t_ray *r, t_obj *obj, double *t0)
+int		iraycone(t_ray *r, t_objgpu *obj, double *t0)
 {
 	t_vec	delt_p;
 	t_vec	tmp[3];
@@ -99,7 +99,7 @@ int		iraycone(t_ray *r, t_obj *obj, double *t0)
 	return (FALSE);
 }
 
-int		irayplane(t_ray *r, t_obj *obj, double *t0)
+int		irayplane(t_ray *r, t_objgpu *obj, double *t0)
 {
 	t_vec	tmp;
 	double	t[2];
@@ -157,7 +157,7 @@ int		irayplane(t_ray *r, t_obj *obj, double *t0)
 //Aq = Axd2 + Byd2 + Czd2 + Dxdyd + Exdzd + Fydzd
 //Bq = 2*Axoxd + 2*Byoyd + 2*Czozd + D(xoyd + yoxd) + E(xozd + zoxd) + F(yozd + ydzo) + Gxd + Hyd + Izd
 //Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
-int		irayquadric(t_ray *r, t_obj *obj, double *t0)
+int		irayquadric(t_ray *r, t_objgpu *obj, double *t0)
 {
 	double	abcd[4];
 	bool	ret;
@@ -283,7 +283,7 @@ int		irayquadric(t_ray *r, t_obj *obj, double *t0)
 
 //Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
 
-int		iraycylinder(t_ray *r, t_obj *obj, double *t0)
+int		iraycylinder(t_ray *r, t_objgpu *obj, double *t0)
 {
 	double	abcd[4];
 	t_vec	cam;
@@ -351,7 +351,7 @@ int		iraycylinder(t_ray *r, t_obj *obj, double *t0)
 //rotate slice
 
 //returns a distance
-int		irayslice(t_ray *r, t_obj *obj, double *dist)
+int		irayslice(t_ray *r, t_objgpu *obj, double *dist)
 {
 	t_vec	tmp;
 	double	tmpt;
@@ -467,9 +467,9 @@ int		irayslice(t_ray *r, t_obj *obj, double *dist)
 }
 
 //The problem lies in computeshadow, do my intersection works well when i go from the hole toward light?
-int		irayneg(t_ray *r, t_obj *obj, double *dist)
+int		irayneg(t_ray *r, t_objgpu *obj, double *dist)
 {
-//	t_obj	*cursor;
+//	t_objgpu	*cursor;
 	int 	deepestobj;
 	double 	tmax;
 	double	current;
@@ -507,11 +507,11 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist)
 	//	printf("obj->nextneg[i].pos.x = %g, obj->nextneg[i].pos.y = %g, obj->nextneg[i].pos.z = %g\n", obj->nextneg[i].pos.x, obj->nextneg[i].pos.y, obj->nextneg[i].pos.z);
 	//	printf("obj->nextneg[i].dir.x = %g, obj->nextneg[i].dir.y = %g, obj->nextneg[i].dir.z = %g\n", obj->nextneg[i].dir.x, obj->nextneg[i].dir.y, obj->nextneg[i].dir.z);
 		tmax = MAX_RANGE;
-		if ((obj->nextneg[i].type == TYPE_SPHERE && iraysphere(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_PLANE && irayplane(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_CYLINDER && iraycylinder(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_CONE && iraycone(r, (t_obj*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_QUADRIC && irayquadric(r, (t_obj*)(&obj->nextneg[i]), &tmax)))
+		if ((obj->nextneg[i].type == TYPE_SPHERE && iraysphere(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_PLANE && irayplane(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_CYLINDER && iraycylinder(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_CONE && iraycone(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
+			(obj->nextneg[i].type == TYPE_QUADRIC && irayquadric(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)))
 		{
 			if (obj->nextneg[i].t[1] == DOESNOTEXIST)
 			{
@@ -591,7 +591,7 @@ int		irayneg(t_ray *r, t_obj *obj, double *dist)
 
 //negative object model working with shadow
 //a negative object going through an object (t0 and t1 of negative larger than both t0 and t1 of native object)
-int		iraysphere(t_ray *r, t_obj *obj, double *t0)
+int		iraysphere(t_ray *r, t_objgpu *obj, double *t0)
 {
 	double	abcdiscr[5];
 	t_vec	dist;

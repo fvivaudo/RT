@@ -111,7 +111,9 @@ void		refract(t_env *e)
 
 		coef *= e->cmat.refraction;
 		double fOldRefractionCoef = e->crefraction;
-		e->obj->reversen = FALSE;
+
+		//I dont remember what this does....
+	/*	e->obj->reversen = FALSE;
 		if (e->obj->t[1] != DOESNOTEXIST)
 		{
 			e->crefraction = 1.0;
@@ -120,7 +122,7 @@ void		refract(t_env *e)
 		else
 		{
 			e->crefraction = e->cmat.refraction;
-		}
+		}*/
 
 		e->r.start = vectoradd(e->newstart, e->r.dir);
 		e->r.dir = vectoradd(e->r.dir,vectorscale(fCosThetaI, e->n));
@@ -138,7 +140,7 @@ t_color			reflect_and_refract(t_env e)
 	t_color			refracolor;
 	t_color			res;
 	t_vec			tmp;
-	t_obj			*collide;
+	t_objgpu			*collide;
 
 
 	e.t = MAX_RANGE;
@@ -303,11 +305,28 @@ void			get_img_pos(int *x, int *y, int inter)
 	}
 }
 
-t_obj	*copyallobj(t_obj *obj)
+void	copyallobj(t_objgpu *copy, t_objconf *obj)
 {
-	t_obj *copy;
+	int 		i;
 
-	copy = (t_obj*)malloc(sizeof(t_obj));
+
+	i = 0;
+	while (i < LIMIT_OBJ)
+	{
+		copy[i].set = FALSE;
+		++i;
+	}
+
+	i = 0;
+	while (obj && i < LIMIT_OBJ)
+	{
+		ft_memcpy(&copy[i], obj, sizeof(t_objgpu));
+		copy[i].set = TRUE;
+		obj = obj->nextitem;
+		++i;
+	}
+
+/*
 	copy->id = obj->id;
 	//copy->id = obj->id;
 	//copy->parent = obj->parent;
@@ -323,15 +342,14 @@ t_obj	*copyallobj(t_obj *obj)
 
 	ft_memcpy(copy->nextneg, obj->nextneg, sizeof(t_neg) * LIMIT_NEG);
 	ft_memcpy(copy->nextslice, obj->nextslice, sizeof(t_slice) * LIMIT_SLICE);
-	/*if (obj->nextslice)
+	if (obj->nextslice)
 	{
 		copy->nextslice = copyallobj(obj->nextslice);
-	}*/
+	}
 	if (obj->nextitem)
 	{
 		copy->nextitem = copyallobj(obj->nextitem);
-	}
-	return (copy);
+	}*/
 }
 
 /*t_cam copycam(t_cam cam)
@@ -366,54 +384,55 @@ void		effect(t_env *new, t_env *e)
 
 void			*cast_ray_thread(void *e)
 {
-	t_env 	new;
+	t_env 	*new;
 	t_env 	*env;
 	int 	interval;
 
+	new = (t_env*)malloc(sizeof(t_env));
 	interval = ((t_thread_task*)e)->i;
 	env = ((t_thread_task*)e)->arg;
 	//printf("interval = %d\n", interval);
 
-	new.obj = env->obj;
-	new.cam = env->cam;
-	ft_memcpy(&new.lights, &env->lights, sizeof(t_light) * LIMIT_LIGHT);
-//	new.lights = env->lights;
-	new.x = 0;
-	new.y = 0;
-	get_img_pos(&new.x, &new.y, interval);
+	ft_memcpy(&new->objgpu, &env->objgpu, sizeof(t_objgpu) * LIMIT_OBJ); // switch limit obj for size stored somewhere?
+	new->cam = env->cam;
+	ft_memcpy(&new->lights, &env->lights, sizeof(t_light) * LIMIT_LIGHT);
+//	new->lights = env->lights;
+	new->x = 0;
+	new->y = 0;
+	get_img_pos(&new->x, &new->y, interval);
 	//printf("effect %g, red %g , green %g ,  blue %g\n", env->col.effect, env->col.ered, env->col.egreen, env->col.eblue);
 
-//	new.obj = copyallobj(*env->obj);
-//	new.cam = env->cam;
-//	new.lights = copyalllights(env->lights); // maybe copy a malloced version for each thread?
+//	new->obj = copyallobj(*env->obj);
+//	new->cam = env->cam;
+//	new->lights = copyalllights(env->lights); // maybe copy a malloced version for each thread?
 	
 	while (1)
 	{
-		reset(&new, new.x, new.y);
-		new.col = reflect_and_refract(new);
+		reset(new, new->x, new->y);
+		new->col = reflect_and_refract(*new);
 	
 	//	printf("env->effect = %g, env->ered = %g, env->egreen = %g, env->eblue= %g\n", env->effect, env->ered, env->egreen, env->eblue);
 		if (env->effect == 1)
-			effect(&new, env);
-		if (new.id != -1) //Ambient shading has to take place after every reflection took place
+			effect(new, env);
+		if (new->id != -1) //Ambient shading has to take place after every reflection took10 place
 		{
-			new.col.red += AMBIANT_SHADING * new.cmat.diffuse.red;
-			new.col.green += AMBIANT_SHADING * new.cmat.diffuse.green;
-			new.col.blue += AMBIANT_SHADING * new.cmat.diffuse.blue;
+			new->col.red += AMBIANT_SHADING * new->cmat.diffuse.red;
+			new->col.green += AMBIANT_SHADING * new->cmat.diffuse.green;
+			new->col.blue += AMBIANT_SHADING * new->cmat.diffuse.blue;
 			//exposure/ saturation
-			new.col.red = 1.0 - exp(new.col.red * EXPOSURE);
-			new.col.blue = 1.0 - exp(new.col.blue * EXPOSURE);
-			new.col.green = 1.0 - exp(new.col.green * EXPOSURE);
+			new->col.red = 1.0 - exp(new->col.red * EXPOSURE);
+			new->col.blue = 1.0 - exp(new->col.blue * EXPOSURE);
+			new->col.green = 1.0 - exp(new->col.green * EXPOSURE);
 		}
 
 
-		update_img(&new, new.x, new.y);
-		if (new.x >= WIDTH && new.y >= HEIGHT)
+		update_img(new, new->x, new->y);
+		if (new->x >= WIDTH && new->y >= HEIGHT)
 		{
 		//	pthread_cond_broadcast(&e->cond, &e->mutex);
 			break;
 		}
-		get_img_pos(&new.x, &new.y, interval);
+		get_img_pos(&new->x, &new->y, interval);
 	}
 	return (NULL);
 }
@@ -427,7 +446,9 @@ int				main(int ac, char **av)
 	pthread_t		pth[MAX_THREAD];
 	t_thread_task	arg;
 	int				i;
-
+	printf("%ld\n", sizeof(t_env));
+	printf("%ld\n", sizeof(t_objgpu));
+	printf("%ld\n", sizeof(t_objconf));
 	i = 0;
 	if (ac != 2 || (fd = open(av[1], O_RDONLY)) <= -1 || !(original = readConfig(fd)))
 	{
@@ -435,27 +456,27 @@ int				main(int ac, char **av)
 		return (0);
 	}
 	arg.i = 0;
-		//ft_putendl("alive1");
+	//	ft_putendl("alive1");
 	while (arg.i < MAX_THREAD)
 	{
 		++arg.i;
-	//	ft_putendl("alive2");
 		copy = (t_env*)malloc(sizeof(t_env));
 		copy->effect = original->effect;
 		copy->ered = original->ered;
 		copy->egreen = original->egreen;
 		copy->eblue = original->eblue;
 
-		copy->obj = copyallobj(original->obj);
+		copyallobj(copy->objgpu, original->objconf);
+
 		copy->cam = original->cam;
 	//	copy->lights = original->lights; // maybe copy a malloced version for each thread?
 		ft_memcpy(&copy->lights, &original->lights, sizeof(t_light) * LIMIT_LIGHT);
 		arg.arg = (void*)copy;
-		pthread_create(&pth[arg.i - 1], NULL, cast_ray_thread, (void *)&arg);
+	//	pthread_create(&pth[arg.i - 1], NULL, cast_ray_thread, (void *)&arg);
 		usleep(100); //better way to do things?
 	}
 //	++arg.i;
-//	cast_ray_thread((void*)&arg);
+	cast_ray_thread((void*)&arg);
 	//	ft_putendl("alive3");
 //	e->available_ressource = 1;
 //	e->y = 0;

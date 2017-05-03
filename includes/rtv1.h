@@ -32,10 +32,10 @@
 # include <stdbool.h>
 
 
-# define LIMIT_SLICE	20
+# define LIMIT_SLICE	10
 # define LIMIT_NEG		20
-# define LIMIT_OBJ		500
-# define LIMIT_LIGHT	100
+# define LIMIT_OBJ		20
+# define LIMIT_LIGHT	10
 
 # define TRUE					1
 # define FALSE					0
@@ -154,8 +154,6 @@ typedef struct		s_color
 	double			red;
 	double			green;
 	double			blue;
-	
-
 }					t_color;
 
 typedef struct		s_light
@@ -174,7 +172,7 @@ typedef struct		s_mat
 	double			refraction;
 	double			reflection;
 	double			brillance; // can be converted to t_color
-	int				perlin[512];
+	//int				perlin[512];
 	double			bump;
 }					t_mat;
 
@@ -208,7 +206,7 @@ typedef struct		s_neg
 // /!\ Conserve object order similar to t_neg /!\
 //parent is an object containing only a position, orientation, and child objects
 //orientation and position of child objects become local
-typedef struct		s_obj
+typedef struct		s_objconf
 {
 	//int 			parent;
 
@@ -237,10 +235,42 @@ typedef struct		s_obj
 	t_neg			nextneg[LIMIT_NEG];
 
 	int				id;
-	struct s_obj	*nextitem;
-	struct s_obj	*nextchild;
-}					t_obj;
+	struct s_objconf	*nextitem;
+	struct s_objconf	*nextchild;
+}					t_objconf;
 
+
+typedef struct		s_objgpu
+{
+	//int 			parent;
+
+	int				type;
+	t_mat			material;
+	t_vec			pos;
+	t_vec			dir;
+	double			rad;
+	double			height;
+	double			alpha;
+	t_quadric		quad;
+	
+	bool			reversen; //useful if we collide with the inside of an object
+	double 			rotation; // rotation degree on axis
+	double			t[2]; //storage needed for negative objects
+	t_slice			nextslice[LIMIT_SLICE];
+	int 			specificnormal;
+
+	//in the case of a negative object (or eventually a composed one)
+	//we need to have a varaible normal function
+	//ex : negative sphere in cylinder will need
+	//sphere normal calculation and object information
+
+	//void 			(*normal)(struct s_env *, struct s_obj *obj);
+	t_neg 			normobj;
+	t_neg			nextneg[LIMIT_NEG];
+
+	int				id;
+	bool			set;
+}					t_objgpu;
 
 typedef struct 		s_cam
 {
@@ -281,7 +311,8 @@ typedef struct		s_env
 	t_vec			scaled; //temporary
 	t_vec			newstart; //intersection point with an object
 	t_vec			n; //vector normal
-	t_obj			*obj; //start of object list
+	t_objgpu		objgpu[LIMIT_OBJ]; //object list used by gpu
+	t_objconf		*objconf; //start of object list before gpu processing
 	t_vec			vdir;
 	int				id; //new object id
 	double			lambert;
@@ -301,36 +332,42 @@ typedef struct		s_env
 	double			reflecoef;
 }					t_env;
 
-void				cast_ray(t_env *e);
 t_color				colorinit(double red, double green, double blue);
-t_obj				*computeray(t_env *e);
-int					deal_shadow(t_env *e);
+
 
 int 				init_effect(t_env *e,char **buffer);
 t_env				*readConfig(int fd);
-t_obj 				*init_null(void);
+t_objconf 			*init_null(void);
 //bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
-bool				setslice(char **buffer, int *y, t_obj *obj);
-bool				setorient(char **buffer, int *y, t_obj *obj);
+/*Conf*/
+bool				setslice(char **buffer, int *y, t_objconf *obj);
+bool				setorient(char **buffer, int *y, t_objconf *obj);
 bool			 	setmat(char **buffer, int *y, t_mat *mat);
-void				extractobj(t_obj **lstobj, t_obj *obj, int id);
+void				extractobj(t_objconf **lstobj, t_objconf *obj, int id);
 
 void				init_cam(t_env *e, char **buffer);
-int					init_cone(t_obj **lstobj, char **buffer);
-int					init_cyl(t_obj **lstobj, char **buffer);
+int					init_cone(t_objconf **lstobj, char **buffer);
+int					init_cyl(t_objconf **lstobj, char **buffer);
 void				init_light(t_env *e, char **buffer);
-int					init_plane(t_obj **lstobj, char **buffer);
-int					init_sphere(t_obj **lstobj, char **buffer);
-int					init_quadric(t_obj **lstobj, char **buffer);
-void				init_compose(t_obj **lstobj, char **buffer);
-int					init_object(t_obj **lstobj, char **buffer);
-t_obj				*intersection(t_env *e, t_ray *r, int id_ignore);
-int					iraycone(t_ray *r, t_obj *co, double *t0);
+int					init_plane(t_objconf **lstobj, char **buffer);
+int					init_sphere(t_objconf **lstobj, char **buffer);
+int					init_quadric(t_objconf **lstobj, char **buffer);
+void				init_compose(t_objconf **lstobj, char **buffer);
+int					init_object(t_objconf **lstobj, char **buffer);
+t_objconf			addneg(t_objconf obj, t_neg new);
+void				lstaddobj(t_objconf **alst, t_objconf *new);
+t_objconf			addslice(t_objconf obj, t_slice new);
+void				addlight(t_light *lights, t_light new);
+t_objconf			*lstremoveoneobj(t_objconf **alst, int id);
+bool				setnegative(char **buffer, int *y, t_objconf *parent);
+
+t_objgpu			*intersection(t_env *e, t_ray *r);
+int					iraycone(t_ray *r, t_objgpu *co, double *t0);
 int					iraycone2(double abcd[4], double t[2], double *t0);
-int					iraycylinder(t_ray *r, t_obj *cyl, double *t0);
-int					irayplane(t_ray *r, t_obj *p, double *t);
-int					iraysphere(t_ray *r, t_obj *s, double *t0);
-int					irayquadric(t_ray *r, t_obj *obj, double *t0);
+int					iraycylinder(t_ray *r, t_objgpu *cyl, double *t0);
+int					irayplane(t_ray *r, t_objgpu *p, double *t);
+int					iraysphere(t_ray *r, t_objgpu *s, double *t0);
+int					irayquadric(t_ray *r, t_objgpu *obj, double *t0);
 void				print_img(unsigned char img[3 * WIDTH * HEIGHT]);
 void				reset(t_env *e, int x, int y);
 unsigned char		*update_img(t_env *e, int x, int y);
@@ -348,30 +385,28 @@ double				vectormagnitude(t_vec v);
 t_vec				vectorrotate(t_vec v, t_vec axis, double angle);
 t_vec 				vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta) ;
 
+void				cast_ray(t_env *e);
+t_objgpu			*computeray(t_env *e);
+int					deal_shadow(t_env *e);
 double				computeshadow(t_env *e, t_ray *r, double light, double dist);
 
 double				noise(double x, double y, double z);
 t_quadric			quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos);
 
-t_obj				addneg(t_obj obj, t_neg new);
-void				lstaddobj(t_obj **alst, t_obj *new);
-t_obj				addslice(t_obj obj, t_slice new);
-t_env				addlight(t_env e, t_light new);
-t_obj				*lstremoveoneobj(t_obj **alst, int id);
 
-void				normalsphere(t_env *e, t_obj *obj);
-void				normalplane(t_env *e, t_obj *obj);
-void				normalcylinder(t_env *e, t_obj *obj);
-void				normalcone(t_env *e, t_obj *obj);
-void				normalquadric(t_env *e, t_obj *obj);
 
-int					irayneg(t_ray *r, t_obj *obj, double *dist);
-int					irayslice(t_ray *r, t_obj *obj, double *dist);
+void				normalsphere(t_env *e, t_objgpu *obj);
+void				normalplane(t_env *e, t_objgpu *obj);
+void				normalcylinder(t_env *e, t_objgpu *obj);
+void				normalcone(t_env *e, t_objgpu *obj);
+void				normalquadric(t_env *e, t_objgpu *obj);
+
+int					irayneg(t_ray *r, t_objgpu *obj, double *dist);
+int					irayslice(t_ray *r, t_objgpu *obj, double *dist);
 
 void				swapdouble(double *a, double *b);
 
 t_vec				bump_mapping(t_env *e);
 void				blinn_phong(t_env *e, t_vec lightray_dir);
 
-bool				setnegative(char **buffer, int *y, t_obj *parent);
 #endif
