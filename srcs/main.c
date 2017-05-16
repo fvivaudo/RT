@@ -200,6 +200,7 @@ t_color			reflect_and_refract(t_env e)
 	//ft_putendl("ok0");
 	double R0 = pow((e.crefraction - e.cmat.refraction) / (e.crefraction + e.cmat.refraction), 2);
 
+	//printf("r0%g\n", R0);
 	//ft_putendl("ok1");
 	//shlick's approximation
 

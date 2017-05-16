@@ -94,33 +94,22 @@ void effect_sepia(unsigned char *img)
 {
 	int y;
 	int x;
-	int tr;
-	int tg;
-	int tb;
+	int rgb[3];
 
 	y = -1;
 	while (++y < HEIGHT && (x = -1))
 		while (++x < WIDTH)
 		{
-			tr = (int)(0.393 * IMG_RED(x,y) + 0.769 * IMG_GREEN(x,y) + 0.189
+			rgb[0] = (int)(0.393 * IMG_RED(x,y) + 0.769 * IMG_GREEN(x,y) + 0.189
 			* IMG_BLUE(x,y));
-			tg = (int)(0.349 * IMG_RED(x,y) + 0.686 * IMG_GREEN(x,y) + 0.168
+			rgb[1] = (int)(0.349 * IMG_RED(x,y) + 0.686 * IMG_GREEN(x,y) + 0.168
 			* IMG_BLUE(x,y));
-			tb = (int)(0.272 * IMG_RED(x,y) + 0.534 * IMG_GREEN(x,y) + 0.131
+			rgb[2] = (int)(0.272 * IMG_RED(x,y) + 0.534 * IMG_GREEN(x,y) + 0.131
 			 * IMG_BLUE(x,y));
-			if(tr > 255)
-				 IMG_RED(x,y) = 255;
-			 else
-				 IMG_RED(x,y) = tr;
-			 if(tg > 255)
-				 IMG_GREEN(x,y) = 255;
-			 else
-				 IMG_GREEN(x,y) = tg;
-			 if(tb > 255)
-				 IMG_BLUE(x,y) = 255;
-			 else
-				 IMG_BLUE(x,y) = tb;
-			}
+			IMG_RED(x,y) = (rgb[0] > 255) ? 255 : rgb[0];
+			IMG_GREEN(x,y) = (rgb[1] > 255) ? 255 : rgb[1];
+			IMG_BLUE(x,y) = (rgb[2] > 255) ? 255 : rgb[2];
+		}
 }
 
 void effect_grayscale(unsigned char *img)
@@ -485,13 +474,12 @@ void	print_img(t_effects *effects,unsigned char img[3 * WIDTH * HEIGHT], int ani
 			color = (img[(x + y * WIDTH) * 3 + 2])
 					+ (img[(x + y * WIDTH) * 3 + 1] * 256)
 					+ (img[(x + y * WIDTH) * 3] * 256 * 256);
-			draw(&e, x, y, color);
+		//	draw(&e, x, y, color);
 			put_pixel32(e.surface, x, y, color);
 		}
-	pack(&e);
-	if (effects->stereo)
-					return;
-	SDL_SaveBMP(e.surface, name_anime(anim));
+	//pack(&e);
+	if (!effects->stereo)
+		SDL_SaveBMP(e.surface, name_anime(anim));
 }
 
 void	swapdouble(double *a, double *b)
