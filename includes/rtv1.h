@@ -47,7 +47,7 @@
 # define FOV					120
 # define MAX_RANGE				20000.0
 # define MAX_DEPTH_LEVEL		5
-# define AMBIANT_SHADING		1
+# define AMBIANT_SHADING		0.15
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
 

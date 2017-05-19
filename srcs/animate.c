@@ -18,20 +18,34 @@
 //     return ret;
 // }
 
-void  interpolation_linear(double n1, double n2, int frames)
+double  *tabinterpolation_linear(double n1, double n2, int frames)
 {
-  double ret;
-  double step;
+  double *ret;
+  double dif;
   double n;
-  double i;
+  int i;
 
+  ret = malloc(frames * sizeof(double));
   i = 0;
+  dif = n1 + (n2 - n1);
   while (++i < frames)
   {
     n = i / frames;
-    printf("n = %g ", n);
+    ret[i - 1] =  n1+ n * dif;
   }
+  return ret;
 }
+
+// double  interpolation_linear(double n1, double n2, double n)
+// {
+//   double ret;
+//   double dif;
+//   int i;
+//
+//   i = 0;
+//   dif = ;
+//   return (n1 + n * (n2 - n1));
+// }
 
 void  interpolation_slow_to_fast(double n1, double n2, int frames)
 {
@@ -44,36 +58,6 @@ void  interpolation_slow_to_fast(double n1, double n2, int frames)
   while (++i < frames)
   {
     n = i / frames;
-    step = n1 - (n1 - n2) * n * n;
-  }
-}
-
-float smootherstep(float edge0, float edge1, float x)
-{
-    // Scale, and clamp x to 0..1 range
-    x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
-    // Evaluate polynomial
-    return x*x*x*(x*(x*6 - 15) + 10);
-}
-
-float clamp(float x, float lowerlimit, float upperlimit)
-{
-    if (x < lowerlimit) x = lowerlimit;
-    if (x > upperlimit) x = upperlimit;
-    return x;
-}
-
-void  interpolation_smooth(double n1, double n2, int frames)
-{
-  double ret;
-  double step;
-  double n;
-  double i;
-
-  i = 0;
-  while (++i < frames)
-  {
-    n = i / (frames / 2);
     step = n1 - (n1 - n2) * n * n;
   }
 }
@@ -94,10 +78,10 @@ void  interpolation_fast_to_slow(double n1, double n2, int frames)
   }
 }
 
-// int main()
-// {
-//
-//   printf("TEST \n");
-//   interp_()
-//   return 0;
-// }
+int main()
+{
+
+  printf("TEST \n");
+  interpolation_linear(-30, 40, 20);
+  return 0;
+}

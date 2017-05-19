@@ -288,13 +288,10 @@ void effect_black(unsigned char *img, unsigned char *img2)
 
 void effect(t_effects *effect, unsigned char *img) {
 	int i;
-
-	i = 0;
 	unsigned char img2[3 * WIDTH * HEIGHT];
 
-
+	i = 0;
 	ft_memcpy(img2, img, (WIDTH * HEIGHT * 3));
-	printf("%d\n", effect->grayscale);
 	while (++i < EFFECT_MAX)
 	{
 		if (effect->grayscale == i)
@@ -442,6 +439,18 @@ char *name_anime(int anim)
 	return ret;
 }
 
+t_display  *singleton_display(t_display *e) {
+		static char init = 0;
+		int i;
+		static t_display *ret;
+		if (!init)
+		{
+			ret = ft_memalloc(sizeof(t_display));
+			init_display(ret);
+			init = 1;
+		}
+		*e = *ret;
+}
 
 void	print_img(t_effects *effects,unsigned char img[3 * WIDTH * HEIGHT], int anim)
 {
@@ -450,7 +459,8 @@ void	print_img(t_effects *effects,unsigned char img[3 * WIDTH * HEIGHT], int ani
 	int x;
 	int color;
 
-	init_display(&e);
+	singleton_display(&e);
+	//init_display(&e);
 	effect(effects, img);
 	if (effects->stereo)
 	{
@@ -474,10 +484,10 @@ void	print_img(t_effects *effects,unsigned char img[3 * WIDTH * HEIGHT], int ani
 			color = (img[(x + y * WIDTH) * 3 + 2])
 					+ (img[(x + y * WIDTH) * 3 + 1] * 256)
 					+ (img[(x + y * WIDTH) * 3] * 256 * 256);
-		//	draw(&e, x, y, color);
+			draw(&e, x, y, color);
 			put_pixel32(e.surface, x, y, color);
 		}
-	//pack(&e);
+	pack(&e);
 	if (!effects->stereo)
 		SDL_SaveBMP(e.surface, name_anime(anim));
 }

@@ -233,7 +233,7 @@ double				ft_sin(double x);
 double				ft_tan(double x);
 
 void				ft_lstrev(t_list **alst, size_t size);
-t_list				*ft_lstnew (void const *content, size_t content_size);
+t_list			*ft_lstnew (void const *content, size_t content_size);
 void				ft_lstdel(t_list **alst, void (*del)(void *, size_t));
 void				ft_lstadd(t_list **alst, t_list *new);
 void				ft_lstnadd(t_list **alst, t_list *new, size_t n);
@@ -241,8 +241,8 @@ void				ft_lstdelone(t_list **alst, void (*del)(void*, size_t));
 void				ft_lstndelone(t_list **alst, size_t n,
 					void (*del)(void*, size_t));
 void				ft_lstiter(t_list *lst, void (*f)(t_list *elem));
-t_list				*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
+t_list			*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
 void				ft_lstaddb(t_list **alst, t_list *new);
-t_list				*ft_lstget(t_list *alst, size_t n);
+t_list			*ft_lstget(t_list *alst, size_t n);
 
 #endif

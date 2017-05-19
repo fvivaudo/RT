@@ -37,18 +37,203 @@ void env_effect_init(t_effects *e)
 	e->anim = 1;
 }
 
+// pour chaque line
+// 	add to tlist
+// pour chaque t_list
+//
+// 	while tlist->next == ANIM
+// 		create interpolation list entre dernier t_list->content et anim
+// 		add interpolation to last tlist->content
+// 		delete tlist anim
+
+int	ft_isnumber(char *s)
+{
+	if (*s == '-')
+		s++;
+	while (*s && ft_isdigit(*s))
+	{
+		s++;
+	}
+	if (*s == '.')
+			{
+				s++;
+				while (*s && ft_isdigit(*s))
+										s++;
+
+		}
+		if (*s)
+			return (0);
+		else
+			return (1);
+}
+
+void putlst(t_list *l)
+{
+	char **content;
+	while (l)
+	{
+		content = l->content;
+		while (*content)
+			printf("%s ", *content++);
+		l = l->next;
+		printf(". ");
+
+	}
+}
+
+
+void putfile(t_list *l)
+{
+	t_list *content;
+	while (l)
+	{
+		content = l->content;
+		putlst(content);
+		l = l->next;
+		printf(" \n");
+	}
+}
+
+t_list		*get_file(fd)
+{
+	char			*buffer_gnl;
+	char			**buffer_line;
+	t_list		*file;
+	t_list		*tmp;
+	t_list		*line;
+
+	//file = ft_lstnew(1, 0);
+	file = NULL;
+	while (get_next_line(fd, &buffer_gnl) == 1)
+	{
+		buffer_line = ft_strsplitspace(buffer_gnl);
+		line = ft_lstnew(0, 0);
+		line->content = buffer_line;
+		line->content_size = sizeof(char **);
+//		if (file == NULL)
+			//	file = ft_lstnew(line, sizeof(t_list *));
+		//else
+		tmp = ft_lstnew(0, 0);
+		tmp->content = line;
+		tmp->content_size = sizeof(t_list *);
+		ft_lstaddb(&file, tmp);
+		//putlst(line);
+		//printf("\n" );
+
+		free(buffer_gnl);
+	}
+	printf("putfile\n" );
+	putfile(file);
+	printf("end\n" );
+	return(file);
+}
+
+double  interpolation_linear(double n1, double n2, double n)
+{
+  return (n1 + n * (n2 - n1));
+}
+
+// get buff1 size
+// get nb_frames
+// 	creer nb_frames t_list contenant char** (size = buff1_size)
+// pour chaque t_list
+// 	pacourir tout les buff et inserer valeur
+
+int	ft_pstrlen(char **s)
+{
+	char **ret;
+
+	ret = s;
+	while(*s)
+		s++;
+	return (s - ret);
+}
+
+void interpol_line(t_list* l1, t_list *l2)
+{
+	int frames;
+	char **buff2;
+	char **buff1;
+	t_list *tmp;
+	int i;
+	double n;
+	int buff_size;
+
+	i = -1;
+	tmp = l1;
+	frames = 0;
+	buff1 = ((char **)l1->content);
+	buff2 = ((char **)l2->content);
+	buff_size = ft_pstrlen(buff1) - 1;
+	frames = ft_atoi(buff2[2]);
+	printf("%d\n", frames);
+	while (++i < frames)
+	{
+		tmp->next = ft_lstnew(0,0);
+		tmp = tmp->next;
+		tmp->content = malloc(buff_size * sizeof(char *));
+	}
+	tmp = l1->next;
+	i = 0;
+	while (++i < frames)
+	{
+		n = (double)i / frames + 0.;
+		int j = -1;
+		while (++j < buff_size)
+		{
+			if (ft_isnumber(buff1[j]))
+			{
+				char s[50];
+ 				sprintf(s,"%g", interpolation_linear(ft_datoi(buff1[j]),ft_datoi(buff2[3 + j]), n));
+				((char **)tmp->content)[j] = ft_strdup(s);
+			//	printf("buff1 = %g , buff 2 = %g, n %g", ft_datoi(buff1[j]),ft_datoi(buff2[3 + j]), n);
+
+			}
+			else
+				((char **)tmp->content)[j] = ft_strdup(buff1[j]);
+		}
+		tmp = tmp->next;
+	}
+	tmp->next = l2;
+}
+
+void 		set_anim(t_list *file)
+{
+	t_list *tmp;
+
+	tmp = file;
+	while (file->next)
+	{
+		if (((char **)((t_list *)file->next->content)->content)[0] && !ft_strcmp(((char **)((t_list *)file->next->content)->content)[0], "ANIM"))
+		{
+				printf("interpol\n");
+				interpol_line(file->content, file->next->content);
+				//delete file->next
+				file->next = file->next->next;
+		}
+		else
+			file = file->next;
+	}
+	/* code */
+}
+
 t_env			*readConfig(int fd)
 {
 	char			*buffer_gnl;
 	char			**buffer_line;
 	t_env			*e;
-
+	t_list		*file;
 	e = (t_env*)malloc(sizeof(t_env));
 	reset(e, 0, 0);
 	e->obj = NULL;
 	e->lights = NULL;
 	e->id = 0;
 	env_effect_init(&e->effect);
+
+	file = get_file(fd);
+	set_anim(file);
+	putfile(file);
+	return NULL;
 	//e->effect = (t_effects)malloc(sizeof(t_effects));
 	while (get_next_line(fd, &buffer_gnl) == 1)
 	{

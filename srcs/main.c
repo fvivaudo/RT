@@ -509,35 +509,35 @@ int				main(int ac, char **av)
 	int 			ste;
 	printf("enter name\n");
 
-
-
 	i = 0;
 	if (ac != 2 || (fd = open(av[1], O_RDONLY)) <= -1 || !(original = readConfig(fd)))
 	{
 		return (0);
 	}
-	ste = 0;
-if (original->effect.stereo)
-	ste = 1;
-while (original->effect.anim--)
-{
-	while (1)
-	{
-		arg.i = 1;
-		arg.arg = (void*)original;
-		cast_ray_thread((void *)(&arg));
-		print_img(&original->effect, update_img(NULL, WIDTH - 1, HEIGHT - 1), original->effect.anim);
-			if (!original->effect.stereo)
-				break;
-			original->effect.stereo = 0;
-		env_stereo(original);
-	}
-	if (ste)
-	{
-		original->effect.stereo = 1;
-		env_rev_stereo(original);
-	}
-	env_anim(original);
-}
+
+
+// 	ste = 0;
+// if (original->effect.stereo)
+// 	ste = 1;
+// while (original->effect.anim-- > 0)
+// {
+// 	while (1)
+// 	{
+// 		arg.i = 1;
+// 		arg.arg = (void*)original;
+// 		cast_ray_thread((void *)(&arg));
+// 		print_img(&original->effect, update_img(NULL, WIDTH - 1, HEIGHT - 1), original->effect.anim);
+// 			if (!original->effect.stereo)
+// 				break;
+// 			original->effect.stereo = 0;
+// 		env_stereo(original);
+// 	}
+// 	if (ste)
+// 	{
+// 		original->effect.stereo = 1;
+// 		env_rev_stereo(original);
+// 	}
+// 	env_anim(original);
+// }
 	return (0);
 }
