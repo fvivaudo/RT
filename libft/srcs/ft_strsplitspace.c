@@ -91,7 +91,7 @@ char			**ft_strsplitspace(char const *s)
 			++i;
 		}
 		i = i - size;
-		if ((res[y] = (char*)malloc(size + 1)) == NULL)
+		if ((res[y] = (char*)malloc(sizeof(char size + 1))) == NULL)
 			return (NULL);
 		res[y] = ft_filling(&i, res[y], s);
 		++y;

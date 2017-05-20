@@ -487,9 +487,24 @@ void env_stereo(t_env *e) {
 void env_rev_stereo(t_env *e) {
 	e->cam.viewplanebottomleftpoint.x -= 20;
 }
-void env_anim(t_env *e) {
-	e->cam.eyepoint.z += 100;
-	e->cam.viewplanebottomleftpoint.z += 100;
+void file_anim(t_list *file) {
+	t_list *tmp;
+	 while (file)
+	 {
+		 tmp = (t_list *)file->content;
+		 if (tmp->next)
+		 {
+			// free(file->content);
+			// free(tmp);
+				ft_doubletabfree(&tmp->content);
+
+		 	file->content = tmp->next;
+			//free(file);
+
+
+			}
+		file	= file->next;
+	 }
 }
 #include <stdio.h>
 #include <stdlib.h>
@@ -507,37 +522,51 @@ int				main(int ac, char **av)
 	t_thread_task	arg;
 	int				i;
 	int 			ste;
+	original = (t_env*)malloc(sizeof(t_env));
 	printf("enter name\n");
 
+	t_list *file;
 	i = 0;
-	if (ac != 2 || (fd = open(av[1], O_RDONLY)) <= -1 || !(original = readConfig(fd)))
+
+	if (ac != 2 || (fd = open(av[1], O_RDONLY)) <= -1)
 	{
 		return (0);
 	}
 
+	get_file(fd, &file);
+	close(fd);
+	set_anim(file);
+	readConfig(original,file);
 
-// 	ste = 0;
-// if (original->effect.stereo)
-// 	ste = 1;
-// while (original->effect.anim-- > 0)
-// {
-// 	while (1)
-// 	{
-// 		arg.i = 1;
-// 		arg.arg = (void*)original;
-// 		cast_ray_thread((void *)(&arg));
-// 		print_img(&original->effect, update_img(NULL, WIDTH - 1, HEIGHT - 1), original->effect.anim);
-// 			if (!original->effect.stereo)
-// 				break;
-// 			original->effect.stereo = 0;
-// 		env_stereo(original);
-// 	}
-// 	if (ste)
-// 	{
-// 		original->effect.stereo = 1;
-// 		env_rev_stereo(original);
-// 	}
-// 	env_anim(original);
-// }
+	ste = 0;
+if (original->effect.stereo)
+	ste = 1;
+	int anim = 0;
+while (anim++ < 10)
+{
+	while (1)
+	{
+		arg.i = 1;
+		arg.arg = (void*)original;
+		cast_ray_thread((void *)(&arg));
+		print_img(&original->effect, update_img(NULL, WIDTH - 1, HEIGHT - 1), anim);
+			if (!original->effect.stereo)
+				break;
+			original->effect.stereo = 0;
+		env_stereo(original);
+	}
+	if (ste)
+	{
+		original->effect.stereo = 1;
+		env_rev_stereo(original);
+	 }
+	//  free(original);
+	//  original = (t_env*)malloc(sizeof(t_env));
+
+	 file_anim(file);
+	 readConfig(original,file);
+
+	//putfile(file);
+}
 	return (0);
 }

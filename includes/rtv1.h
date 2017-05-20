@@ -323,7 +323,7 @@ t_obj				*computeray(t_env *e);
 int					deal_shadow(t_env *e);
 
 int 				init_effect(t_env *e,char **buffer);
-t_env				*readConfig(int fd);
+t_env				*readConfig(t_env *e, t_list *file);
 t_obj 				*init_null(void);
 bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj);
 bool				setslice(char **buffer, int *y, t_obj *obj);
