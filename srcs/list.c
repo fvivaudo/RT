@@ -16,12 +16,12 @@
 **		Simple removal, doesn't free anything
 */
 
-//t_objconf	*RemoveNode(t_objconf **alst, int id)
-t_objconf	*lstremoveoneobj(t_objconf **alst, int id)
+//t_obj	*RemoveNode(t_obj **alst, int id)
+t_obj	*lstremoveoneobj(t_obj **alst, int id)
 {
-	t_objconf *temp;
-	t_objconf *current;
-	t_objconf *previous;
+	t_obj *temp;
+	t_obj *current;
+	t_obj *previous;
 
 	if (id == ((*alst)->id))
 	{
@@ -47,11 +47,11 @@ t_objconf	*lstremoveoneobj(t_objconf **alst, int id)
 	return (NULL);
 }
 /*
-t_objconf	*lstremoveoneobj(t_objconf **alst, int id)
+t_obj	*lstremoveoneobj(t_obj **alst, int id)
 {
-	t_objconf	*prev;
-	t_objconf	*next;
-	t_objconf	*cursor;
+	t_obj	*prev;
+	t_obj	*next;
+	t_obj	*cursor;
 
 	next = NULL;
 	if (alst && *alst)
@@ -82,7 +82,7 @@ t_objconf	*lstremoveoneobj(t_objconf **alst, int id)
 	return (NULL);
 }*/
 
-void	lstaddobj(t_objconf **alst, t_objconf *new)
+void	lstaddobj(t_obj **alst, t_obj *new)
 {
 	if (alst && *alst && new)
 	{
@@ -93,54 +93,36 @@ void	lstaddobj(t_objconf **alst, t_objconf *new)
 		*alst = new;
 }
 
-t_objconf	addslice(t_objconf obj, t_slice new)
+//lstaddslice not used
+void	lstaddslice(t_obj **alst, t_obj *new)
 {
-	int i;
-
-	i = 0;
-	while (obj.nextslice[i].set == TRUE && i < LIMIT_SLICE)
+	if (alst && *alst && new)
 	{
-		++i;
+		new->nextslice = *alst;
+		*alst = new;
 	}
-	if (i < LIMIT_SLICE)
-	{
-		obj.nextslice[i].pos = new.pos;
-		obj.nextslice[i].dir = new.dir;
-		obj.nextslice[i].set = TRUE;
-	}
-	return (obj);
+	else if (alst)
+		*alst = new;
 }
 
-t_objconf	addneg(t_objconf obj, t_neg new)
+void	lstaddneg(t_obj **alst, t_obj *new)
 {
-	int i;
-
-	i = 0;
-	while (obj.nextneg[i].set == TRUE && i < LIMIT_NEG)
+	if (alst && *alst && new)
 	{
-		++i;
+		new->nextneg = *alst;
+		*alst = new;
 	}
-	if (i < LIMIT_NEG)
-	{
-		memcpy(&obj.nextneg[i], &new, sizeof(t_neg));
-		obj.nextneg[i].pos = vectoradd(obj.pos, obj.nextneg[i].pos); // add something for direction too?
-		obj.nextneg[i].set = TRUE;
-	}
-	return (obj);
+	else if (alst)
+		*alst = new;
 }
 
-void	addlight(t_light *lights, t_light new)
+void	lstaddlight(t_light **alst, t_light *new)
 {
-	int i;
-
-	i = 0;
-	while (lights[i].set == TRUE && i < LIMIT_LIGHT)
+	if (alst && *alst && new)
 	{
-		++i;
+		new->next = *alst;
+		*alst = new;
 	}
-	if (i < LIMIT_LIGHT)
-	{
-		memcpy(&lights[i], &new, sizeof(t_light));
-		lights[i].set = TRUE;
-	}
+	else if (alst)
+		*alst = new;
 }

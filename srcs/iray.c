@@ -29,7 +29,7 @@ int		iraycone2(double abcd[4], double t[2], double *t0)
 	return (FALSE);
 }
 
-int		iraycone(t_ray *r, t_objgpu *obj, double *t0)
+int		iraycone(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp)
 {
 	t_vec	delt_p;
 	t_vec	tmp[3];
@@ -55,32 +55,32 @@ int		iraycone(t_ray *r, t_objgpu *obj, double *t0)
 	abcd[3] = pow(abcd[1], 2) - (4 * abcd[0] * abcd[2]);
 	if (abcd[3] >= 0)
 	{
-		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
-		obj->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
+		comp->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
+		comp->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
 
-		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
+		if ((comp->t[0] > comp->t[1] && comp->t[1] > 0) || comp->t[0] < 0)
 		{
-			swapdouble(&obj->t[0], &obj->t[1]);
+			swapdouble(&comp->t[0], &comp->t[1]);
 		}
 
-		if (obj->t[0] < 0 && obj->t[1] < 0)
+		if (comp->t[0] < 0 && comp->t[1] < 0)
 		{
 			return(FALSE);
 		}
-		obj->specificnormal = TYPE_CONE;
+		comp->normal = normalcone;
 
 		//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
-		if (obj->nextslice[0].set == TRUE)
+		if (obj->nextslice)
 		{
-			ret = irayslice(r, obj, t0);
+			ret = irayslice(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg[0].set == TRUE)
+		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0);
+			ret = irayneg(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
@@ -90,16 +90,16 @@ int		iraycone(t_ray *r, t_objgpu *obj, double *t0)
 		{
 			return (TRUE);
 		}
-		if (/*(t[0] > 0.001f) && */obj->t[0] < *t0)
+		if (/*(t[0] > 0.001f) && */comp->t[0] < *t0 || *t0 == -1)
 		{
-			*t0 = obj->t[0];
+			*t0 = comp->t[0];
 			return (TRUE);
 		}
 	}
 	return (FALSE);
 }
 
-int		irayplane(t_ray *r, t_objgpu *obj, double *t0)
+int		irayplane(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp)
 {
 	t_vec	tmp;
 	double	t[2];
@@ -116,27 +116,27 @@ int		irayplane(t_ray *r, t_objgpu *obj, double *t0)
 		return (FALSE);
 	}
 
-	obj->t[0] = t[0];
-	obj->t[1] = DOESNOTEXIST;
+	comp->t[0] = t[0];
+	comp->t[1] = DOESNOTEXIST;
 
 	if (t[0] < 0)
 	{
 		return (FALSE);
 	}
+	comp->normal = normalplane;
 
 	//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
-	obj->specificnormal = TYPE_PLANE;
-	if (obj->nextslice[0].set == TRUE)
+	if (obj->nextslice)
 	{
-		ret = irayslice(r, obj, t0);
+		ret = irayslice(r, obj, t0, comp);
 		if (!ret)
 		{
 			return (FALSE);
 		}
 	}
-	if (obj->nextneg[0].set == TRUE)
+	if (obj->nextneg)
 	{
-		ret = irayneg(r, obj, t0);
+		ret = irayneg(r, obj, t0, comp);
 		if (!ret)
 		{
 			return (FALSE);
@@ -146,7 +146,7 @@ int		irayplane(t_ray *r, t_objgpu *obj, double *t0)
 	{
 		return (TRUE);
 	}
-	if (/*(t[0] > 0.001f) && */t[0] < *t0)
+	if (/*(t[0] > 0.001f) && */t[0] < *t0 || *t0 == -1)
 	{
 		*t0 = t[0];
 		return (TRUE);
@@ -157,7 +157,7 @@ int		irayplane(t_ray *r, t_objgpu *obj, double *t0)
 //Aq = Axd2 + Byd2 + Czd2 + Dxdyd + Exdzd + Fydzd
 //Bq = 2*Axoxd + 2*Byoyd + 2*Czozd + D(xoyd + yoxd) + E(xozd + zoxd) + F(yozd + ydzo) + Gxd + Hyd + Izd
 //Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
-int		irayquadric(t_ray *r, t_objgpu *obj, double *t0)
+int		irayquadric(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp)
 {
 	double	abcd[4];
 	bool	ret;
@@ -209,10 +209,10 @@ int		irayquadric(t_ray *r, t_objgpu *obj, double *t0)
 
 	if (abcd[0] == 0) // solving first degree equation
 	{
-		obj->t[0] = -abcd[2] / abcd[1];
-		if (obj->t[0] > 0 && obj->t[0] < *t0)
+		comp->t[0] = -abcd[2] / abcd[1];
+		if (comp->t[0] > 0 && comp->t[0] < *t0)
 		{
-			*t0 = obj->t[0];
+			*t0 = comp->t[0];
 			return (TRUE);
 		}
 		return (FALSE);
@@ -220,32 +220,32 @@ int		irayquadric(t_ray *r, t_objgpu *obj, double *t0)
 	abcd[3] = pow(abcd[1], 2) - (4 * abcd[0] * abcd[2]);
 	if (abcd[3] >= 0)
 	{
-		obj->t[0] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
-	//	if (obj->t[0] <= 0)
-			obj->t[1] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
+		comp->t[0] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
+	//	if (comp->t[0] <= 0)
+			comp->t[1] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
 	//	else
-	//		obj->t[1] = MAX_RANGE + 1;
-		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
+	//		comp->t[1] = MAX_RANGE + 1;
+		if ((comp->t[0] > comp->t[1] && comp->t[1] > 0) || comp->t[0] < 0)
 		{
-			swapdouble(&obj->t[0], &obj->t[1]);
+			swapdouble(&comp->t[0], &comp->t[1]);
 		}
 
-		if (obj->t[0] < 0 && obj->t[1] < 0)
+		if (comp->t[0] < 0 && comp->t[1] < 0)
 		{
 			return(FALSE);
 		}
-		obj->specificnormal = TYPE_QUADRIC;
-		if (obj->nextslice[0].set == TRUE)
+		comp->normal = normalquadric;
+		if (obj->nextslice)
 		{
-			ret = irayslice(r, obj, t0);
+			ret = irayslice(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg[0].set == TRUE)
+		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0);
+			ret = irayneg(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
@@ -255,9 +255,9 @@ int		irayquadric(t_ray *r, t_objgpu *obj, double *t0)
 		{
 			return (TRUE);
 		}
-		if (/*(t[0] > 0.001f) && */obj->t[0] < *t0)
+		if (/*(t[0] > 0.001f) && */comp->t[0] < *t0 || *t0 == -1)
 		{
-			*t0 = obj->t[0];
+			*t0 = comp->t[0];
 			return (TRUE);
 		}
 	}
@@ -283,7 +283,7 @@ int		irayquadric(t_ray *r, t_objgpu *obj, double *t0)
 
 //Cq = Axo2 + Byo2 + Czo2 + Dxoyo + Exozo + Fyozo + Gxo + Hyo + Izo + J
 
-int		iraycylinder(t_ray *r, t_objgpu *obj, double *t0)
+int		iraycylinder(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp)
 {
 	double	abcd[4];
 	t_vec	cam;
@@ -301,34 +301,32 @@ int		iraycylinder(t_ray *r, t_objgpu *obj, double *t0)
 	abcd[3] = ft_pow(abcd[1], 2) - (4 * abcd[0] * abcd[2]);
 
 	if (abcd[3] < 0)
-	{
 		return (FALSE);
-	}
 	else
 	{
-		obj->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
-		obj->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
-		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
+		comp->t[0] = (((-1) * abcd[1]) + sqrtf(abcd[3])) / (2 * abcd[0]);
+		comp->t[1] = (((-1) * abcd[1]) - sqrtf(abcd[3])) / (2 * abcd[0]);
+		if ((comp->t[0] > comp->t[1] && comp->t[1] > 0) || comp->t[0] < 0)
 		{
-			swapdouble(&obj->t[0], &obj->t[1]);
+			swapdouble(&comp->t[0], &comp->t[1]);
 		}
 
-		if (obj->t[0] < 0 && obj->t[1] < 0)
+		if (comp->t[0] < 0 && comp->t[1] < 0)
 		{
 			return(FALSE);
 		}
-		obj->specificnormal = TYPE_CYLINDER;
-		if (obj->nextslice[0].set == TRUE)
+		comp->normal = normalcylinder;
+		if (obj->nextslice)
 		{
-			ret = irayslice(r, obj, t0);
+			ret = irayslice(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
 			}
 		}
-		if (obj->nextneg[0].set == TRUE)
+		if (obj->nextneg)
 		{
-			ret = irayneg(r, obj, t0);
+			ret = irayneg(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
@@ -338,9 +336,9 @@ int		iraycylinder(t_ray *r, t_objgpu *obj, double *t0)
 		{
 			return (TRUE);
 		}
-		if (/*(obj->t[0] > 0.001f) && */obj->t[0] < *t0)
+		if (/*(comp->t[0] > 0.001f) && */comp->t[0] < *t0 || *t0 == -1) // -1 only useful for neg
 		{
-			*t0 = obj->t[0];
+			*t0 = comp->t[0];
 			return (TRUE);
 		}
 	}
@@ -351,38 +349,44 @@ int		iraycylinder(t_ray *r, t_objgpu *obj, double *t0)
 //rotate slice
 
 //returns a distance
-int		irayslice(t_ray *r, t_objgpu *obj, double *dist)
+int		irayslice(t_ray *r, t_obj *obj, double *dist, t_objcomplement *comp)
 {
 	t_vec	tmp;
 	double	tmpt;
-	int 	i;
+	t_obj	*cursor;
 	double	dot;
 
 	t_vec relativepos; //position of intersection
 	t_vec relativedir;
 //	t_vec sliceinter;
 
+	cursor = obj->nextslice;
 //	printf("slice->pos.x = %g, slice->pos.y = %g, slice->pos.z = %g\n", slice->pos.x, slice->pos.y, slice->pos.z);
-	if (obj->t[0] < 0 && obj->t[1] < 0)
+	if (comp->t[0] < 0 && comp->t[1] < 0)
 	{
 		return (FALSE);
 	}
-
-	if (obj->t[0] > 0)
+/*	if (comp->t[0] > comp->t[1])
 	{
-		relativepos = vectoradd(r->start, vectorscale(obj->t[0], r->dir)); //tmpstart instead?
+		tmptswitch = comp->t[0];
+		comp->t[0] = comp->t[1];
+		comp->t[1] = tmptswitch;
+	}*/
+
+	if (comp->t[0] > 0)
+	{
+		relativepos = vectoradd(r->start, vectorscale(comp->t[0], r->dir)); //tmpstart instead?
 	}
 	else
 	{
-		relativepos = vectoradd(r->start, vectorscale(obj->t[1], r->dir)); //tmpstart instead?
+		relativepos = vectoradd(r->start, vectorscale(comp->t[1], r->dir)); //tmpstart instead?
 	}
 	relativepos = vectorsub(obj->pos, relativepos); //now in local space?
 	relativedir = /*vectorsub(cursor->pos, */relativepos/*)*/; //from local center position to intersection
 	vectornormalize(&relativedir);
 //relative dir should be a vector going from the slice toward emptiness/sliced part
 
-	i = 0;
-	while (obj->nextslice[i].set == TRUE)
+	while (cursor)
 	{
 //case 0 =  unreachable slice, 2 cases, touching object or touching void
 //case 1 =  intersection with plan, facing plan
@@ -391,198 +395,231 @@ int		irayslice(t_ray *r, t_objgpu *obj, double *dist)
 //case 3 =  no intersection with plan and good dir
 //case 3 =  no intersection with plan and wrong dir
 //		printf("cursor->dir.x = %g cursor->dir.y = %g cursor->dir.z = %g\n", cursor->dir.x, cursor->dir.y, cursor->dir.z);
-		tmp = vectorsub(vectoradd(obj->nextslice[i].pos, obj->pos), r->start);
-		dot = vectordot(obj->nextslice[i].dir, r->dir);
+		tmp = vectorsub(vectoradd(cursor->pos, obj->pos), r->start);
+		dot = vectordot(cursor->dir, r->dir);
 		if (dot)
 		{
-			tmpt = vectordot(obj->nextslice[i].dir, tmp) / dot;
+			tmpt = vectordot(cursor->dir, tmp) / dot;
+
+//			sliceinter = vectoradd(r->start, vectorscale(tmpt, r->dir));
+//			relativedir = vectorsub(relativepos, sliceinter); //from slice intersection toward sphere intersection
+//	printf("relativedir.x = %g relativedir.y = %g relativedir.z = %g\n", relativedir.x, relativedir.y, relativedir.z);
+//			vectornormalize(&relativedir);
+//	printf("relativepos.x = %g relativepos.y = %g relativepos.z = %g\n", relativepos.x, relativepos.y, relativepos.z);
+//	printf("relativedir.x = %g relativedir.y = %g relativedir.z = %g\n", relativedir.x, relativedir.y, relativedir.z);
+			//printf("tmpt = %g\nt0 = %g\n comp->t[1] = %g, dot = %g\n", tmpt, comp->t[0], comp->t[1], dot);
 			//check if slice is inside the object
 			//if not, maybe we're hitting nothing, or we're hitting the object
-			if ((obj->t[0] > tmpt && obj->t[1] > tmpt) || (obj->t[0] < tmpt && obj->t[1] < tmpt))
+			if ((comp->t[0] > tmpt && comp->t[1] > tmpt) || (comp->t[0] < tmpt && comp->t[1] < tmpt))
 			{
+				//comp->t[0] will be the closest point
+				/*if ((comp->t[0] > comp->t[1] && comp->t[1] > 0) || (comp->t[0] < 0 && comp->t[1] > 0))
+				{
+					tmptswitch = comp->t[0];
+					comp->t[0] = comp->t[1];
+				}*/
+			//	else
+			//	{
+				//	return (FALSE); //no conceivable distance, i think
+			//	}
+
+
 				//object is fully in front of slice and slice is aligned on r->dir
-				if (obj->t[1] < tmpt && dot > 0)
+				if (comp->t[1] < tmpt && dot > 0)
 				{
 					//return(FALSE);
-				//	printf("obj->t[0] = %g, obj->t[1] = %g, tmpt = %g\n", obj->t[0], obj->t[1], tmpt);
-					if (obj->t[0] > 0 && obj->t[0] <= *dist)
+				//	printf("comp->t[0] = %g, comp->t[1] = %g, tmpt = %g\n", comp->t[0], comp->t[1], tmpt);
+					if (comp->t[0] > 0 && comp->t[0] <= *dist)
 					{
-						*dist = obj->t[0];
+				//		printf("Outcome1 reached\n");
+						*dist = comp->t[0];
 					}
-					else if (obj->t[1] > 0 && obj->t[1] <= *dist)
+					else if (comp->t[1] > 0 && comp->t[1] <= *dist)
 					{
-						*dist = obj->t[1];
+				//		printf("Outcome2 reached\n");
+						*dist = comp->t[1];
 					}
+				//	return (TRUE);
 				}//object is fully behind slice and slice is directed toward r->start
-				else if (obj->t[0] > tmpt && dot < 0)
+				else if (comp->t[0] > tmpt && dot < 0)
 				{
-					if (obj->t[0] > 0 && obj->t[0] <= *dist)
+
+					if (comp->t[0] > 0 && comp->t[0] <= *dist)
 					{
-						*dist = obj->t[0];
+						*dist = comp->t[0];
 					}
-					else if (obj->t[1] > 0 && obj->t[1] <= *dist)
+					else if (comp->t[1] > 0 && comp->t[1] <= *dist)
 					{
-						*dist = obj->t[1];
+						*dist = comp->t[1];
 					}
 				}//object is sliced out, resulting in an absence of collision, I guess
-				else// if (obj->t[0] != *dist && obj->t[1] != *dist)
+				else// if (comp->t[0] != *dist && comp->t[1] != *dist)
 				{
+				//	*dist = tmptswitch;
+				//	return (TRUE);
 					return (FALSE);
 				}
 				//	return (TRUE); //slice is out of object
 			}
-			else if (dot > 0) // ray coming toward sliced surface
+			else if (dot > 0 /*vectordot(relativedir, cursor->dir) > 0*/) // ray coming toward sliced surface
 			{
-				//obj->t[0] will be the farthest point
+				//comp->t[0] will be the farthest point
 
 				//	return(FALSE);
-				if (obj->t[1] > 0)
+				if (comp->t[1] > 0)
 				{
-					*dist = obj->t[1];
+					*dist = comp->t[1];
 				}
-				else if (obj->t[0] > 0)
+				else if (comp->t[0] > 0)
 				{
-					*dist = obj->t[0];
+					*dist = comp->t[0];
 				}
+				//return (TRUE);
+				//				*dist = tmpt;
+				//comp->type = TYPE_PLANE;
 			}
 			else if (dot < 0 /*vectordot(relativedir, cursor->dir) < 0*/) // ray coming toward object untouched surface
 			{
-				//obj->t[0] will be the closest point
-				obj->reversen = TRUE; // not logic, but it works, need to check if it works everywhere..
-				if (obj->t[0] > 0)
+				//comp->t[0] will be the closest point
+				comp->reversen = TRUE; // not logic, but it works, need to check if it works everywhere..
+				if (comp->t[0] > 0)
 				{
-					*dist = obj->t[0];
+					*dist = comp->t[0];
 				}
-				else if (obj->t[1] > 0)
+				else if (comp->t[1] > 0)
 				{
-					*dist = obj->t[1];
+					*dist = comp->t[1];
 				}
 				//return (TRUE);
-				//obj->type = TYPE_PLANE;
+				//comp->type = TYPE_PLANE;
 			}
 		}
-		++i;
+		else
+		{
+//			return (FALSE);
+		}
+		cursor = cursor->nextslice;
 	}
+				//	*dist = t0;
 	return (TRUE);
 }
 
 //The problem lies in computeshadow, do my intersection works well when i go from the hole toward light?
-int		irayneg(t_ray *r, t_objgpu *obj, double *dist)
+int		irayneg(t_ray *r, t_obj *obj, double *dist, t_objcomplement *comp)
 {
-//	t_objgpu	*cursor;
-	int 	deepestobj;
+	t_obj	*cursor;
+	t_obj	*deepestobj;
 	double 	tmax;
 	double	current;
 	double  holet[2];
-	int i;
+	t_objcomplement compbis;
 //	t_vec sliceinter;
 
-			//	ft_putendl("unhandled case irayneg");
-	i = 0;
 	holet[0] = 0;
 	holet[1] = 0;
-	deepestobj = -1;
-//	cursor = obj->nextneg;
-	obj->normobj.set = FALSE;
+	cursor = obj->nextneg;
+	//comp->normobj = NULL;
+	compbis.reversen = FALSE;
+	compbis.normal = NULL;
+	compbis.normobj = NULL;
 //	printf("slice->pos.x = %g, slice->pos.y = %g, slice->pos.z = %g\n", slice->pos.x, slice->pos.y, slice->pos.z);
-	if (obj->t[0] < 0 && obj->t[1] < 0)
+	if (comp->t[0] < 0 && comp->t[1] < 0)
 	{
 		return (FALSE);
 	}
 
-	current = obj->t[0];
+	current = comp->t[0];
 /*		printf("\n");
 
 	deepestobj = cursor;
 	while (deepestobj)
 	{
-		printf("type = %d, deepestobj->t[0] = %g, deepestobj->t[1] = %g, deepestobj->rad = %g, deepestobj->pos.x = %g, deepestobj->pos.y = %g, deepestobj->pos.z = %g, deepestobj->dir.x = %g, deepestobj->dir.y = %g, deepestobj->dir.z = %g\n", deepestobj->type, deepestobj->t[0], deepestobj->t[1], deepestobj->rad, deepestobj->pos.x, deepestobj->pos.y, deepestobj->pos.z, deepestobj->dir.x, deepestobj->dir.y, deepestobj->dir.z);
+		printf("type = %d, compbis.t[0] = %g, compbis.t[1] = %g, deepestobj->rad = %g, deepestobj->pos.x = %g, deepestobj->pos.y = %g, deepestobj->pos.z = %g, deepestobj->dir.x = %g, deepestobj->dir.y = %g, deepestobj->dir.z = %g\n", compbis.type, compbis.t[0], compbis.t[1], deepestobj->rad, deepestobj->pos.x, deepestobj->pos.y, deepestobj->pos.z, deepestobj->dir.x, deepestobj->dir.y, deepestobj->dir.z);
 		deepestobj = deepestobj->nextitem;
 	}*/
 
 //printf("\n");
-	while (obj->nextneg[i].set == TRUE)
+	while (cursor)
 	{
-		//printf("type = %d, cursor->t[0] = %g, cursor->t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, cursor->t[0], cursor->t[1], holet[0], holet[1]);
-	//	printf("obj->nextneg[i].pos.x = %g, obj->nextneg[i].pos.y = %g, obj->nextneg[i].pos.z = %g\n", obj->nextneg[i].pos.x, obj->nextneg[i].pos.y, obj->nextneg[i].pos.z);
-	//	printf("obj->nextneg[i].dir.x = %g, obj->nextneg[i].dir.y = %g, obj->nextneg[i].dir.z = %g\n", obj->nextneg[i].dir.x, obj->nextneg[i].dir.y, obj->nextneg[i].dir.z);
-		tmax = MAX_RANGE;
-		if ((obj->nextneg[i].type == TYPE_SPHERE && iraysphere(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_PLANE && irayplane(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_CYLINDER && iraycylinder(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_CONE && iraycone(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)) ||
-			(obj->nextneg[i].type == TYPE_QUADRIC && irayquadric(r, (t_objgpu*)(&obj->nextneg[i]), &tmax)))
+		//printf("type = %d, compbis.t[0] = %g, compbis.t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, compbis.t[0], compbis.t[1], holet[0], holet[1]);
+		tmax = -1;
+		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &tmax, &compbis)) ||
+			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &tmax, &compbis)) ||
+			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &tmax, &compbis)) ||
+			(cursor->type == TYPE_CONE && iraycone(r, cursor, &tmax, &compbis)) ||
+			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &tmax, &compbis)) ||
+			 (cursor->type == TYPE_TORUS && iraytorus(r, cursor, &tmax, &compbis)))
 		{
-			if (obj->nextneg[i].t[1] == DOESNOTEXIST)
+			if (compbis.t[1] == DOESNOTEXIST)
 			{
 				continue;
 			}
-			if (obj->nextneg[i].t[0] > obj->nextneg[i].t[1]) //doesnt matter if holet[0] is inferior to 0 here
+			if (compbis.t[0] > compbis.t[1]) //doesnt matter if holet[0] is inferior to 0 here
 			{
-				swapdouble(&obj->nextneg[i].t[0], &obj->nextneg[i].t[1]);
+				swapdouble(&compbis.t[0], &compbis.t[1]);
 			}
 			//first negative object
 			if (holet[0] == 0 && holet[1] == 0)
 			{
-				deepestobj = i;
-			//	obj->normobj = obj->nextneg[i];
-			//	obj->normal = obj->nextneg[i]->normal;
-				holet[0] = obj->nextneg[i].t[0];
-				holet[1] = obj->nextneg[i].t[1];
+				deepestobj = cursor;
+			//	comp->normobj = cursor;
+			//	comp->normal = cursor->normal;
+				holet[0] = compbis.t[0];
+				holet[1] = compbis.t[1];
 			//	if (holet[0] > holet[1]) //doesnt matter if holet[0] is inferior to 0 here
 			//	{
 			//		swapdouble(&holet[0], &holet[1]);
 			//	}
 			}
-			else if (holet[0] <= obj->nextneg[i].t[1] && obj->nextneg[i].t[0] <= holet[1]) // check for overlap
+			else if (holet[0] <= compbis.t[1] && compbis.t[0] <= holet[1]) // check for overlap
 			{
-				if (obj->nextneg[i].t[0] < holet[0])
+				if (compbis.t[0] < holet[0])
 				{
-					holet[0] = obj->nextneg[i].t[0];
+					holet[0] = compbis.t[0];
 				}
-				if (obj->nextneg[i].t[1] > holet[1])
+				if (compbis.t[1] > holet[1])
 				{
-					deepestobj = i;
-				//	obj->normobj = obj->nextneg[i];
-				//	obj->normal = obj->nextneg[i]->normal;
-					holet[1] = obj->nextneg[i].t[1];
+					deepestobj = cursor;
+				//	comp->normobj = cursor;
+				//	comp->normal = cursor->normal;
+					holet[1] = compbis.t[1];
 				}
 			}
 		}
-		//printf("type = %d, obj->nextneg[i]->t[0] = %g, obj->nextneg[i]->t[1] = %g, holet[0] = %g, holet[1] = %g\n", obj->nextneg[i]->type, obj->nextneg[i]->t[0], obj->nextneg[i]->t[1], holet[0], holet[1]);
+		//printf("type = %d, compbis.t[0] = %g, compbis.t[1] = %g, holet[0] = %g, holet[1] = %g\n", cursor->type, compbis.t[0], compbis.t[1], holet[0], holet[1]);
 		//it should be nextitem and not nextneg
-		++i;
+		cursor = cursor->nextitem;
 	}
 		//case 1 hole going through object
 		//case 2 hole in front object
 		//case 3 hole behind object
 //	if (e->x == 355 && e->y == 263)
 //	{
-//		printf("case 0 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
+//		printf("case 0 = holet[0] = %g, holet[1] = %g, comp->t[0] = %g, comp->t[1] = %g\n", holet[0], holet[1], comp->t[0], comp->t[1]);
 //	}
 //if we are inside the object how do we determine how to
-	if (holet[0] < obj->t[0] && holet[1] > obj->t[1])
+	if (holet[0] < comp->t[0] && holet[1] > comp->t[1])
 	{
 //	if (e->x == 355 && e->y == 263)
-//		printf("case 1 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
+//		printf("case 1 = holet[0] = %g, holet[1] = %g, comp->t[0] = %g, comp->t[1] = %g\n", holet[0], holet[1], comp->t[0], comp->t[1]);
 		return (FALSE);
 	}
-	else if (holet[0] < obj->t[0]/* && holet[1] < obj->t[1]*/)
+	else if (holet[0] < comp->t[0]/* && holet[1] < comp->t[1]*/)
 	{
-	//	ft_putendl("case 2");
 //	if (e->x == 355 && e->y == 263)
-//		printf("case 2 = holet[0] = %g, holet[1] = %g, obj->t[0] = %g, obj->t[1] = %g\n", holet[0], holet[1], obj->t[0], obj->t[1]);
-		if (holet[1] > current && deepestobj != -1)
+//		printf("case 2 = holet[0] = %g, holet[1] = %g, comp->t[0] = %g, comp->t[1] = %g\n", holet[0], holet[1], comp->t[0], comp->t[1]);
+		if (holet[1] > current)
 		{
-			ft_memcpy(&obj->normobj, &obj->nextneg[deepestobj], sizeof(t_neg));
-		//	obj->normal = deepestobj->normal;
-			obj->normobj.set = TRUE;
-			obj->normobj.reversen = TRUE;
+			comp->normobj = deepestobj;
+			comp->normal = compbis.normal;
+			if (comp->normobj)
+			{
+			//	comp->normobj->reversen = TRUE;
+				comp->reversen = TRUE;
+			}
 			current = holet[1]; //we need the deepest hole
 		}
 	}
-
-	//	ft_putendl("ok6");
 				//	*dist = t0;
 	*dist = current;
 	return (TRUE);
@@ -591,7 +628,7 @@ int		irayneg(t_ray *r, t_objgpu *obj, double *dist)
 
 //negative object model working with shadow
 //a negative object going through an object (t0 and t1 of negative larger than both t0 and t1 of native object)
-int		iraysphere(t_ray *r, t_objgpu *obj, double *t0)
+int		iraysphere(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp)
 {
 	double	abcdiscr[5];
 	t_vec	dist;
@@ -613,55 +650,444 @@ int		iraysphere(t_ray *r, t_objgpu *obj, double *t0)
 	else
 	{
 		abcdiscr[4] = sqrtf(abcdiscr[3]);
-		obj->t[0] = (-(abcdiscr[1]) + abcdiscr[4]) / (2);
-		obj->t[1] = (-(abcdiscr[1]) - abcdiscr[4]) / (2);
+		comp->t[0] = (-(abcdiscr[1]) + abcdiscr[4]) / (2);
+		comp->t[1] = (-(abcdiscr[1]) - abcdiscr[4]) / (2);
 
-		if ((obj->t[0] > obj->t[1] && obj->t[1] > 0) || obj->t[0] < 0)
+		if ((comp->t[0] > comp->t[1] && comp->t[1] > 0) || comp->t[0] < 0)
 		{
-			swapdouble(&obj->t[0], &obj->t[1]);
+			swapdouble(&comp->t[0], &comp->t[1]);
 		}
 
-		if (obj->t[0] < 0 && obj->t[1] < 0) // this is not necesarily true, if i have a negative object, it can extend T and bring it into view
+		if (comp->t[0] < 0 && comp->t[1] < 0) // this is not necesarily true, if i have a negative object, it can extend T and bring it into view
 		{
 			return(FALSE);
 		}
-		obj->specificnormal = TYPE_SPHERE;
 /*		else if (t[0] < 0)
 		{
 			t[0] = t[1];
 		}*/
 
+		comp->normal = normalsphere;
+
 		//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
-		if (obj->nextslice[0].set == TRUE)
+		if (obj->nextslice)
 		{
-			ret = irayslice(r, obj, t0);
+			ret = irayslice(r, obj, t0, comp);
 
 			if (!ret)
 			{
 				return (FALSE);
 			}
 		}
-
-		if (obj->nextneg[0].set == TRUE)
+		if (obj->nextneg)
 		{
-	//		printf("%d\n", obj->nextneg[0].set);
-			ret = irayneg(r, obj, t0);
+			ret = irayneg(r, obj, t0, comp);
 			if (!ret)
 			{
 				return (FALSE);
 			}
-	//		printf("%d\n", obj->nextneg[0].set);
 		}
 		if (ret)
 		{
 			return (TRUE);
 		}
 
-		if (/*(t[0] > 0.001f) && */(obj->t[0] < *t0))
+		if (/*(t[0] > 0.001f) && */(comp->t[0] < *t0) || *t0 == -1)
 		{
 		//printf("tfinal = %g\n", t[0]);
 
-			*t0 = obj->t[0];
+			*t0 = comp->t[0];
+			return (TRUE);
+		}
+	}
+	return (FALSE);
+}
+
+/*double	quarticsolver(double p[5])
+{
+	double discr;
+
+	discr = 256 * a^3 * e^3 - 192 * a^2 * b * d * e^2 - 128 * a^2 * c^2 * e^2 + 144 * a^2 * c * d^2 * e - 27 * a ^2 * d^4
+			+ 144 * a * b^2 * c * e^2 - - 6 * a * b^2 * d^2 * e - 80
+
+
+
+	double Q;
+	double S;
+	double theta0;
+	double theta1;
+
+	theta0 = c^2 - 3 * b * d + 12 * a * e;
+	theta1 = 2 * c^3 - 9 * b *c * d + 27 * b^2 * e + 27 * a * d^2 - 72 * a * c * e;
+
+
+	return(0);
+}*/
+
+static double _root3 ( double x )
+{
+    double s = 1.;
+    while ( x < 1. )
+    {
+        x *= 8.;
+        s *= 0.5;
+    }
+    while ( x > 8. )
+    {
+        x *= 0.125;
+        s *= 2.;
+    }
+    double r = 1.5;
+    r -= 1./3. * ( r - x / ( r * r ) );
+    r -= 1./3. * ( r - x / ( r * r ) );
+    r -= 1./3. * ( r - x / ( r * r ) );
+    r -= 1./3. * ( r - x / ( r * r ) );
+    r -= 1./3. * ( r - x / ( r * r ) );
+    r -= 1./3. * ( r - x / ( r * r ) );
+    return r * s;
+}
+
+double root3 ( double x )
+{
+    if ( x > 0 ) return _root3 ( x ); else
+    if ( x < 0 ) return-_root3 (-x ); else
+    return 0.;
+}
+
+
+// x - array of size 2
+// return 2: 2 real roots x[0], x[1]
+// return 0: pair of complex roots: x[0]±i*x[1]
+int   SolveP2(double *x, double a, double b) {			// solve equation x^2 + a*x + b = 0
+	double D = 0.25*a*a - b;
+	if (D >= 0) {
+		D = sqrt(D);
+		x[0] = 0.5*a + D;
+		x[1] = 0.5*a - D;
+		return 2;
+	}
+	x[0] = 0.5*a;
+	x[1] = sqrt(-D);
+	return 0;
+}
+//---------------------------------------------------------------------------
+// x - array of size 3
+// In case 3 real roots: => x[0], x[1], x[2], return 3
+//         2 real roots: x[0], x[1],          return 2
+//         1 real root : x[0], x[1] ± i*x[2], return 1
+int SolveP3(double *x,double a,double b,double c) {	// solve cubic equation x^3 + a*x^2 + b*x + c = 0
+	double a2 = a*a;
+    double q  = (a2 - 3*b)/9; 
+	double r  = (a*(2*a2-9*b) + 27*c)/54;
+	// equation x^3 + q*x + r = 0
+    double r2 = r*r;
+	double q3 = q*q*q;
+	double A,B;
+    if(r2<q3) {
+        double t=r/sqrt(q3);
+		if( t<-1) t=-1;
+		if( t> 1) t= 1;
+        t=acos(t);
+        a/=3; q=-2*sqrt(q);
+        x[0]=q*cos(t/3)-a;
+        x[1]=q*cos((t+TwoPi)/3)-a;
+        x[2]=q*cos((t-TwoPi)/3)-a;
+        return(3);
+    } else {
+        //A =-pow(fabs(r)+sqrt(r2-q3),1./3); 
+        A =-root3(fabs(r)+sqrt(r2-q3)); 
+		if( r<0 ) A=-A;
+		B = A==0? 0 : q/A;
+
+		a/=3;
+		x[0] =(A+B)-a;
+        x[1] =-0.5*(A+B)-a;
+        x[2] = 0.5*sqrt(3.)*(A-B);
+		if(fabs(x[2])<KEPSILON) { x[2]=x[1]; return(2); }
+        return(1);
+    }
+}// SolveP3(double *x,double a,double b,double c) {	
+//---------------------------------------------------------------------------
+// a>=0!
+void  CSqrt( double x, double y, double *a, double *b) // returns:  (*a)+i*s = sqrt(x+i*y)
+{
+	double r  = sqrt(x*x+y*y);
+	if( y==0 ) { 
+		r = sqrt(r);
+		if(x>=0) { (*a)=r; (*b)=0; } else { (*a)=0; (*b)=r; }
+	} else {		// y != 0
+		(*a) = sqrt(0.5*(x+r));
+		(*b) = 0.5*y/(*a);
+	}
+}
+//---------------------------------------------------------------------------
+int   SolveP4Bi(double *x, double b, double d)	// solve equation x^4 + b*x^2 + d = 0
+{
+	double D = b*b-4*d;
+	if( D>=0 ) 
+	{
+		double sD = sqrt(D);
+		double x1 = (-b+sD)/2;
+		double x2 = (-b-sD)/2;	// x2 <= x1
+		if( x2>=0 )				// 0 <= x2 <= x1, 4 real roots
+		{
+			double sx1 = sqrt(x1);
+			double sx2 = sqrt(x2);
+			x[0] = -sx1;
+			x[1] =  sx1;
+			x[2] = -sx2;
+			x[3] =  sx2;
+			return 4;
+		}
+		if( x1 < 0 )				// x2 <= x1 < 0, two pair of imaginary roots
+		{
+			double sx1 = sqrt(-x1);
+			double sx2 = sqrt(-x2);
+			x[0] =    0;
+			x[1] =  sx1;
+			x[2] =    0;
+			x[3] =  sx2;
+			return 0;
+		}
+		// now x2 < 0 <= x1 , two real roots and one pair of imginary root
+			double sx1 = sqrt( x1);
+			double sx2 = sqrt(-x2);
+			x[0] = -sx1;
+			x[1] =  sx1;
+			x[2] =    0;
+			x[3] =  sx2;
+			return 2;
+	} else { // if( D < 0 ), two pair of compex roots
+		double sD2 = 0.5*sqrt(-D);
+		CSqrt(-0.5*b, sD2, &x[0],&x[1]);
+		CSqrt(-0.5*b,-sD2, &x[2],&x[3]);
+		return 0;
+	} // if( D>=0 ) 
+} // SolveP4Bi(double *x, double b, double d)	// solve equation x^4 + b*x^2 d
+//---------------------------------------------------------------------------
+static void  dblSort3( double *a, double *b, double *c) // make: a <= b <= c
+{
+	if( (*a)>(*b) ) swapdouble(a, b);	// now a<=(*b)
+	if( (*c)<(*b) ) {
+		swapdouble(b,c);			// now a<=(*b), (*b)<=c
+		if( (*a)>(*b) ) swapdouble(a, b);// now a<=b
+	}
+}
+//---------------------------------------------------------------------------
+int   SolveP4De(double *x, double b, double c, double d)	// solve equation x^4 + b*x^2 + c*x + d
+{
+	//if( c==0 ) return SolveP4Bi(x,b,d); // After that, c!=0
+	if( fabs(c)<1e-14*(fabs(b)+fabs(d)) ) return SolveP4Bi(x,b,d); // After that, c!=0
+
+	int res3 = SolveP3( x, 2*b, b*b-4*d, -c*c);	// solve resolvent
+	// by Viet theorem:  x1*x2*x3=-c*c not equals to 0, so x1!=0, x2!=0, x3!=0
+	if( res3>1 )	// 3 real roots, 
+	{				
+		dblSort3(&x[0], &x[1], &x[2]);	// sort roots to x[0] <= x[1] <= x[2]
+		// Note: x[0]*x[1]*x[2]= c*c > 0
+		if( x[0] > 0) // all roots are positive
+		{
+			double sz1 = sqrt(x[0]);
+			double sz2 = sqrt(x[1]);
+			double sz3 = sqrt(x[2]);
+			// Note: sz1*sz2*sz3= -c (and not equal to 0)
+			if( c>0 )
+			{
+				x[0] = (-sz1 -sz2 -sz3)/2;
+				x[1] = (-sz1 +sz2 +sz3)/2;
+				x[2] = (+sz1 -sz2 +sz3)/2;
+				x[3] = (+sz1 +sz2 -sz3)/2;
+				return 4;
+			}
+			// now: c<0
+			x[0] = (-sz1 -sz2 +sz3)/2;
+			x[1] = (-sz1 +sz2 -sz3)/2;
+			x[2] = (+sz1 -sz2 -sz3)/2;
+			x[3] = (+sz1 +sz2 +sz3)/2;
+			return 4;
+		} // if( x[0] > 0) // all roots are positive
+		// now x[0] <= x[1] < 0, x[2] > 0
+		// two pair of comlex roots
+		double sz1 = sqrt(-x[0]);
+		double sz2 = sqrt(-x[1]);
+		double sz3 = sqrt( x[2]);
+
+		if( c>0 )	// sign = -1
+		{
+			x[0] = -sz3/2;					
+			x[1] = ( sz1 -sz2)/2;		// x[0]±i*x[1]
+			x[2] =  sz3/2;
+			x[3] = (-sz1 -sz2)/2;		// x[2]±i*x[3]
+			return 0;
+		}
+		// now: c<0 , sign = +1
+		x[0] =   sz3/2;
+		x[1] = (-sz1 +sz2)/2;
+		x[2] =  -sz3/2;
+		x[3] = ( sz1 +sz2)/2;
+		return 0;
+	} // if( res3>1 )	// 3 real roots, 
+	// now resoventa have 1 real and pair of compex roots
+	// x[0] - real root, and x[0]>0, 
+	// x[1]±i*x[2] - complex roots, 
+	// x[0] must be >=0. But one times x[0]=~ 1e-17, so:
+	if (x[0] < 0) x[0] = 0;
+	double sz1 = sqrt(x[0]);
+	double szr, szi;
+	CSqrt(x[1], x[2], &szr, &szi);  // (szr+i*szi)^2 = x[1]+i*x[2]
+	if( c>0 )	// sign = -1
+	{
+		x[0] = -sz1/2-szr;			// 1st real root
+		x[1] = -sz1/2+szr;			// 2nd real root
+		x[2] = sz1/2; 
+		x[3] = szi;
+		return 2;
+	}
+	// now: c<0 , sign = +1
+	x[0] = sz1/2-szr;			// 1st real root
+	x[1] = sz1/2+szr;			// 2nd real root
+	x[2] = -sz1/2;
+	x[3] = szi;
+	return 2;
+} // SolveP4De(double *x, double b, double c, double d)	// solve equation x^4 + b*x^2 + c*x + d
+//-----------------------------------------------------------------------------
+double N4Step(double x, double a,double b,double c,double d)	// one Newton step for x^4 + a*x^3 + b*x^2 + c*x + d
+{
+	double fxs= ((4*x+3*a)*x+2*b)*x+c;	// f'(x)
+	if( fxs==0 ) return 1e99;
+	double fx = (((x+a)*x+b)*x+c)*x+d;	// f(x)
+	return x - fx/fxs;
+} 
+//-----------------------------------------------------------------------------
+// x - array of size 4
+// return 4: 4 real roots x[0], x[1], x[2], x[3], possible multiple roots
+// return 2: 2 real roots x[0], x[1] and complex x[2]±i*x[3], 
+// return 0: two pair of complex roots: x[0]±i*x[1],  x[2]±i*x[3], 
+int   SolveP4(double x[4],double a,double b,double c,double d) {	// solve equation x^4 + a*x^3 + b*x^2 + c*x + d by Dekart-Euler method
+	// move to a=0:
+	double d1 = d + 0.25*a*( 0.25*b*a - 3./64*a*a*a - c);
+	double c1 = c + 0.5*a*(0.25*a*a - b);
+	double b1 = b - 0.375*a*a;
+	int res = SolveP4De( x, b1, c1, d1);
+	if( res==4) { x[0]-= a/4; x[1]-= a/4; x[2]-= a/4; x[3]-= a/4; }
+	else if (res==2) { x[0]-= a/4; x[1]-= a/4; x[2]-= a/4; }
+	else             { x[0]-= a/4; x[2]-= a/4; }
+	// one Newton step for each real root:
+	if( res>0 )
+	{
+		x[0] = N4Step(x[0], a,b,c,d);
+		x[1] = N4Step(x[1], a,b,c,d);
+	}
+	if( res>2 )
+	{
+		x[2] = N4Step(x[2], a,b,c,d);
+		x[3] = N4Step(x[3], a,b,c,d);
+	}
+	return res;
+}
+	// D = ray direction
+	// V = obj->dir
+	// X = ray origin - obj pos
+
+	//m = D|D
+	//n = D|X
+	//o = X|X
+	//p = D|V
+	//q = X|V
+
+	//a = m^2
+	//b = 4*m*n
+	//c = 4*m^2 + 2*m*o - 2*(R^2+r^2)*m + 4*R^2*p^2
+	//d = 4*n*o - 4*(R^2+r^2)*n + 8*R^2*p*q
+	//e = o^2 - 2*(R^2+r^2)*o + 4*R^2*q^2 + (R^2-r^2)^2
+
+
+//negative object model working with shadow
+//a negative object going through an object (t0 and t1 of negative larger than both t0 and t1 of native object)
+int		iraytorus(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp)
+{
+	bool	ret;
+	double	abcdiscr[5];
+//	double	tmp[5];
+//	t_vec	dist;
+	double	t[4];
+	int 	nb_root;
+
+	t_vec rayOriginPosition = r->start;
+	t_vec rayDirection = r->dir;
+
+	t_vec centerToRayOrigin = vectorsub(rayOriginPosition, obj->pos);
+	const double centerToRayOriginDotDirection = vectordot(rayDirection, centerToRayOrigin);
+	double	centerToRayOriginDotDirectionSquared = vectordot(centerToRayOrigin, centerToRayOrigin);
+	double innerRadiusSquared = obj->rad2 * obj->rad2;
+	double outerRadiusSquared = obj->rad * obj->rad;
+
+	double	axisDotCenterToRayOrigin	= vectordot(obj->dir, centerToRayOrigin);
+	double	axisDotRayDirection = vectordot(obj->dir, rayDirection);
+	double	a = 1 - axisDotRayDirection * axisDotRayDirection;
+	double	b = 2 * (vectordot(centerToRayOrigin, rayDirection) - axisDotCenterToRayOrigin * axisDotRayDirection);
+	double c = centerToRayOriginDotDirectionSquared - axisDotCenterToRayOrigin * axisDotCenterToRayOrigin;
+	double	d = centerToRayOriginDotDirectionSquared + outerRadiusSquared - innerRadiusSquared;
+
+	// Solve quartic equation with coefficients A, B, C, D and E
+	abcdiscr[0] = 1; 
+	abcdiscr[1] = 4 * centerToRayOriginDotDirection;
+	abcdiscr[2] = 2 * d + abcdiscr[1] * abcdiscr[1] * 0.25f - 4 * outerRadiusSquared * a;
+	abcdiscr[3] = abcdiscr[1] * d - 4 * outerRadiusSquared * b;
+	abcdiscr[4] = d * d - 4 * outerRadiusSquared * c;
+//	abcdiscr[1] /= abcdiscr[0];
+//	abcdiscr[2] /= abcdiscr[0];
+//	abcdiscr[3] /= abcdiscr[0];
+//	abcdiscr[4] /= abcdiscr[0];
+
+	nb_root = SolveP4(t, abcdiscr[1], abcdiscr[2], abcdiscr[3], abcdiscr[4]);
+
+	if (nb_root)
+	{
+		comp->t[0] = t[0];
+		comp->t[1] = t[1];
+
+		if ((comp->t[0] > comp->t[1] && comp->t[1] > 0) || comp->t[0] < 0)
+		{
+			swapdouble(&comp->t[0], &comp->t[1]);
+		}
+
+		if (comp->t[0] < 0 && comp->t[1] < 0) // this is not necesarily true, if i have a negative object, it can extend T and bring it into view
+		{
+			return(FALSE);
+		}
+
+
+		comp->normal = normaltorus;
+
+		//printf("t[0] = %g\nt[1] = %g\n", t[0], t[1]);
+		if (obj->nextslice)
+		{
+			ret = irayslice(r, obj, t0, comp);
+
+			if (!ret)
+			{
+				return (FALSE);
+			}
+		}
+		if (obj->nextneg)
+		{
+			ret = irayneg(r, obj, t0, comp);
+			if (!ret)
+			{
+				return (FALSE);
+			}
+		}
+		if (ret)
+		{
+			return (TRUE);
+		}
+
+		if ((comp->t[0] < *t0) || *t0 == -1)
+		{
+		//printf("tfinal = %g\n", t[0]);
+
+			*t0 = comp->t[0];
 			return (TRUE);
 		}
 	}

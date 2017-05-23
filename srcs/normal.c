@@ -12,7 +12,7 @@
 
 #include <rtv1.h>
 
-void	normalplane(t_env *e, t_objgpu *obj)
+void	normalplane(t_env *e, t_obj *obj, t_objcomplement *comp)
 {
 	//vector dot > 0 check if both vectors are going in the same direction
 	//if they are not, get the reverse direction of the plane to get it's normal
@@ -26,7 +26,7 @@ void	normalplane(t_env *e, t_objgpu *obj)
 	}
 }
 
-void	normalsphere(t_env *e, t_objgpu *obj)
+void	normalsphere(t_env *e, t_obj *obj, t_objcomplement *comp)
 {
 	//calcul de la normale d'une sphere
 	//get distance between new distant ray and object pos?
@@ -42,14 +42,14 @@ void	normalsphere(t_env *e, t_objgpu *obj)
 
 	//if the intersection point is located behind the object center from the camera perspective,
 	//then we're inside the object
-	if (obj->reversen)
+	if (comp->reversen)
 	{
 		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
+		comp->reversen = FALSE;
 	}
 }
 
-void	normalcylinder(t_env *e, t_objgpu *obj)
+void	normalcylinder(t_env *e, t_obj *obj, t_objcomplement *comp)
 {
 	t_vec	y_axis;
 	t_vec	rot_axis;
@@ -87,10 +87,10 @@ void	normalcylinder(t_env *e, t_objgpu *obj)
 	}
 	vectornormalize(&e->n);
 
-	if (obj->reversen)
+	if (comp->reversen)
 	{
 		e->n = vectorscale(-1, e->n);
-    obj->reversen = FALSE;
+		comp->reversen = FALSE;
 	}
 }
 
@@ -98,7 +98,7 @@ void	normalcylinder(t_env *e, t_objgpu *obj)
 //y = r
 //z = -r sin(rad)
 //n = e->newstart - magnitude(newstart - cone.pos) / cos(e->alpha) * cone.dir
-void	normalcone(t_env *e, t_objgpu *obj)
+void	normalcone(t_env *e, t_obj *obj, t_objcomplement *comp)
 {
 	double tmp;
 
@@ -113,17 +113,17 @@ void	normalcone(t_env *e, t_objgpu *obj)
 
 	vectornormalize(&e->n);
 
-	if (obj->reversen)
+	if (comp->reversen)
 	{
 		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
+		comp->reversen = FALSE;
 	}
 }
 
 //xn = 2*A*xi + D*yi + E*zi + G
 //yn = 2*B*yi + D*xi + F*zi + H
 //z n = 2*C*zi + E*xi + F*yi + I
-void	normalquadric(t_env *e, t_objgpu *obj)
+void	normalquadric(t_env *e, t_obj *obj, t_objcomplement *comp)
 {
 	t_vec camdir = vectorsub(obj->pos, e->cam.eyepoint);
 	double tmpdist = vectormagnitude(camdir);
@@ -146,10 +146,43 @@ void	normalquadric(t_env *e, t_objgpu *obj)
 	e->n.z += 2 * obj->quad.r;
 	vectornormalize(&e->n);
 
-	if (obj->reversen)
+	if (comp->reversen)
 	{
 		e->n = vectorscale(-1, e->n);
-		obj->reversen = FALSE;
+		comp->reversen = FALSE;
 	}
 	//if the vector from the intersection to the apex is aligned to the cone axis, the it's fine
 }
+
+	// P = e->newstart
+	// C = obj->pos
+	// V = obj->dir
+	// nrm = V (V/sqrt(V|V))
+
+	// k = (P-C)|V
+	// A = P - V*k
+	// m = sqrt( r^2 - k^2 )
+	// N = nrm( P - A - (C-A)*m/(R+m) )
+void	normaltorus(t_env *e, t_obj *obj, t_objcomplement *comp)
+{ 
+	t_vec tmp[3];
+	double m;
+	double k;
+	
+	k = vectordot(vectorsub(e->newstart, obj->pos), obj->dir);
+	m = sqrtf((obj->rad2 * obj->rad2) - (k * k));
+	tmp[0] = vectorsub(e->newstart, vectorscale(k, obj->dir));
+	tmp[1] = vectorscale(m, vectorsub(obj->pos, tmp[0]));
+	tmp[2] = vectorsub(e->newstart, tmp[0]);
+	e->n = vectorsub(tmp[2], (vectorscale(1.0 / (obj->rad + m), tmp[1])));
+
+	vectornormalize(&e->n);
+
+	if (comp->reversen)
+	{
+		e->n = vectorscale(-1, e->n);
+		comp->reversen = FALSE;
+	}
+}
+
+

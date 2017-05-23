@@ -16,29 +16,34 @@
 // transparency, refraction
 double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 {
-	int 				i;
-	i = 0;
+	t_obj			*cursor;
+	t_objcomplement	comp;
+	comp.reversen = FALSE;
+	comp.normal = NULL;
+	comp.normobj = NULL;
+	cursor = e->obj;
 //	double t = dist; // distance between point and light
 	//printf("type == %d\n", cursor->type);
 	//if (cursor->type == TYPE_SPHERE)
 	//	printf("Transparency computeshadow == %g\n",cursor->material.transparency);
-	while (e->objgpu[i].set == TRUE)
+	while (cursor)
 	{
 		//if (cursor->type == TYPE_SPHERE)
 		//	printf("type == %d\n", cursor->type);
 		//if (cursor->type == TYPE_SPHERE)
 		//	printf("Transparency computeshadow 1 == %g\n",cursor->material.transparency);
-		if ((e->objgpu[i].type == TYPE_SPHERE && iraysphere(r, &e->objgpu[i], &dist)) ||
-			(e->objgpu[i].type == TYPE_PLANE && irayplane(r, &e->objgpu[i], &dist)) ||
-			(e->objgpu[i].type == TYPE_CYLINDER && iraycylinder(r, &e->objgpu[i], &dist)) ||
-			(e->objgpu[i].type == TYPE_CONE && iraycone(r, &e->objgpu[i], &dist)) ||
-			(e->objgpu[i].type == TYPE_QUADRIC && irayquadric(r, &e->objgpu[i], &dist)))
+		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &dist, &comp)) ||
+			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &dist, &comp)) ||
+			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &dist, &comp)) ||
+			(cursor->type == TYPE_CONE && iraycone(r, cursor, &dist, &comp)) ||
+			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &dist, &comp)) ||
+			 (cursor->type == TYPE_TORUS && iraytorus(r, cursor, &dist, &comp)))
 		{
 		//	e->t = t;
 			//printf("e->cmat.transparency = %g\n", e->cmat.transparency);
-			light *= e->objgpu[i].material.transparency; // is it accurate?
+			light *= cursor->material.transparency; // is it accurate?
 		}
-		++i;
+		cursor = cursor->nextitem;
 	}
 	//if (cursor->type == TYPE_SPHERE)
 	//	printf("Transparency computeshadow 1 == %g\n", e->cmat.transparency);
@@ -46,6 +51,55 @@ double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 	//	ft_putendl("Transparency computeshadow 1 == %g\n",cursor->material.transparency);
 	return (light);
 	// if an intersection was found
+}
+
+void	perlinmap (t_env *e)
+{
+	t_vec output;
+	double noiseCoef = 0;
+
+	for (int level = 1; level < 10; level++)
+	{
+		noiseCoef += (1.0 / level) * fabs(noise(level * e->cmat.procedural_scale * e->newstart.x, level * e->cmat.procedural_scale * e->newstart.y, level * e->cmat.procedural_scale * e->newstart.z));
+	};
+	//noiseCoef = 0.5 * sin((e->newstart.x + e->newstart.y) * e->cmat.procedural_scale + noiseCoef) + 0.5;
+	output = vectoradd(
+	vectorscale(noiseCoef, *(t_vec*)&e->cmat.diffuse)
+	,vectorscale((1.0 - noiseCoef), *(t_vec*)&e->cmat.diffuse2));
+
+	e->cmat.diffuse.red = output.x;
+	e->cmat.diffuse.green = output.y;
+	e->cmat.diffuse.blue = output.z;
+}
+
+void	marble (t_env *e)
+{
+	t_vec output;
+	double noiseCoef = 0;
+
+	for (int level = 1; level < 10; level++)
+	{
+		noiseCoef += (1.0 / level) * fabs(noise(level * e->cmat.procedural_scale * e->newstart.x, level * e->cmat.procedural_scale * e->newstart.y, level * e->cmat.procedural_scale * e->newstart.z));
+	};
+	noiseCoef = 0.5 * sin((e->newstart.x + e->newstart.y) * e->cmat.procedural_scale + noiseCoef) + 0.5;
+	output = vectoradd(
+	vectorscale(noiseCoef, *(t_vec*)&e->cmat.diffuse)
+	,vectorscale((1.0 - noiseCoef), *(t_vec*)&e->cmat.diffuse2));
+
+	e->cmat.diffuse.red = output.x;
+	e->cmat.diffuse.green = output.y;
+	e->cmat.diffuse.blue = output.z;
+}
+
+
+void	checker (t_env *e)
+{
+	if (((int)floor(e->newstart.x / (1.0 / e->cmat.procedural_scale))
+		+ (int)floor(e->newstart.y / (1.0 / e->cmat.procedural_scale))
+		+ (int)floor(e->newstart.z / (1.0 / e->cmat.procedural_scale))) % 2 == 0)
+	{		
+		e->cmat.diffuse = e->cmat.diffuse2;
+	}
 }
 
 /*for each light in the scene
@@ -58,17 +112,15 @@ double		computeshadow(t_env *e, t_ray *r, double light, double dist)
 int		deal_shadow(t_env *e)
 {
 	t_ray			lightray;
-//	t_light			*tmplight;
-	int 			i;
+	t_light			*tmplight;
 	double			tmpdot;
 	double			distancetolight;
-//	t_objgpu			*cursor;
+//	t_obj			*cursor;
 
-	i = 0;
-//	tmplight = e->lights;
+	tmplight = e->lights;
 //	cursor = e->obj;
 
-	while (e->lights[i].set == TRUE)
+	while (tmplight)
 	{
 		if (e->cmat.bump)
 		{
@@ -76,8 +128,8 @@ int		deal_shadow(t_env *e)
 		}
 		//if (cursor->type == TYPE_SPHERE)
 		//	printf("Transparency computeshadow 2 == %g\n",cursor->material.transparency);
-		e->clight = e->lights[i];
-		++i;
+		e->clight = *tmplight;
+		tmplight = tmplight->next;
 		//distance between intersection point and light
 		e->dist = vectorsub(e->clight.pos, e->newstart);
 		distancetolight = vectormagnitude(e->dist);
@@ -134,6 +186,15 @@ int		deal_shadow(t_env *e)
 		{
 			continue;
 		}
+
+		if (e->cmat.type == TEXTURE_MARBLE)
+			marble(e);
+		else if (e->cmat.type == TEXTURE_CHECKER)
+			checker(e);
+		else if (e->cmat.type == TEXTURE_PERLIN)
+			perlinmap(e);
+
+
 	//	printf("light = %g\n", light);
 	//	printf("intersection2\n");
 

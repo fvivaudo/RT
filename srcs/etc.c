@@ -58,7 +58,7 @@ void    init_display(t_display *e)
     e->view = SDL_CreateTexture(e->render, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
     e->pxl_view = (Uint32*)(malloc(sizeof(Uint32) * WIDTH * HEIGHT));
 	e->surface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32 ,0 ,0 ,0 ,0);
-	ft_memset(e->pxl_view, 0,sizeof(Uint32) * WIDTH * HEIGHT );
+	ft_memset(e->pxl_view, 0, sizeof(Uint32) * WIDTH * HEIGHT );
 
 }
 void draw(t_display *e, int x, int y, int color)
@@ -79,6 +79,23 @@ void put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel )
     pixels[ ( y * surface->w ) + x ] = pixel;
 }
 
+ 	
+
+// "BMP"
+// "CUR"
+// "GIF"
+// "ICO"
+// "JPG"
+// "LBM"
+// "PCX"
+// "PNG"
+// "PNM"
+// "TGA"
+// "TIF"
+// "XCF"
+// "XPM"
+// "XV"
+
 void	print_img(unsigned char img[3 * WIDTH * HEIGHT])
 {
 	t_display e;
@@ -94,10 +111,14 @@ void	print_img(unsigned char img[3 * WIDTH * HEIGHT])
 			color = (img[(x + y * WIDTH) * 3 + 2])
 					+ (img[(x + y * WIDTH) * 3 + 1] * 256)
 					+ (img[(x + y * WIDTH) * 3] * 256 * 256);
-			draw(&e, x, y, color);
+		//	draw(&e, x, y, color);
 			put_pixel32(e.surface, x, y, color);
 		}
+
 	pack(&e);
+	//SDL_Surface *surface = NULL;
+    //surface = IMG_LoadTyped_RW(SDL_RWFromFile("textures/bricks2.jpeg", "rb"), 1, "JPG");
+
 	SDL_SaveBMP(e.surface, "out.bmp");
 	//SDL_Delay(2000);
 }

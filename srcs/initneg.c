@@ -7,9 +7,16 @@ int				init_negcyl(t_objconf *obj, char **buffer)
 	int			y;
 	t_neg		neg;
 	t_mat		material;
+	int 		i;
 
+	i = 0;
+
+	while(i < LIMIT_SLICE)
+	{
+		neg.nextslice[i].set = FALSE;
+		++i;
+	}
 	y = 4;
-
 	if (buffer[1] && buffer[2] && buffer[3])
 		neg.pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
@@ -45,7 +52,7 @@ int				init_negcyl(t_objconf *obj, char **buffer)
 	neg.type = TYPE_CYLINDER;
 	neg.material = material;
 	//neg.id = e->id;
-	*obj = addneg(*obj, neg);
+	addneg(obj, neg);
 	return (y);
 }
 
@@ -54,6 +61,15 @@ int		init_negcone(t_objconf *obj, char **buffer)
 	int			y;
 	t_neg		neg;
 	t_mat		material;
+	int 		i;
+
+	i = 0;
+
+	while(i < LIMIT_SLICE)
+	{
+		neg.nextslice[i].set = FALSE;
+		++i;
+	}
 
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
@@ -81,7 +97,7 @@ int		init_negcone(t_objconf *obj, char **buffer)
 	}
 	neg.type = TYPE_CONE;
 	neg.material = material;
-	*obj = addneg(*obj, neg);
+	addneg(obj, neg);
 	return (y);
 }
 
@@ -90,6 +106,15 @@ int		init_negsphere(t_objconf *obj, char **buffer)
 	int			y;
 	t_neg		neg;
 	t_mat		material;
+	int 		i;
+
+	i = 0;
+
+	while(i < LIMIT_SLICE)
+	{
+		neg.nextslice[i].set = FALSE;
+		++i;
+	}
 
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
@@ -121,7 +146,7 @@ int		init_negsphere(t_objconf *obj, char **buffer)
 	neg.type = TYPE_SPHERE;
 	neg.material = material;
 	//neg.pos = neg.pos;
-	*obj = addneg(*obj, neg);
+	addneg(obj, neg);
 	return (y);
 }
 
@@ -131,7 +156,15 @@ int		init_negquadric(t_objconf *obj, char **buffer)
 	t_neg		neg;
 	t_mat		material;
 	t_quadric	quad;
+	int 		i;
 
+	i = 0;
+
+	while(i < LIMIT_SLICE)
+	{
+		neg.nextslice[i].set = FALSE;
+		++i;
+	}
 	y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
 		neg.pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
@@ -194,7 +227,7 @@ int		init_negquadric(t_objconf *obj, char **buffer)
 	neg.type = TYPE_QUADRIC;
 	neg.material = material;
 	//neg.pos = neg.pos;
-	*obj = addneg(*obj, neg);
+	addneg(obj, neg);
 	return (y);
 }
 
@@ -223,13 +256,13 @@ bool				setnegative(char **buffer, int *y, t_objconf *parent)
 		//	(*lstobj)->normal = normalquadric;
 		}
 
-		int i;
+/*		int i;
 
 		i = 0;
 		while (parent->nextneg[i].set == TRUE && i < LIMIT_NEG)
 		{
 			++i;
-		}
+		}*/
 		/*else if (!(ft_strcmp(buffer[*y + 1], "OBJECT")))
 		{
 			*y += init_object(lstobj, &(*(buffer + *y + 1)), TRUE);
