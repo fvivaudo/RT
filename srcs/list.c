@@ -12,13 +12,6 @@
 
 #include <rtv1.h>
 
-typedef struct 	s_lstobj
-{
-	t_obj *temp;
-	t_obj *current;
-	t_obj *previous;
-}				t_lstobj;
-
 t_obj	*lstremoveoneobj(t_obj **alst, int id)
 {
 	t_lstobj o;

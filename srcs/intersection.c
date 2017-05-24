@@ -25,10 +25,6 @@ t_objcomplement *init_comp(t_objcomplement *comp)
 	return (comp);
 }
 
-#define CU cursor->type
-#define CO cursor
-#define IC init_comp(&tmpcomp)
-
 t_obj	*intersection(t_env *e, t_ray *r, t_objcomplement *comp)
 {
 	t_obj			*cursor;

@@ -16,17 +16,32 @@ SRC = 	srcs/etc.c \
 		srcs/init.c \
 		srcs/intersection.c \
 		srcs/main.c \
-		srcs/perlin.c \
 		srcs/vector.c \
+		srcs/vector1.c \
+		srcs/vector2.c \
+		srcs/vector3.c \
 		srcs/list.c \
-		srcs/normal.c \
-		srcs/iray.c \
-		srcs/bump_mapping.c \
-		srcs/blinn_phong.c \
-		srcs/shadow.c \
 		srcs/config.c \
-		srcs/readconfig2.c
-
+		srcs/readconfig2.c \
+		srcs/readconfig2_1.c \
+		srcs/readconfig2_2.c \
+		srcs/readconfig2_3.c \
+		srcs/readconfig2_4.c \
+		srcs/config1.c \
+		srcs/config2.c \
+		srcs/config3.c \
+		srcs/config4.c \
+		srcs/config5.c \
+		srcs/config6.c \
+		srcs/config7.c \
+		srcs/engine1.c \
+		srcs/engine2.c \
+		srcs/engine3.c \
+		srcs/engine4.c \
+		srcs/engine5.c \
+		srcs/engine6.c \
+		srcs/engine7.c \
+		srcs/engine8.c \
 
 OBJ  = $(subst srcs/,,$(SRC:.c=.o))
 

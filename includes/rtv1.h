@@ -83,6 +83,11 @@
 # define COSCALC (u.fdensity2 * u.fCosThetaT + u.fdensity1 * u.fCosThetaI)
 # define COSSCALC (u.fdensity1 * u.fCosThetaT - u.fdensity2 * u.fCosThetaI)
 
+#define CU cursor->type
+#define CO cursor
+#define IC init_comp(&tmpcomp)
+
+
 struct					s_env;
 
 typedef struct 			s_quadric
@@ -125,35 +130,7 @@ typedef struct			s_vec
 	double				y;
 	double				z;
 }						t_vec;
-/*
-typedef struct		s_plane
-{
-	t_vec			dir;
-	t_vec			pos;
-}					t_plane;
 
-typedef struct		s_sphere
-{
-	t_vec			pos;
-	double			rad;
-}					t_sphere;
-
-typedef struct		s_cylinder
-{
-	t_vec			dir;
-	t_vec			pos;
-	double			height;
-	double			rad;
-}					t_cylinder;
-
-typedef struct		s_cone
-{
-	t_vec			dir;
-	t_vec			pos;
-	double			rad;
-	double			alpha;
-}					t_cone;
-*/
 typedef struct			s_ray
 {
 	t_vec				initialstart; // before any reflection/refraction
@@ -161,7 +138,6 @@ typedef struct			s_ray
 	t_vec				dir;
 	bool				indirect; //if the ray is reflected or refracted, is true
 	int 				pixel_id;
-	//not handled yet
 }						t_ray;
 
 typedef struct			s_color
@@ -379,6 +355,200 @@ typedef struct 			s_sray_info
 	double 				previousrefractionindex;
 }						t_sray_info;
 
+typedef struct 	s_init_cyl
+{
+	int			y;
+	t_obj		*obj;
+	t_mat		material;
+	t_quadric	quad;
+}				t_init_cyl;
+
+typedef struct s_ncomp
+{
+	int 		y;
+	t_obj		*obj;
+	t_obj		*tmp;
+}				t_ncomp;
+
+typedef struct s_incam
+{
+	t_vec	up;
+	t_vec	u;
+	t_vec	v;
+
+	t_vec	tmp_up;
+	t_vec	tmp_vdir;
+}				t_incam;
+
+typedef struct s_niniobj
+{
+	int 		y;
+	t_obj		*obj;
+	t_obj		*cursor;
+	int 		id;
+}				t_niniobj;
+
+typedef struct s_extobj
+{
+	t_obj *tmp;
+	t_obj *cursor;
+	double rot_angle;
+	t_vec worldfd;
+	t_vec rot_axis;
+}				t_extobj;
+
+typedef struct 		s_display
+{
+	SDL_Window      *window;
+	SDL_Renderer    *render;
+	SDL_Texture     *view;
+	SDL_Surface 	*surface;
+	Uint32          *pxl_view;
+}					t_display;
+
+typedef struct 	s_lstobj
+{
+	t_obj *temp;
+	t_obj *current;
+	t_obj *previous;
+}				t_lstobj;
+
+typedef struct s_read
+{
+	int 		pos[3];
+	int 		material[8];
+	int 		lookat[3];
+	int 		radius;
+}				t_read;
+
+# define CON r->content
+# define LIN r->lines
+
+typedef struct s_checker
+{
+	char 		tab[4096];
+	int 		i;
+	int 		itab;
+}				t_checker;
+
+typedef struct s_parser
+{
+	char 		*content;
+	char 		**lines;
+	char 		**obj;
+	char 		**endobj;
+	char 		**tmpfree;
+	int 		comp_id;
+	FILE 		*fi;
+}				t_parser;
+
+typedef struct s_vpr
+{
+	double u2 ;
+	double v2 ;
+	double w2 ;
+	double cost;
+	double omc ;
+	double sint;
+	t_vec res;
+}				t_vpr;
+
+
+typedef struct s_srtm
+{
+	double x2 ;
+	double y2 ;
+	double z2 ;
+	double cangle ;
+	double sangle ;
+}				t_srtm;
+
+
+typedef struct s_qrte
+{
+	double	tmpquad[4][4];
+	double	tmprot[4][4];
+	double	tmptranspose[4][4];
+	double	tmpres[4][4];
+	double	tmp[4][4];
+}				t_qrte;
+
+typedef struct s_nrefract
+{
+	double	ViewProjection;
+	double coef;
+	double fCosThetaT;
+	double 	fdensity1;
+	double 	fdensity2;
+	double reflectance;
+	double	fCosThetaI;
+	double fSinThetaI;
+	double fSinThetaT;
+}				t_nrefract;
+
+typedef struct s_cast
+{
+	t_ray *r;
+	t_vec *n;
+	t_mat *cmat;
+	t_vec *inter_point;
+	double *crefraction;
+}				t_cast;
+
+typedef struct 	s_raus
+{
+	t_color			reflecolor;
+	t_color			refracolor;
+	t_color			res;
+	t_vec			tmp;
+	t_obj			*collide;
+	double originalcoef;
+	double tmpcoef1;
+	double tmpcoef2;
+	double angle ;
+	double R0 ;
+}				t_raus;
+
+typedef struct s_cc
+{
+	t_env 	*new;
+	t_env 	*env;
+	int 	interval;
+	t_gputool gtool;
+	int level;
+	int sizerays;
+	double reflecoef;
+	double transcoef;
+	double tmpcoef1;
+	double tmpcoef2;
+	double angle ;
+	double R0 ;
+	t_color			reflecolor;
+	t_color			refracolor;
+	t_vec			tmp;
+	t_mat 			*cmat;
+	t_ray 			*ray;
+	double 			crefraction;
+	t_vec 			inter_point;
+	t_vec 			normal;
+	t_cl cl;
+	t_sray_info *inforays;
+	int sizenewray;
+	t_ray *newrays;
+	t_sray_info *newinforays;
+	t_gpu_out *newout;
+	double *coef;
+	int gbis;
+	t_cast par;
+}				t_cc;
+
+typedef struct s_gll
+{
+	int size;
+	t_obj *cursor;
+}				t_gll;
+
+
 void				cast_ray(t_env *e);
 t_color				colorinit(double red, double green, double blue);
 t_obj				*computeray(t_env *e);
@@ -403,8 +573,6 @@ int					init_quadric(t_obj **lstobj, char **buffer, bool neg);
 int					init_torus(t_obj **lstobj, char **buffer, bool neg);
 void				init_compose(t_obj **lstobj, char **buffer);
 int					init_object(t_obj **lstobj, char **buffer, bool neg);
-
-
 t_obj				*intersection(t_env *e, t_ray *r, t_objcomplement *comp);
 int					iraycone(t_ray *r, t_obj *co, double *t0, t_objcomplement *comp);
 int					iraycone2(double abcd[4], double t[2], double *t0);
@@ -413,14 +581,11 @@ int					irayplane(t_ray *r, t_obj *p, double *t0, t_objcomplement *comp);
 int					iraysphere(t_ray *r, t_obj *s, double *t0, t_objcomplement *comp);
 int					irayquadric(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp);
 int					iraytorus(t_ray *r, t_obj *obj, double *t0, t_objcomplement *comp);
-
 int					irayneg(t_ray *r, t_obj *obj, double *dist, t_objcomplement *comp);
 int					irayslice(t_ray *r, t_obj *obj, double *dist, t_objcomplement *comp);
-
 void				print_img(unsigned char img[3 * WIDTH * HEIGHT]);
 void				reset(t_env *e, int x, int y);
 unsigned char		*update_img(t_color *col, int pixel_id, double coef);
-
 t_vec				vectoradd(t_vec v1, t_vec v2);
 double				vectordot(t_vec v1, t_vec v2);
 t_vec				vectorinit(double x, double y, double z);
@@ -433,9 +598,7 @@ t_vec				vectordiv(t_vec u, t_vec v);
 double				vectormagnitude(t_vec v);
 t_vec				vectorrotate(t_vec v, t_vec axis, double angle);
 t_vec 				vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta);
-
 double				computeshadow(t_env *e, t_ray *r, double light, double dist);
-
 double				noise(double x, double y, double z);
 t_quadric			quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos);
 
@@ -451,12 +614,134 @@ void				normalcylinder(t_env *e, t_obj *obj, t_objcomplement *comp);
 void				normalcone(t_env *e, t_obj *obj, t_objcomplement *comp);
 void				normalquadric(t_env *e, t_obj *obj, t_objcomplement *comp);
 void				normaltorus(t_env *e, t_obj *obj, t_objcomplement *comp);
-
-
-
 void				swapdouble(double *a, double *b);
-
 t_vec				bump_mapping(t_env *e);
 void				blinn_phong(t_env *e, t_vec lightray_dir);
+
+void readConfig_func(t_env *e, char **buffer_line);
+t_env			*readConfig(int fd);
+int 			init_effect(t_env *e, char **buffer);
+int 			init_cyl_func(t_init_cyl *u, char **buffer);
+int 			init_cyl_func2(t_init_cyl *u, char **buffer);
+int 			init_cyl_func3(t_init_cyl *u, char **buffer);
+int 			init_cyl_func4(t_init_cyl *u, char **buffer);
+int 			init_cyl_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+				bool neg);
+int				init_cyl(t_obj **lstobj, char **buffer, bool neg);
+int 			init_cone_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+				bool neg);
+int		init_cone(t_obj **lstobj, char **buffer, bool neg);
+int 	init_sphere_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+		bool neg);
+int 		init_plane_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+		bool neg);
+int		init_sphere(t_obj **lstobj, char **buffer, bool neg);
+int		init_plane(t_obj **lstobj, char **buffer, bool neg);
+void 			init_quadric_func2(t_init_cyl *u, char **buffer);
+int 		init_quadric_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+			bool neg);
+int		init_quadric(t_obj **lstobj, char **buffer, bool neg);
+int 	init_torus_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+		bool neg);
+int			init_torus(t_obj **lstobj, char **buffer, bool neg);
+t_quadric initquad(double param[10]);
+void		init_compose(t_obj **lstobj, char **buffer);
+t_obj 				*init_null(void);
+void 			setmat_func(t_mat *mat, int *y, char **buffer);
+bool			 	setmat(char **buffer, int *y, t_mat *mat);
+bool				setorient(char **buffer, int *y, t_obj *obj);
+bool				setslice(char **buffer, int *y, t_obj *obj);
+bool				setnegative(char **buffer, int *y, t_obj *parent,
+					t_obj **lstobj);
+void 		init_cam_func(t_env *e, t_incam *o);
+void		init_cam(t_env *e, char **buffer);
+int 			init_obj_func2(t_niniobj *u, char **buffer);
+int 			init_obj_func3(t_niniobj *o, char **buffer);
+int 			init_object_func1(t_niniobj *o, char **buffer, t_obj **lstobj,
+				bool neg);
+int			init_object(t_obj **lstobj, char **buffer, bool neg);
+void 	init_light_func(char **buffer, int y, t_light *light);
+void    init_display(t_display *e);
+void check_quit();
+void free_tab(char **str);
+char *get_file_content(char *filename);
+char  **read_skip_list(t_parser *r, char **line);
+char **read_get_one(t_parser *r, char **line ,char *str);
+void read_apply_one(t_parser *r, char *line, char *str);
+void read_work_obj2(t_parser *r, char **line);
+void read_work_obj(t_parser *r, char **line);
+int read_is_anim(t_parser *r, char *line);
+void read_set_last_line_obj(t_parser *r);
+void read_get_slices_set(t_parser *r, char **line);
+void read_get_slices(t_parser *r);
+void read_get_negatives(t_parser *r);
+void read_compose_apply_id(t_parser *r, char *line);
+void read_get_compose_line(t_parser *r, char **line, char **end);
+char **read_get_last_compose_line(char **line);
+void read_get_composes(t_parser *r);
+void read_get_effect(t_parser *r, char *line);
+void read_work(t_parser *r);
+void check_brackets_add(t_checker *c, char *str);
+void				readConfig2(char *filename);
+void check_brackets_rem(t_checker *c, char *str);
+int 	check_brackets(t_parser *r);
+void check_content_detail(char *line);
+int check_content(t_parser *r);
+void read_check(t_parser *r);
+t_vec		vectorinit(double x, double y, double z);
+t_vec	vectorscale(double c, t_vec v);
+t_vec	vectorscalediv(double c, t_vec v);
+t_vec	vectoradd(t_vec v1, t_vec v2);
+t_vec	vectorsub(t_vec v1, t_vec v2);
+t_vec	vectorproduct(t_vec u, t_vec v);
+t_vec	vectordiv(t_vec u, t_vec v);
+double	vectordot(t_vec v1, t_vec v2);
+double	vectormagnitude(t_vec v);
+t_vec	vectornormalize(t_vec *v);
+t_vec	vectorrotate(t_vec to_rot, t_vec r_a, double rad);
+t_vec vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta);
+void setrotationmatrix_func(double rotmat[4][4]);
+t_srtm 	setrotationmatrix_init(double angle, t_vec axis);
+void setrotationmatrix(double angle, t_vec axis, double rotmat[4][4]);
+const char *getErrorString(cl_int error);
+void			reset(t_env *e, int x, int y);
+t_nrefract 		refract_init(t_cast o);
+void 	refract_func(t_cast *o, t_nrefract *u, double *fOldRefractionCoef,
+	double *fRoulette);
+void		refract(t_cast o);
+void 			reflect_and_refract_func(t_raus *o, t_env *e);
+void 			reflect_and_refract_func2(t_raus *o, t_env *e);
+void 			reflect_and_refract_func3(t_raus *o, t_env *e);
+unsigned char	*update_img(t_color *col, int pixel_id, double coef);
+t_color			reflect_and_refract(t_env e);
+void			get_img_pos(int *x, int *y, int inter);
+t_obj 	*copyallobj_func(t_obj *obj);
+t_obj	*copyallobj(t_obj *obj);
+void		effect(t_env *new, t_env *e);
+t_light	*copyalllights(t_light *light);
+char *init_sources(char **srcs);
+void init_opencl_func(t_gputool *t, t_cl *cl);
+void 	init_opencl(t_gputool *t, t_cl *cl);
+int greatestcommondivisor(int a, int b);
+int greatestmultiple(int maxmultiple, int value);
+void 	load_opencl_func(t_gputool *t, t_cl *cl, int max_workgroup_size);
+void 	load_opencl(t_gputool *t, t_cl *cl, int count);
+void 	free_opencl(t_cl *cl);
+t_objgpu 			*fillgpuobj(t_objgpu *array, t_obj *list);
+int 			getlistlength(t_obj *list);
+int 			getlistlightlength(t_light *list);
+t_lightgpu 			*fillgpulights(t_lightgpu *array, t_light *list);
+t_gputool 	init_gtool(t_env *env);
+void 			cast_ray_thread_func(t_env *new, t_gputool *gtool,
+			int *interval);
+t_env 			*cast_init_new(t_env *env);
+void 			cast_func0(t_cc *c, t_env *e);
+void 			cast_func1(t_cc *c);
+void 			cast_func3(t_cc *c, int g);
+void 			cast_func6(t_cc *c, int g);
+void 			cast_func4(t_cc *c, int g);
+void 			cast_func2(t_cc *c, int g);
+void 			cast_func5(t_cc *c, int g);
+void			*cast_ray_thread(void *e);
 
 #endif
