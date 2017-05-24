@@ -83,7 +83,7 @@ typedef struct 	s_init_cyl
 	int			y;
 	t_obj		*obj;
 	t_mat		material;
-
+	t_quadric	quad;
 }				t_init_cyl;
 
 int 			init_cyl_func(t_init_cyl *u, char **buffer)
@@ -247,7 +247,8 @@ int 			init_sphere_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
 		return (res);
 	else if (setmat(buffer, &u->y, &u->material));
 	else if (setslice(buffer, &u->y, u->obj));
-	else if (neg == FALSE && setnegative(buffer, &u->y, u->obj, &u->obj->nextneg));
+	else if (neg == FALSE && setnegative(buffer, &u->y, u->obj,
+		&u->obj->nextneg));
 	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
 	else if (!ft_strcmp("RADIUS", buffer[u->y]))
 	{
@@ -264,6 +265,30 @@ int 			init_sphere_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
 	return (-1234567);
 }
 
+int 			init_plane_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+	bool neg)
+{
+	if (!ft_strcmp("ID", buffer[u->y]))
+	{
+		if (buffer[u->y + 1])
+		{
+			u->obj->id = ft_atoi(buffer[u->y + 1]);
+			u->y += 2;
+		}
+		else
+			return (u->y);
+	}
+	else if (setmat(buffer, &u->y, &u->material));
+	else if (setorient(buffer, &u->y, u->obj));
+	else if (setslice(buffer, &u->y, u->obj));
+	else if (neg == FALSE && setnegative(buffer, &u->y, u->obj,
+		 &u->obj->nextneg));
+	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
+	else
+		++u->y;
+	return (-1234567);
+}
+
 int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
 {
 	t_init_cyl u;
@@ -272,7 +297,8 @@ int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
 	u.obj = init_null();
 	u.y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
-		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]),
+		ft_datoi(buffer[3]));
 	else
 		return (1);
 	while (buffer[u.y] != NULL)
@@ -293,33 +319,13 @@ int		init_plane(t_obj **lstobj, char **buffer, bool neg)
 	u.obj = init_null();
 	u.y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
-		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]),
+		ft_datoi(buffer[3]));
 	else
-	{
 		return (0);
-	}
 	while (buffer[u.y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[u.y]))
-		{
-			if (buffer[u.y + 1])
-			{
-				u.obj->id = ft_atoi(buffer[u.y + 1]);
-				u.y += 2;
-			}
-			else
-				return (u.y);
-		}
-		else if (setmat(buffer, &u.y, &u.material));
-		else if (setorient(buffer, &u.y, u.obj));
-		else if (setslice(buffer, &u.y, u.obj));
-		else if (neg == FALSE && setnegative(buffer, &u.y, u.obj, &u.obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &u.y, NULL, lstobj));
-		else
-		{
-			++u.y;
-		}
-	}
+	if ((res = init_plane_func1(&u, buffer, lstobj, neg)) != -1234567)
+		return (res);
 	u.obj->type = TYPE_PLANE;
 	u.obj->material = u.material;
 	u.obj->nextitem = NULL;
@@ -327,145 +333,131 @@ int		init_plane(t_obj **lstobj, char **buffer, bool neg)
 	return (u.y);
 }
 
+void 			init_quadric_func2(t_init_cyl *u, char **buffer)
+{
+	u->quad.a = ft_datoi(buffer[u->y + 1]);
+	u->quad.b = ft_datoi(buffer[u->y + 2]);
+	u->quad.c = ft_datoi(buffer[u->y + 3]);
+	u->quad.f = ft_datoi(buffer[u->y + 4]);
+	u->quad.g = ft_datoi(buffer[u->y + 5]);
+	u->quad.h = ft_datoi(buffer[u->y + 6]);
+	u->quad.p = ft_datoi(buffer[u->y + 7]);
+	u->quad.q = ft_datoi(buffer[u->y + 8]);
+	u->quad.r = ft_datoi(buffer[u->y + 9]);
+	u->quad.d = ft_datoi(buffer[u->y + 10]);
+	u->y += 11;
+}
+
+int 			init_quadric_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+	bool neg)
+{
+	int res;
+
+	if (!ft_strcmp("ID", buffer[u->y]) &&
+		(res = init_cyl_func2(u, buffer)) != -1234567)
+		return (res);
+	else if (setmat(buffer, &u->y, &u->material));
+	else if (setorient(buffer, &u->y, u->obj));
+	else if (setslice(buffer, &u->y, u->obj));
+	else if (neg == FALSE && setnegative(buffer, &u->y, u->obj,
+		&u->obj->nextneg));
+	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
+	else if (!ft_strcmp("PARAM", buffer[u->y]))
+	{
+		if (buffer[u->y + 1] && buffer[u->y + 2] && buffer[u->y + 3]
+			&& buffer[u->y + 4] && buffer[u->y + 5] && buffer[u->y + 6]
+			&& buffer[u->y + 7] && buffer[u->y + 8] && buffer[u->y + 9]
+			&& buffer[u->y + 10])
+			init_quadric_func2(u, buffer);
+		else
+			return (u->y);
+	}
+	else
+		++u->y;
+	return (-1234567);
+}
 int		init_quadric(t_obj **lstobj, char **buffer, bool neg)
 {
-	int			y;
-	t_obj		*obj;
-	t_mat		material;
-	t_quadric	quad;
+	t_init_cyl u;
+	int res;
 
-	obj = init_null();
-
-	y = 4;
+	u.obj = init_null();
+	u.y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
-		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]),
+		ft_datoi(buffer[3]));
 	else
-	{
 		return (0);
-	}
-	while (buffer[y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-				return (y);
-		}
-		else if (setmat(buffer, &y, &material));
-		else if (setorient(buffer, &y, obj));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else if (!ft_strcmp("PARAM", buffer[y]))
-		{
-			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3] && buffer[y + 4] && buffer[y + 5] && buffer[y + 6] && buffer[y + 7] && buffer[y + 8] && buffer[y + 9] && buffer[y + 10])
-			{
-				quad.a = ft_datoi(buffer[y + 1]);
-				quad.b = ft_datoi(buffer[y + 2]);
-				quad.c = ft_datoi(buffer[y + 3]);
-				quad.f = ft_datoi(buffer[y + 4]);
-				quad.g = ft_datoi(buffer[y + 5]);
-				quad.h = ft_datoi(buffer[y + 6]);
-				quad.p = ft_datoi(buffer[y + 7]);
-				quad.q = ft_datoi(buffer[y + 8]);
-				quad.r = ft_datoi(buffer[y + 9]);
-				quad.d = ft_datoi(buffer[y + 10]);
-				y += 11;
-			}
-			else
-			{
-				return (y);
-			}
-		}
-		else
-		{
-			++y;
-		}
-	}
-
-	//we assume the default orientation is toward +y, then we move according to the orientation defined in the configuration file
+	while (buffer[u.y] != NULL)
+	if ((res = init_quadric_func1(&u, buffer, lstobj, neg)) != -1234567)
+		return (res);
 	double	rot_angle;
 	t_vec	rot_axis;
 	t_vec	y_axis;
-
 	y_axis = vectorinit(0, 1, 0);
-	rot_angle = acos(vectordot(y_axis, obj->dir));
-	rot_axis = vectorproduct(y_axis, obj->dir);
-
-	//obj->quad = quadricrotate(quad, vectorproduct(obj->dir, vectorinit(0, 1, 0)), acos(vectordot(vectorinit(0, 1, 0), obj->dir)));
+	rot_angle = acos(vectordot(y_axis, u.obj->dir));
+	rot_axis = vectorproduct(y_axis, u.obj->dir);
 	if (rot_angle)
+		u.obj->quad = quadricrotate(u.quad, rot_axis, rot_angle, u.obj->pos);
+	else
+		u.obj->quad = quadricrotate(u.quad, y_axis, 0, u.obj->pos);
+	u.obj->type = TYPE_QUADRIC;
+	u.obj->material = u.material;
+	u.obj->nextitem = NULL;
+	lstaddobj(lstobj, u.obj);
+	return (u.y);
+}
+
+int 			init_torus_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+	bool neg)
+{
+	int res;
+
+	if (!ft_strcmp("ID", buffer[u->y]) &&
+		(res = init_cyl_func2(u, buffer)) != -1234567)
+		return (res);
+	else if (setmat(buffer, &u->y, &u->material));
+	else if (setorient(buffer, &u->y, u->obj));
+	else if (setslice(buffer, &u->y, u->obj));
+	else if (neg == FALSE && setnegative(buffer, &u->y,
+		u->obj, &u->obj->nextneg));
+	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
+	else if (!ft_strcmp("RADIUS", buffer[u->y]))
 	{
-		obj->quad = quadricrotate(quad, rot_axis, rot_angle, obj->pos);
+		if (buffer[u->y + 1] && buffer[u->y + 2])
+		{
+			u->obj->rad = ft_datoi(buffer[u->y + 1]);
+			u->obj->rad2 = ft_datoi(buffer[u->y + 2]);
+			u->y += 3;
+		}
+		else
+			return (u->y);
 	}
 	else
-	{
-		obj->quad = quadricrotate(quad, y_axis, 0, obj->pos);
-	}
-//	obj->quad = quadricrotate(quad, vectorinit(1, 0, 0), 90);
-//	obj->quad = quad;
-	obj->type = TYPE_QUADRIC;
-	obj->material = material;
-	obj->nextitem = NULL;
-	lstaddobj(lstobj, obj);
-	return (y);
+		++u->y;
+	return (-1234567);
 }
 
 int					init_torus(t_obj **lstobj, char **buffer, bool neg)
 {
-	int			y;
-	t_obj		*obj;
-	t_mat		material;
+	t_init_cyl u;
+	int res;
 
-	obj = init_null();
-	y = 4;
+	u.obj = init_null();
+	u.y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
-		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]),
+		ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
 		return (1);
-	while (buffer[y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-			{
-				return (y);
-			}
-		}
-		else if (setmat(buffer, &y, &material));
-		else if (setorient(buffer, &y, obj));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else if (!ft_strcmp("RADIUS", buffer[y]))
-		{
-			if (buffer[y + 1] && buffer[y + 2])
-			{
-				obj->rad = ft_datoi(buffer[y + 1]);
-				obj->rad2 = ft_datoi(buffer[y + 2]);
-				y += 3;
-			}
-			else
-			{
-				return (y);
-			}
-		}
-		else
-			++y;
-	}
-	obj->type = TYPE_TORUS;
-	obj->material = material;
-	obj->nextitem = NULL;
-	lstaddobj(lstobj, obj);
-	return (y);
+	while (buffer[u.y] != NULL)
+	if ((res = init_torus_func1(&u, buffer, lstobj, neg)) != -1234567)
+		return (res);
+	u.obj->type = TYPE_TORUS;
+	u.obj->material = u.material;
+	u.obj->nextitem = NULL;
+	lstaddobj(lstobj, u.obj);
+	return (u.y);
 }
 
 
@@ -486,36 +478,40 @@ t_quadric initquad(double param[10])
 	return (quad);
 }
 
-//should grab one or several object with same id in the scene and add em all to a list of children
-//init compose only sets up components and remove them from the scene, making it and invisible object
-void		init_compose(t_obj **lstobj, char **buffer)
+typedef struct s_ncomp
 {
 	int 		y;
 	t_obj		*obj;
 	t_obj		*tmp;
+}				t_ncomp;
 
-	y = 1;
-	obj = init_null();
-	while (buffer[y] != NULL)
+void		init_compose(t_obj **lstobj, char **buffer)
+{
+	t_ncomp u;
+
+	u.y = 1;
+	u.obj = init_null();
+	while (buffer[u.y] != NULL)
 	{
-		if (!ft_strcmp("ID", buffer[y]))
+		if (!ft_strcmp("ID", buffer[u.y]))
 		{
-			if (buffer[y + 1])
+			if (buffer[u.y + 1])
 			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
+				u.obj->id = ft_atoi(buffer[u.y + 1]);
+				u.y += 2;
 			}
 			else
 				return;
 		}
 		else
 		{
-			while (*lstobj && (tmp = lstremoveoneobj(lstobj, ft_atoi(buffer[y]))))
-				lstaddobj(&obj->nextchild, tmp);
-			++y;
+			while (*lstobj && (u.tmp = lstremoveoneobj(lstobj,
+				ft_atoi(buffer[u.y]))))
+				lstaddobj(&u.obj->nextchild, u.tmp);
+			++u.y;
 		}
 	}
-	lstaddobj(lstobj, obj);
+	lstaddobj(lstobj, u.obj);
 }
 
 t_obj 				*init_null(void)
@@ -534,23 +530,31 @@ t_obj 				*init_null(void)
 	return(obj);
 }
 
+void 			setmat_func(t_mat *mat, int *y, char **buffer)
+{
+	mat->diffuse = colorinit(ft_datoi(buffer[*y + 1]),
+		ft_datoi(buffer[*y + 2]), ft_datoi(buffer[*y + 3]));
+	mat->reflection = ft_datoi(buffer[*y + 4]);
+	mat->brillance = ft_datoi(buffer[*y + 5]);
+	mat->bump = ft_datoi(buffer[*y + 6]);
+	mat->refraction = ft_datoi(buffer[*y + 7]);
+	mat->transparency = ft_datoi(buffer[*y + 8]);
+	mat->type = ft_datoi(buffer[*y + 9]);
+}
+
 bool			 	setmat(char **buffer, int *y, t_mat *mat)
 {
 	if (!ft_strcmp("MATERIAL", buffer[*y]))
 	{
-		if (buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3] && buffer[*y + 4] && buffer[*y + 5] && buffer[*y + 6] && buffer[*y + 7] && buffer[*y + 8] && buffer[*y + 9])
+		if (buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3] &&
+			buffer[*y + 4] && buffer[*y + 5] && buffer[*y + 6] &&
+			buffer[*y + 7] && buffer[*y + 8] && buffer[*y + 9])
 		{
-			mat->diffuse = colorinit(ft_datoi(buffer[*y + 1]),
-				ft_datoi(buffer[*y + 2]), ft_datoi(buffer[*y + 3]));
-			mat->reflection = ft_datoi(buffer[*y + 4]);
-			mat->brillance = ft_datoi(buffer[*y + 5]);
-			mat->bump = ft_datoi(buffer[*y + 6]);
-			mat->refraction = ft_datoi(buffer[*y + 7]);
-			mat->transparency = ft_datoi(buffer[*y + 8]);
-			mat->type = ft_datoi(buffer[*y + 9]);
+			setmat_func(mat, y, buffer);
 			*y += 10;
 		}
-		if (mat->type > 0 && buffer[*y] && buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3])
+		if (mat->type > 0 && buffer[*y] && buffer[*y + 1] && buffer[*y + 2]
+			&& buffer[*y + 3])
 		{
 			mat->procedural_scale = ft_datoi(buffer[*y]);
 			mat->diffuse2 = colorinit(ft_datoi(buffer[*y + 1]),
@@ -584,7 +588,8 @@ bool				setslice(char **buffer, int *y, t_obj *obj)
 
 	if (!ft_strcmp("SLICE", buffer[*y]))
 	{
-		if (buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3] && buffer[*y + 4] && buffer[*y + 5] && buffer[*y + 6])
+		if (buffer[*y + 1] && buffer[*y + 2] && buffer[*y + 3] &&
+			buffer[*y + 4] && buffer[*y + 5] && buffer[*y + 6])
 		{
 			slice = (t_obj*)malloc(sizeof(t_obj));
 			slice = init_null();
@@ -592,7 +597,6 @@ bool				setslice(char **buffer, int *y, t_obj *obj)
 			ft_datoi(buffer[*y + 2]), ft_datoi(buffer[*y + 3]));
 			slice->dir = vectorinit(ft_datoi(buffer[*y + 4]),
 			ft_datoi(buffer[*y + 5]), ft_datoi(buffer[*y + 6]));
-			//printf("slice->dir.x = %g slice->dir.y = %g slice->dir.z = %g\n", slice->dir.x, slice->dir.y, slice->dir.z);
 			vectornormalize(&slice->dir);
 			slice->type_obj = TYPE_SLICE;
 			lstaddslice(&obj->nextslice, slice);
@@ -603,7 +607,8 @@ bool				setslice(char **buffer, int *y, t_obj *obj)
 	return (FALSE);
 }
 
-bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj)
+bool				setnegative(char **buffer, int *y, t_obj *parent,
+	 t_obj **lstobj)
 {
 	static t_obj* parentsave = NULL;
 
@@ -623,7 +628,7 @@ bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj)
 			*y += init_quadric(lstobj, &(*(buffer + *y + 1)), TRUE);
 		else if (!(ft_strcmp(buffer[*y + 1], "OBJECT")))
 			*y += init_object(lstobj, &(*(buffer + *y + 1)), TRUE);
-		(*lstobj)->pos = vectoradd(parentsave->pos, (*lstobj)->pos); // add something for direction too?
+		(*lstobj)->pos = vectoradd(parentsave->pos, (*lstobj)->pos);
 		(*lstobj)->type_obj = TYPE_NEGATIVE;
 		(*lstobj)->isneg = TRUE;
 		return (TRUE);
@@ -631,7 +636,7 @@ bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj)
 	return (FALSE);
 }
 
-void		init_cam(t_env *e, char **buffer)
+typedef struct s_incam
 {
 	t_vec	up;
 	t_vec	u;
@@ -639,132 +644,147 @@ void		init_cam(t_env *e, char **buffer)
 
 	t_vec	tmp_up;
 	t_vec	tmp_vdir;
+}				t_incam;
+
+void 		init_cam_func(t_env *e, t_incam *o)
+{
+	e->cam.lookat = vectorscale(SCREEN_EYE_DIST, e->cam.vdir);
+	o->tmp_vdir = vectorinit(0, 0, 1);
+	o->tmp_up = vectorinit(0, -1, 0);
+	o->up = vectorinit(0, -1, 0);
+	o->u = vectorproduct(e->cam.vdir, o->up);
+	o->v = vectorproduct(o->u, e->cam.vdir);
+	o->u = vectornormalize(&o->u);
+	o->v = vectornormalize(&o->v);
+	e->cam.viewplanebottomleftpoint = vectorsub(
+	vectorsub(e->cam.lookat, vectorscale(HEIGHT / 2, o->v)),
+		vectorscale(WIDTH / 2, o->u));
+	e->cam.viewplanebottomleftpoint =
+		vectoradd(e->cam.viewplanebottomleftpoint, e->cam.eyepoint);
+	e->cam.viewplanebottomleftpoint =
+		vectoradd(e->cam.viewplanebottomleftpoint, e->cam.lookat);
+	e->cam.xincvector = vectorscale(1 / (double)WIDTH,
+	(vectorscale(2 * WIDTH / 2, o->u)));
+	e->cam.yincvector = vectorscale(1 / (double)HEIGHT,
+	(vectorscale(2 * HEIGHT / 2, o->v)));
+}
+
+void		init_cam(t_env *e, char **buffer)
+{
+	t_incam o;
 
 	if (buffer[1] && buffer[2] && buffer[3])
-		e->cam.eyepoint = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		e->cam.eyepoint = vectorinit(ft_datoi(buffer[1]),
+		ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
 		return;
-
 	if (!ft_strcmp("LOOKAT", buffer[4]) && buffer[5] && buffer[6] && buffer[7])
 	{
-		e->cam.lookat = vectorinit(ft_datoi(buffer[5]), ft_datoi(buffer[6]), ft_datoi(buffer[7]));
+		e->cam.lookat = vectorinit(ft_datoi(buffer[5]), ft_datoi(buffer[6]),
+			ft_datoi(buffer[7]));
 		e->cam.vdir = vectorsub(e->cam.lookat, e->cam.eyepoint);
 		vectornormalize(&e->cam.vdir);
 	}
-	else if (!ft_strcmp("ORIENTATION", buffer[4]) && buffer[5] && buffer[6] && buffer[7])
+	else if (!ft_strcmp("ORIENTATION", buffer[4]) && buffer[5] && buffer[6]
+		&& buffer[7])
 	{
-		e->cam.vdir = vectorinit(ft_datoi(buffer[5]), ft_datoi(buffer[6]), ft_datoi(buffer[7]));
+		e->cam.vdir = vectorinit(ft_datoi(buffer[5]), ft_datoi(buffer[6]),
+			ft_datoi(buffer[7]));
 		vectornormalize(&e->cam.vdir);
 	}
 	else
 		return;
-	e->cam.lookat = vectorscale(SCREEN_EYE_DIST, e->cam.vdir); //temporary I hope
-	tmp_vdir = vectorinit(0, 0, 1);
-	tmp_up = vectorinit(0, -1, 0); // why -1? Dunno, it works for now.
-	up = vectorinit(0, -1, 0);
-	u = vectorproduct(e->cam.vdir, up);
-	printf("up.x = %g, up.y = %g, up.z = %g\n", up.x, up.y, up.z);
-	v = vectorproduct(u, e->cam.vdir);
-	u = vectornormalize(&u);
-	v = vectornormalize(&v);
-	e->cam.viewplanebottomleftpoint = vectorsub(
-	vectorsub(e->cam.lookat, vectorscale(HEIGHT / 2, v)), vectorscale(WIDTH / 2, u));
-	e->cam.viewplanebottomleftpoint = vectoradd (e->cam.viewplanebottomleftpoint, e->cam.eyepoint);
-	e->cam.viewplanebottomleftpoint = vectoradd (e->cam.viewplanebottomleftpoint, e->cam.lookat);
-	e->cam.xincvector = vectorscale(1 / (double)WIDTH,
-	(vectorscale(2 * WIDTH / 2, u)));
-	e->cam.yincvector = vectorscale(1 / (double)HEIGHT,
-	(vectorscale(2 * HEIGHT / 2, v)));
+	init_cam_func(e, &o);
 }
 
-int			init_object(t_obj **lstobj, char **buffer, bool neg)
+typedef struct s_niniobj
 {
 	int 		y;
 	t_obj		*obj;
 	t_obj		*cursor;
-	int 		id; // id of object(s) added to the scene
+	int 		id;
+}				t_niniobj;
 
-	obj = NULL;
-	y = 2;
-	id = 0;
-	//obj = (t_obj*)malloc(sizeof(t_obj));
+int 			init_obj_func2(t_niniobj *u, char **buffer)
+{
+	if (buffer[u->y + 1])
+	{
+		u->obj->id = ft_atoi(buffer[u->y + 1]);
+		u->y += 2;
+	}
+	else
+		return (u->y);
+	return (-1234567);
+}
+int 			init_obj_func3(t_niniobj *o, char **buffer)
+{
+	if (buffer[o->y + 1])
+	{
+		o->obj->rotation = ft_datoi(buffer[o->y + 1]) * M_PI / 180.0;
+		o->y += 2;
+	}
+	return (-1234567);
+}
 
+int 			init_object_func1(t_niniobj *o, char **buffer, t_obj **lstobj,
+	bool neg)
+{
+	int (res);
+
+	if (!ft_strcmp("ID", buffer[o->y]) &&
+		(res = init_obj_func2(o, buffer)) != -1234567)
+		return (res);
+	else if (!ft_strcmp("POSITION", buffer[o->y]))
+	{
+		if (buffer[o->y + 1] && buffer[o->y + 2] && buffer[o->y + 3])
+		{
+			o->obj->pos = vectorinit(ft_datoi(buffer[o->y + 1]),
+			ft_datoi(buffer[o->y + 2]), ft_datoi(buffer[o->y + 3]));
+			o->y += 4;
+		}
+		else
+			return (o->y);
+	}
+	else if (setorient(buffer, &o->y, o->obj));
+	else if (setslice(buffer, &o->y, o->obj));
+	else if (neg == FALSE && setnegative(buffer, &o->y, o->obj, OHAO));
+	else if (neg == TRUE && setnegative(buffer, &o->y, NULL, lstobj));
+	else if (!ft_strcmp("ROTATE", buffer[o->y]))
+		init_obj_func3(o, buffer);
+	else
+		++o->y;
+	return (-1234567);
+}
+
+int			init_object(t_obj **lstobj, char **buffer, bool neg)
+{
+	t_niniobj o;
+	int res;
+
+	o.obj = NULL;
+	o.y = 2;
+	o.id = 0;
 	if (buffer[1])
 	{
-		cursor = *lstobj;
-		while (cursor)
+		o.cursor = *lstobj;
+		while (o.cursor)
 		{
-			if (cursor->id == ft_atoi(buffer[1]))
-			{
-				obj = cursor;
-			}
-			cursor = cursor->nextitem;
+			if (o.cursor->id == ft_atoi(buffer[1]))
+				o.obj = o.cursor;
+			o.cursor = o.cursor->nextitem;
 		}
 	}
 	if (buffer == NULL)
-	{
 		return (1);
-	}
-	while (buffer[y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[y]))
-		{ //segfault
-			if (buffer[y + 1])
-			{
-				id = ft_atoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-				return (y);
-		}
-		else if (!ft_strcmp("POSITION", buffer[y]))
-		{
-			//ft_putendl("typestart2");
-			if (buffer[y + 1] && buffer[y + 2] && buffer[y + 3])
-			{
-				obj->pos = vectorinit(ft_datoi(buffer[y + 1]), ft_datoi(buffer[y + 2]), ft_datoi(buffer[y + 3]));
-				y += 4;
-			}
-			else
-			{
-				return (y);
-			}
-		}
-		else if (setorient(buffer, &y, obj));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else if (!ft_strcmp("ROTATE", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->rotation = ft_datoi(buffer[y + 1]) * M_PI / 180.0;
-				y += 2;
-			}
-		}
-		else
-		{
-			++y;
-		}
-	}
-		printf("extractobj\n");
-	extractobj(lstobj, obj, id);
-	return (y);
+	while (buffer[o.y] != NULL)
+	if ((res = init_object_func1(&o, buffer, lstobj, neg)) != -1234567)
+		return (res);
+	extractobj(lstobj, o.obj, o.id);
+	return (o.y);
 }
 
-void	init_light(t_env *e, char **buffer)
+void 	init_light_func(char **buffer, int y, t_light *light)
 {
-	int			y;
-	t_light		*light;
-
-	light = (t_light*)malloc(sizeof(t_light));
-	y = 4;
-	if (buffer[1] && buffer[2] && buffer[3])
-		light->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
-	else
-	{
-		return;
-	}
 	while (buffer[y] != NULL)
 	{
 		if (!ft_strcmp("INTENSITY", buffer[y]))
@@ -776,15 +796,26 @@ void	init_light(t_env *e, char **buffer)
 				y += 4;
 			}
 			else
-			{
 				return;
-			}
 		}
 		else
-		{
 			++y;
-		}
 	}
+}
+
+void	init_light(t_env *e, char **buffer)
+{
+	int			y;
+	t_light		*light;
+
+	light = (t_light*)malloc(sizeof(t_light));
+	y = 4;
+	if (buffer[1] && buffer[2] && buffer[3])
+		light->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]),
+			ft_datoi(buffer[3]));
+	else
+		return;
+	init_light_func(buffer, y, light);
 	light->next = NULL;
 	lstaddlight(&e->lights, light);
 }
@@ -819,61 +850,78 @@ void 		rotateinnercomponents(t_obj *obj, t_obj *child)
 	cursor = child->nextneg;
 	while (cursor)
 	{
-		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
-		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
+		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir,
+			vectoradd(cursor->dir, cursor->pos), obj->rotation);
+		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir,
+			vectoradd(obj->pos, cursor->pos), obj->rotation);
 		cursor->dir = vectorsub(cursor->dir, cursor->pos);
 		cursor = cursor->nextitem;
 	}
 	cursor = child->nextslice;
 	while (cursor)
 	{
-		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
-		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
+		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir,
+			vectoradd(cursor->dir, cursor->pos), obj->rotation);
+		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir,
+			vectoradd(obj->pos, cursor->pos), obj->rotation);
 		cursor->dir = vectorsub(cursor->dir, cursor->pos);
 		cursor->rotation = 0;
 		cursor = cursor->nextslice;
 	}
 }
 
-void		extractobj(t_obj **lstobj, t_obj *obj, int id)
+typedef struct s_extobj
 {
 	t_obj *tmp;
 	t_obj *cursor;
+	double rot_angle;
+	t_vec worldfd;
+	t_vec rot_axis;
+}				t_extobj;
 
-	cursor = obj->nextchild;
-	while (cursor)
+void 		extract_obj_func(t_extobj *o, int id, t_obj *obj)
+{
+	o->tmp = copyobj(o->cursor);
+	o->tmp->id = id;
+	o->worldfd = vectorinit(0, 0, -1);
+	vectornormalize(&o->rot_axis);
+	o->tmp->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir,
+		vectoradd(o->tmp->dir, o->tmp->pos), obj->rotation);
+	o->tmp->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir,
+		vectoradd(obj->pos, o->tmp->pos), obj->rotation);
+	o->tmp->dir = vectorsub(o->tmp->dir, o->tmp->pos);
+	if (obj->rotation && (o->tmp->nextneg || o->tmp->nextslice))
+		rotateinnercomponents(obj, o->tmp);
+	vectornormalize(&o->tmp->dir);
+	o->rot_angle = acos(vectordot(o->worldfd, obj->dir));
+	o->rot_axis = vectorproduct(o->worldfd, obj->dir);
+	if (o->rot_axis.x || o->rot_axis.y || o->rot_axis.z)
 	{
-		if (cursor->nextchild)
+		o->tmp->pos = vectorrotate(o->tmp->pos, o->rot_axis, o->rot_angle);
+		o->tmp->pos = vectoradd(o->tmp->pos, obj->pos);
+	}
+	else
+		o->tmp->pos = vectoradd(o->tmp->pos, obj->pos);
+}
+
+void		extractobj(t_obj **lstobj, t_obj *obj, int id)
+{
+	t_extobj o;
+
+	o.cursor = obj->nextchild;
+	while (o.cursor)
+	{
+		if (o.cursor->nextchild)
 		{
-			if (cursor->type == 0)// if there is a child of another object containing children, add their coordinates
-				cursor->pos = vectoradd(cursor->pos, obj->pos);
-			extractobj(lstobj, cursor, id);
+			if (o.cursor->type == 0)
+				o.cursor->pos = vectoradd(o.cursor->pos, obj->pos);
+			extractobj(lstobj, o.cursor, id);
 		}
-		else if (cursor->type > 0) //if type == 0, it only contains chidren
+		else if (o.cursor->type > 0)
 		{
-			tmp = copyobj(cursor);
-			tmp->id = id;
-			t_vec worldfd = vectorinit(0, 0, -1); //forward of world, forward of object is dir
-			double rot_angle;
-			t_vec rot_axis;
-			vectornormalize(&rot_axis);
-			tmp->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(tmp->dir, tmp->pos), obj->rotation);
-			tmp->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, tmp->pos), obj->rotation);
-			tmp->dir = vectorsub(tmp->dir, tmp->pos);
-			if (obj->rotation && (tmp->nextneg || tmp->nextslice))
-				rotateinnercomponents(obj, tmp);
-			vectornormalize(&tmp->dir);
-			rot_angle = acos(vectordot(worldfd, obj->dir));
-			rot_axis = vectorproduct(worldfd, obj->dir);
-			if (rot_axis.x || rot_axis.y || rot_axis.z) // if ROTATE
-			{
-				tmp->pos = vectorrotate(tmp->pos, rot_axis, rot_angle);
-				tmp->pos = vectoradd(tmp->pos, obj->pos);
-			}
-			else
-				tmp->pos = vectoradd(tmp->pos, obj->pos);
-			lstaddobj(lstobj, tmp);
+			extract_obj_func(&o, id, obj);
+			lstaddobj(lstobj, o.tmp);
 		}
-		cursor = cursor->nextitem;
+		o.cursor = o.cursor->nextitem;
 	}
 }

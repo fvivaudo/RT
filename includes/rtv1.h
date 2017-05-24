@@ -72,7 +72,7 @@
 
 # define TYPE_BUMP				1
 # define SCREEN_EYE_DIST		400
-
+# define OHAO &o->obj->nextneg
 //cosinus and sinus sometimes give back very small values instead of 0
 //so i'm using this to convert them to 0
 # define ROUNDING_LIMIT			0.000001
