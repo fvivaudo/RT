@@ -6,31 +6,31 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:58:09 by fvivaudo          #+#    #+#             */
-/*   Updated: 2017/03/16 10:57:12 by dmoureu-         ###   ########.fr       */
+/*   Updated: 2017/05/24 14:00:49 by adberard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <rtv1.h>
 
-void read_apply_one(t_parser *r, char *line, char *str)
+void		read_apply_one(t_parser *r, char *line, char *str)
 {
 	int ok;
 
 	ok = 0;
-	fprintf(r->fi,"%s", str);
+	fprintf(r->fi, "%s", str);
 	while (*line)
 	{
 		if (ok)
 		{
 			if (*line == ')')
 			{
-				fprintf(r->fi," ");
+				fprintf(r->fi, " ");
 				return ;
 			}
-			if (*line == ',')
-				fprintf(r->fi," ");
+			if (*line == ', ')
+				fprintf(r->fi, " ");
 			else
-				fprintf(r->fi,"%c", toupper(*line));
+				fprintf(r->fi, "%c", toupper(*line));
 		}
 		if (*line == '(')
 			ok = 1;
@@ -39,7 +39,7 @@ void read_apply_one(t_parser *r, char *line, char *str)
 	check_quit();
 }
 
-void read_work_obj2(t_parser *r, char **line)
+void		read_work_obj2(t_parser *r, char **line)
 {
 	char **tmp;
 
@@ -51,9 +51,10 @@ void read_work_obj2(t_parser *r, char **line)
 		read_apply_one(r, *tmp, " ANGLE ");
 }
 
-void read_work_obj(t_parser *r, char **line)
+void		read_work_obj(t_parser *r, char **line)
 {
 	char **tmp;
+
 	if ((tmp = read_get_one(r, line, "style")))
 		read_apply_one(r, *tmp, "");
 	if ((tmp = read_get_one(r, line, "frame")))
@@ -75,17 +76,17 @@ void read_work_obj(t_parser *r, char **line)
 	read_work_obj2(r, line);
 }
 
-int read_is_anim(t_parser *r, char *line)
+int			read_is_anim(t_parser *r, char *line)
 {
 	if (strstr(line, "anim"))
 	{
-		fprintf(r->fi,"ANIM ");
+		fprintf(r->fi, "ANIM ");
 		return (1);
 	}
 	return (0);
 }
 
-void read_set_last_line_obj(t_parser *r)
+void		read_set_last_line_obj(t_parser *r)
 {
 	r->endobj = LIN;
 	while (*r->endobj[0] != '}')

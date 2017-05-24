@@ -6,19 +6,19 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:58:09 by fvivaudo          #+#    #+#             */
-/*   Updated: 2017/03/16 10:57:12 by dmoureu-         ###   ########.fr       */
+/*   Updated: 2017/05/24 12:46:05 by adberard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <rtv1.h>
 
-void check_quit()
+void		check_quit(void)
 {
 	ft_putstr("fichier invalide\n");
 	exit(0);
 }
 
-void free_tab(char **str)
+void		free_tab(char **str)
 {
 	char **tmp;
 
@@ -31,37 +31,40 @@ void free_tab(char **str)
 	free(tmp);
 }
 
-char *get_file_content(char *filename)
+char		*get_file_content(char *filename)
 {
-	char *r;
-	FILE *f = fopen(filename, "rb");
+	char	*r;
+	long	fsize;
+	FILE	*f;
+
+	f = fopen(filename, "rb");
 	fseek(f, 0, SEEK_END);
-	long fsize = ftell(f);
+	fsize = ftell(f);
 	fseek(f, 0, SEEK_SET);
 	r = malloc(fsize + 1);
 	fread(r, fsize, 1, f);
 	fclose(f);
 	r[fsize] = 0;
-	return r;
+	return (r);
 }
 
-char  **read_skip_list(t_parser *r, char **line)
+char		**read_skip_list(t_parser *r, char **line)
 {
 	(void)r;
 	if (strstr(*line, "negative") || strstr(*line, "slices"))
-		while(!strstr(*line, "]"))
+		while (!strstr(*line, "]"))
 			line++;
 	return (line);
 }
 
-char **read_get_one(t_parser *r, char **line ,char *str)
+char		**read_get_one(t_parser *r, char **line, char *str)
 {
 	while (line != r->endobj)
 	{
 		line = read_skip_list(r, line);
 		if (strstr(*line, str))
-			return line;
+			return (line);
 		line++;
 	}
-	return NULL;
+	return (NULL);
 }

@@ -6,13 +6,13 @@
 /*   By: fvivaudo <fvivaudo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/10/31 15:58:09 by fvivaudo          #+#    #+#             */
-/*   Updated: 2017/03/16 10:57:12 by dmoureu-         ###   ########.fr       */
+/*   Updated: 2017/05/24 13:50:25 by adberard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <rtv1.h>
 
-void read_get_slices_set(t_parser *r, char **line)
+void		read_get_slices_set(t_parser *r, char **line)
 {
 	char **tmp;
 	char **tmp2;
@@ -26,12 +26,11 @@ void read_get_slices_set(t_parser *r, char **line)
 	r->endobj = tmp2;
 }
 
-
-void read_get_slices(t_parser *r)
+void		read_get_slices(t_parser *r)
 {
-	char **line;
-	char **endobj;
-	int ok;
+	char	**line;
+	char	**endobj;
+	int		ok;
 
 	ok = 0;
 	line = r->obj;
@@ -53,11 +52,11 @@ void read_get_slices(t_parser *r)
 	}
 }
 
-void read_get_negatives(t_parser *r)
+void		read_get_negatives(t_parser *r)
 {
-	char **line;
-	char **endobj;
-	int ok;
+	char	**line;
+	char	**endobj;
+	int		ok;
 
 	ok = 0;
 	line = r->obj;
@@ -68,7 +67,7 @@ void read_get_negatives(t_parser *r)
 		{
 			if (strstr(*line, "object"))
 			{
-				fprintf(r->fi," NEGATIVE ");
+				fprintf(r->fi, " NEGATIVE ");
 				read_get_slices_set(r, line);
 			}
 			if (strstr(*line, "]"))
@@ -80,18 +79,18 @@ void read_get_negatives(t_parser *r)
 	}
 }
 
-void read_compose_apply_id(t_parser *r, char *line)
+void		read_compose_apply_id(t_parser *r, char *line)
 {
 	read_apply_one(r, line, "");
-	fprintf(r->fi," ID %d\nOBJECT %d", r->comp_id, r->comp_id);
+	fprintf(r->fi, " ID %d\nOBJECT %d", r->comp_id, r->comp_id);
 	r->comp_id++;
 }
 
-void read_get_compose_line(t_parser *r, char **line, char **end)
+void		read_get_compose_line(t_parser *r, char **line, char **end)
 {
 	char **tmp;
 
-	fprintf(r->fi,"\nCOMPOSE ");
+	fprintf(r->fi, "\nCOMPOSE ");
 	line++;
 	tmp = line;
 	while (line != end)
@@ -110,5 +109,5 @@ void read_get_compose_line(t_parser *r, char **line, char **end)
 			read_apply_one(r, *tmp, " ROTATE ");
 		tmp++;
 	}
-	fprintf(r->fi,"\n");
+	fprintf(r->fi, "\n");
 }

@@ -1,6 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   readconfig2.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: adberard <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/05/24 12:39:47 by adberard          #+#    #+#             */
+/*   Updated: 2017/05/24 12:40:03 by adberard         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/rtv1.h"
 
-void check_brackets_rem(t_checker *c, char *str)
+void		check_brackets_rem(t_checker *c, char *str)
 {
 	if ((str[c->i] == '}' || str[c->i] == ']' || str[c->i] == ')') &&
 		c->itab <= 0)
@@ -25,9 +37,10 @@ void check_brackets_rem(t_checker *c, char *str)
 	}
 }
 
-int 	check_brackets(t_parser *r)
+int			check_brackets(t_parser *r)
 {
 	t_checker c;
+
 	c.i = 0;
 	c.itab = 0;
 	while (CON[c.i])
@@ -41,7 +54,7 @@ int 	check_brackets(t_parser *r)
 	return (1);
 }
 
-void check_content_detail(char *line)
+void		check_content_detail(char *line)
 {
 	if (!strstr(line, "type") && !strstr(line, "pos") &&
 		!strstr(line, "orientation") && !strstr(line, "material") &&
@@ -59,7 +72,7 @@ void check_content_detail(char *line)
 		check_quit();
 }
 
-int check_content(t_parser *r)
+int			check_content(t_parser *r)
 {
 	char **lines;
 	char **tmp;
@@ -75,7 +88,7 @@ int check_content(t_parser *r)
 	return (1);
 }
 
-void read_check(t_parser *r)
+void		read_check(t_parser *r)
 {
 	if (!check_brackets(r))
 		check_quit();
