@@ -10,8 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-/* Rien de tres interessant */
-
 #include <rtv1.h>
 
 t_vec		vectorinit(double x, double y, double z)
@@ -23,7 +21,6 @@ t_vec		vectorinit(double x, double y, double z)
 	vec.z = z;
 	return (vec);
 }
-
 
 t_vec	vectorscale(double c, t_vec v)
 {
@@ -113,10 +110,6 @@ t_vec	vectornormalize(t_vec *v)
 	return (*v);
 }
 
-/*
-** Rotate the vector v and return it as a fresh new copy
-*/
-//multiply by initital vector by rotation matrix
 t_vec	vectorrotate(t_vec to_rot, t_vec r_a, double rad)
 {
 	t_vec	res;
@@ -136,83 +129,100 @@ t_vec	vectorrotate(t_vec to_rot, t_vec r_a, double rad)
 	res.z = to_rot.x * (r_a.z * r_a.x * (tmp_rad) - r_a.y * s_rad);
 	res.z += to_rot.y * (r_a.z * r_a.y * (tmp_rad) + r_a.x * s_rad);
 	res.z += to_rot.z * (c_rad + r_a.z * r_a.z * (tmp_rad));
-
 	return (res);
 }
 
-//http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation/
-//rotating the point (x,y,z) about the line through (a,b,c) with direction vector ⟨u,v,w⟩ (where u2 + v2 + w2 = 1) by the angle θ.
-
-t_vec vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta) 
+typedef struct s_vpr
 {
-	// Set some intermediate values.
-	double u2 = axd.x * axd.x;
-	double v2 = axd.y * axd.y;
-	double w2 = axd.z * axd.z;
-	double cost = cos(theta);
-	double omc = 1 - cost;
-	double sint = sin(theta);
-
-	// Use the formula in the paper.
+	double u2 ;
+	double v2 ;
+	double w2 ;
+	double cost;
+	double omc ;
+	double sint;
 	t_vec res;
-	res.x = ((axp.x *(v2 + w2) - axd.x*(axp.y*axd.y + axp.z*axd.z - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * omc
-			+ p.x*cost
-			+ (-axp.z*axd.y + axp.y*axd.z - axd.z*p.y + axd.y*p.z)*sint);
+}				t_vpr;
 
-	res.y = ((axp.y*(u2 + w2) - axd.y*(axp.x*axd.x + axp.z*axd.z - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * omc
-			+ p.y*cost
-			+ (axp.z*axd.x - axp.x*axd.z + axd.z*p.x - axd.x*p.z)*sint);
+t_vec vectorpointrotatearoundaxis(t_vec axp, t_vec axd, t_vec p, double theta)
+{
+	t_vpr u;
 
-	res.z = ((axp.z*(u2 + v2) - axd.z*(axp.x*axd.x + axp.y*axd.y - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * omc
-			+ p.z*cost
-			+ (-axp.y*axd.x + axp.x*axd.y - axd.y*p.x + axd.x*p.y)*sint);
-
-	return (res);
+	u.u2 = axd.x * axd.x;
+	u.v2 = axd.y * axd.y;
+	u.w2 = axd.z * axd.z;
+	u.cost = cos(theta);
+	u.omc = 1 - u.cost;
+	u.sint = sin(theta);
+	u.res.x = ((axp.x *(u.v2 + u.w2) - axd.x*(axp.y*axd.y +
+		axp.z*axd.z - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * u.omc
+			+ p.x*u.cost
+			+ (-axp.z*axd.y + axp.y*axd.z - axd.z*p.y + axd.y*p.z)*u.sint);
+	u.res.y = ((axp.y*(u.u2 + u.w2) - axd.y*(axp.x*axd.x
+		+ axp.z*axd.z - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * u.omc
+			+ p.y*u.cost
+			+ (axp.z*axd.x - axp.x*axd.z + axd.z*p.x - axd.x*p.z)*u.sint);
+	u.res.z = ((axp.z*(u.u2 + u.v2) - axd.z*(axp.x*axd.x
+		+ axp.y*axd.y - axd.x*p.x - axd.y*p.y - axd.z*p.z)) * u.omc
+			+ p.z*u.cost
+			+ (-axp.y*axd.x + axp.x*axd.y - axd.y*p.x + axd.x*p.y)*u.sint);
+	return (u.res);
 }
 
-
-
-void setrotationmatrix(double angle, t_vec axis, double rotmat[4][4]) //normalize entry vector
+void setrotationmatrix_func(double rotmat[4][4])
 {
-	vectornormalize(&axis);
-
-	//angle = angle * M_PI / 180.0; //converting to radian value
-	double x2 = axis.x * axis.x;
-	double y2 = axis.y * axis.y;
-	double z2 = axis.z * axis.z;
-	double cangle = cos(angle);
-	double sangle = sin(angle);
-
-
-	if (cangle < ROUNDING_LIMIT)
-		cangle = 0;
-	if (sangle < ROUNDING_LIMIT)
-		sangle = 0;
-//    double rotationMatrix[3][3];
-
-	rotmat[0][0] = (x2 + (y2 + z2) * cangle);
-	rotmat[0][1] = (axis.x * axis.y * (1 - cangle) - axis.z * sangle);
-	rotmat[0][2] = (axis.x * axis.z * (1 - cangle) + axis.y * sangle);
-	rotmat[0][3] = 0;
-
-	rotmat[1][0] = (axis.x * axis.y * (1 - cangle) + axis.z * sangle);
-	rotmat[1][1] = (y2 + (x2 + z2) * cangle);
-	rotmat[1][2] = (axis.y * axis.z * (1 - cangle) - axis.x * sangle);
-	rotmat[1][3] = 0;
-
-	rotmat[2][0] = (axis.x * axis.z * (1 - cangle) - axis.y * sangle);
-	rotmat[2][1] = (axis.y * axis.z * (1 - cangle) + axis.x * sangle);
-	rotmat[2][2] = (z2 + (x2 + y2) * cangle);
 	rotmat[2][3] = 0;
-
 	rotmat[3][0] = 0;
 	rotmat[3][1] = 0;
 	rotmat[3][2] = 0;
 	rotmat[3][3] = 1;
-
 }
 
-void transposematrix(double transposedmatrix[4][4], double rotationmatrix[4][4]) //normalize entry vector
+typedef struct s_srtm
+{
+	double x2 ;
+	double y2 ;
+	double z2 ;
+	double cangle ;
+	double sangle ;
+}				t_srtm;
+
+t_srtm 	setrotationmatrix_init(double angle, t_vec axis)
+{
+	t_srtm u;
+
+	u.x2 = axis.x * axis.x;
+	u.y2 = axis.y * axis.y;
+	u.z2 = axis.z * axis.z;
+	u.cangle = cos(angle);
+	u.sangle = sin(angle);
+	return(u);
+}
+
+void setrotationmatrix(double angle, t_vec axis, double rotmat[4][4])
+{
+	t_srtm u;
+
+	vectornormalize(&axis);
+	u = setrotationmatrix_init(angle, axis);
+	if (u.cangle < ROUNDING_LIMIT)
+		u.cangle = 0;
+	if (u.sangle < ROUNDING_LIMIT)
+		u.sangle = 0;
+	rotmat[0][0] = (u.x2 + (u.y2 + u.z2) * u.cangle);
+	rotmat[0][1] = (axis.x * axis.y * (1 - u.cangle) - axis.z * u.sangle);
+	rotmat[0][2] = (axis.x * axis.z * (1 - u.cangle) + axis.y * u.sangle);
+	rotmat[0][3] = 0;
+	rotmat[1][0] = (axis.x * axis.y * (1 - u.cangle) + axis.z * u.sangle);
+	rotmat[1][1] = (u.y2 + (u.x2 + u.z2) * u.cangle);
+	rotmat[1][2] = (axis.y * axis.z * (1 - u.cangle) - axis.x * u.sangle);
+	rotmat[1][3] = 0;
+	rotmat[2][0] = (axis.x * axis.z * (1 - u.cangle) - axis.y * u.sangle);
+	rotmat[2][1] = (axis.y * axis.z * (1 - u.cangle) + axis.x * u.sangle);
+	rotmat[2][2] = (u.z2 + (u.x2 + u.y2) * u.cangle);
+	setrotationmatrix_func(rotmat);
+}
+
+void transposematrix(double transposedmatrix[4][4], double rotationmatrix[4][4])
 {
 	int i;
 	int y;
@@ -231,7 +241,7 @@ void transposematrix(double transposedmatrix[4][4], double rotationmatrix[4][4])
 	}
 }
 
-void multmatrix(double res[4][4],double m1[4][4], double m2[4][4]) //normalize entry vector
+void multmatrix(double res[4][4],double m1[4][4], double m2[4][4])
 {
 	int i;
 	int y;
@@ -258,294 +268,66 @@ void multmatrix(double res[4][4],double m1[4][4], double m2[4][4]) //normalize e
 	}
 }
 
-//to rotate a quadric, we need to multiply it by a rotation matrix multiplied by it's transposition
-t_quadric	quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos)
+typedef struct s_qrte
 {
 	double	tmpquad[4][4];
 	double	tmprot[4][4];
 	double	tmptranspose[4][4];
 	double	tmpres[4][4];
 	double	tmp[4][4];
+}				t_qrte;
+
+void quadricrotate_func(t_qrte *u, t_quadric *to_rot)
+{
+	to_rot->a = u->tmpres[0][0];
+	to_rot->h = u->tmpres[0][1];
+	to_rot->g = u->tmpres[0][2];
+	to_rot->h = u->tmpres[1][0];
+	to_rot->b = u->tmpres[1][1];
+	to_rot->f = u->tmpres[1][2];
+	to_rot->g = u->tmpres[2][0];
+	to_rot->f = u->tmpres[2][1];
+	to_rot->c = u->tmpres[2][2];
+	to_rot->p = u->tmpres[0][3];
+	to_rot->f = u->tmpres[1][3];
+	to_rot->c = u->tmpres[2][3];
+	to_rot->g = u->tmpres[3][0];
+	to_rot->f = u->tmpres[3][1];
+	to_rot->c = u->tmpres[3][2];
+	to_rot->d = u->tmpres[3][3];
+}
+
+void quadricrotate_func2(t_qrte *u, t_quadric *to_rot)
+{
+	u->tmpquad[0][0] = to_rot->a;
+	u->tmpquad[0][1] = to_rot->h;
+	u->tmpquad[0][2] = to_rot->g;
+	u->tmpquad[1][0] = to_rot->h;
+	u->tmpquad[1][1] = to_rot->b;
+	u->tmpquad[1][2] = to_rot->f;
+	u->tmpquad[2][0] = to_rot->g;
+	u->tmpquad[2][1] = to_rot->f;
+	u->tmpquad[2][2] = to_rot->c;
+	u->tmpquad[0][3] = to_rot->p;
+	u->tmpquad[1][3] = to_rot->f;
+	u->tmpquad[2][3] = to_rot->c;
+	u->tmpquad[3][0] = to_rot->g;
+	u->tmpquad[3][1] = to_rot->f;
+	u->tmpquad[3][2] = to_rot->c;
+	u->tmpquad[3][3] = to_rot->d;
+}
+
+t_quadric	quadricrotate(t_quadric to_rot, t_vec r_a, double rad, t_vec pos)
+{
+	t_qrte u;
 
 	if (pos.x)
 		pos.x = pos.x;
-
-	setrotationmatrix(rad, r_a, tmprot); //tmpquad holds rotation matrix
-	transposematrix(tmptranspose, tmprot); //tmprot holds transposed rotation matrix
-	//printf("c_rad = %g, r_a.x = %g, tmp_rad = %g\n", c_rad, r_a.x, tmp_rad);
-
-	printf("rotation matrix\n");
-	for (int c = 0; c < 4; ++c)
-	{
-		for (int d = 0; d < 4; ++d)
-		{
-			printf("%10g\t", tmprot[c][d]);
-		}
-		printf("\n");
-	}
-
-	tmpquad[0][0] = to_rot.a;
-	tmpquad[0][1] = to_rot.h;
-	tmpquad[0][2] = to_rot.g;
-	tmpquad[1][0] = to_rot.h;
-	tmpquad[1][1] = to_rot.b;
-	tmpquad[1][2] = to_rot.f;
-	tmpquad[2][0] = to_rot.g;
-	tmpquad[2][1] = to_rot.f;
-	tmpquad[2][2] = to_rot.c;
-
-	tmpquad[0][3] = to_rot.p;
-	tmpquad[1][3] = to_rot.f;
-	tmpquad[2][3] = to_rot.c;
-
-	tmpquad[3][0] = to_rot.g;
-	tmpquad[3][1] = to_rot.f;
-	tmpquad[3][2] = to_rot.c;
-	tmpquad[3][3] = to_rot.d;
-
-	printf("input matrix\n");
-	for (int c = 0; c < 4; ++c)
-	{
-		for (int d = 0; d < 4; ++d)
-		{
-			printf("%10g\t", tmpquad[c][d]);
-		}
-		printf("\n");
-	}
-
-	multmatrix(tmp, tmptranspose, tmpquad);
-
-	printf("mult1\n");
-	for (int c = 0; c < 4; ++c)
-	{
-		for (int d = 0; d < 4; ++d)
-		{
-			printf("%10g\t", tmp[c][d]);
-		}
-		printf("\n");
-	}
-
-	multmatrix(tmpres, tmp, tmprot);
-
-
-/*
-	for(int i = 0; i < 3; i++ )
-	{
-		for(int j = 0; j < 3; j++)
-		{
-			tmpres[i][j] = 0;
-			for(int k = 0; k < 3; k++)
-			{
-				tmpres[i][j] += tmprot[i][k] * tmpquad[k][j];
-			}
-		}
-	}*/
-
-	to_rot.a = tmpres[0][0];
-	to_rot.h = tmpres[0][1];
-	to_rot.g = tmpres[0][2];
-	to_rot.h = tmpres[1][0];
-	to_rot.b = tmpres[1][1];
-	to_rot.f = tmpres[1][2];
-	to_rot.g = tmpres[2][0];
-	to_rot.f = tmpres[2][1];
-	to_rot.c = tmpres[2][2];
-
-	to_rot.p = tmpres[0][3];
-	to_rot.f = tmpres[1][3];
-	to_rot.c = tmpres[2][3];
-	to_rot.g = tmpres[3][0];
-	to_rot.f = tmpres[3][1];
-	to_rot.c = tmpres[3][2];
-	to_rot.d = tmpres[3][3];
-
-	printf("rotated matrix\n");
-	for (int c = 0; c < 4; ++c)
-	{
-		for (int d = 0; d < 4; ++d)
-		{
-			printf("%10g\t", tmpres[c][d]);
-		}
-		printf("\n");
-	}
+	setrotationmatrix(rad, r_a, u.tmprot);
+	transposematrix(u.tmptranspose, u.tmprot);
+	quadricrotate_func2(&u, &to_rot);
+	multmatrix(u.tmp, u.tmptranspose, u.tmpquad);
+	multmatrix(u.tmpres, u.tmp, u.tmprot);
+	quadricrotate_func(&u, &to_rot);
 	return (to_rot);
 }
-/*
-t_quadric	quadricrotate(t_quadric to_rot, t_vec r_a, double rad)
-{
-	double	tmpquad[3][3];
-	double	tmprot[3][3];
-	double	tmpres[3][3];
-	double 	c_rad;
-	double 	s_rad;
-	double	tmp_rad;
-	double	sum;
-
-	c_rad = cos(rad);
-	s_rad = sin(rad);
-
-	if (c_rad < ROUNDING_LIMIT)
-		c_rad = 0;
-	if (s_rad < ROUNDING_LIMIT)
-		s_rad = 0;
-
-	tmp_rad = 1.0 - c_rad;
-
-	//printf("c_rad = %g, r_a.x = %g, tmp_rad = %g\n", c_rad, r_a.x, tmp_rad);
-	tmpres[0][0] = (c_rad + r_a.x * r_a.x * (tmp_rad));
-	tmpres[0][1] = (r_a.x * r_a.y * (tmp_rad) - r_a.z * s_rad);
-	tmpres[0][2] = (r_a.x * r_a.z * (tmp_rad)) + r_a.y * s_rad;
-	tmpres[1][0] = (r_a.y * r_a.x * (tmp_rad) + r_a.z * s_rad);
-	tmpres[1][1] = (c_rad + r_a.y * r_a.y * (tmp_rad));
-	tmpres[1][2] = (r_a.y * r_a.z * (tmp_rad) - r_a.x * s_rad);
-	tmpres[2][0] = (r_a.z * r_a.x * (tmp_rad) - r_a.y * s_rad);
-	tmpres[2][1] = (r_a.z * r_a.y * (tmp_rad) + r_a.x * s_rad);
-	tmpres[2][2] = (c_rad + r_a.z * r_a.z * (tmp_rad)); //tmprot
-
-
-	tmpquad[0][0] = to_rot.a;
-	tmpquad[0][1] = to_rot.h;
-	tmpquad[0][2] = to_rot.g;
-	tmpquad[1][0] = to_rot.h;
-	tmpquad[1][1] = to_rot.b;
-	tmpquad[1][2] = to_rot.f;
-	tmpquad[2][0] = to_rot.g;
-	tmpquad[2][1] = to_rot.f;
-	tmpquad[2][2] = to_rot.c;
-
-	int c;
-	int d;
-	int k;
-
-//	printf("initital matrix\n");
-	for (c = 0; c < 3; ++c)
-	{
-		for (d = 0; d < 3; ++d)
-		{
-//			printf("%10g\t", tmpquad[c][d]);
-		}
-//		printf("\n");
-	}
-
-
-	int i;
-	int j;
-	double determinant = 0;
-
-	for(i = 0; i < 3; i++)
-	{
-		for(j = 3; j < 2*3; j++)
-		{
-
-			if(i == (j - 3))
-			{
-				matrix[i][j] = 1.0;
-			}
-			else
-			{
-				matrix[i][j] = 0.0;
-			}
-
-		}
-
-	}
-
-	for(i = 0; i < 3; i++)
-	{
-
-		for(j = 0; j < 3; j++)
-		{
-
-			if(i != j)
-			{
-				ratio = matrix[j][i]/matrix[i][i];
-
-				for(k = 0; k < 2 * 3; k++)
-				{
-					matrix[j][k] -= ratio * matrix[i][k];
-
-				}
-
-			}
-
-		}
-
-	}
-
-	for(i = 0; i < 3; i++)
-	{
-
-		a = matrix[i][i];
-
-		for(j = 0; j < 2*3; j++)
-		{
-			matrix[i][j] /= a;
-
-		}
-
-	}
-
-	printf("rotation matrix\n");
-	for (c = 0; c < 3; ++c)
-	{
-		for (d = 0; d < 3; ++d)
-		{
-	//		printf("%10g\t", tmprot[c][d]);
-		}
-	//	printf("\n");
-	}
-
-	for (c = 0; c < 3; ++c)
-	{
-		for (d = 0; d < 3; ++d)
-		{
-			sum = 0;
-			for (k = 0; k < 3; ++k)
-			{
-				sum += tmpquad[c][k] * tmprot[k][d];
-			}
-			tmpres[c][d] = fabs(sum) > ROUNDING_LIMIT ? sum : 0;
-		}
-	}
-
-	to_rot.a = tmpres[0][0];
-	to_rot.h = tmpres[0][1];
-	to_rot.g = tmpres[0][2];
-	to_rot.h = tmpres[1][0];
-	to_rot.b = tmpres[1][1];
-	to_rot.f = tmpres[1][2];
-	to_rot.g = tmpres[2][0];
-	to_rot.f = tmpres[2][1];
-	to_rot.c = tmpres[2][2];
-	printf("rotated matrix\n");
-	for (c = 0; c < 3; ++c)
-	{
-		for (d = 0; d < 3; ++d)
-		{
-	//		printf("%10g\t", tmpres[c][d]);
-		}
-	//	printf("\n");
-	}
-	return (to_rot);
-}*/
-/*
-t_vec		vectorrotate(t_vec v, t_vec axis, double angle)
-{
-	double		cs_angle[2];
-	t_vec	v_t_1;
-	t_vec	v_t_2;
-	t_vec	v_t_3;
-	t_vec	r_v;
-
-	cs_angle[0] = cos(-angle);
-	cs_angle[1] = sin(-angle);
-	v_t_1 = vectorscale((1 - cs_angle[0]), axis);
-	v_t_3 = vectorscale(vectordot(v, v_t_1), axis);
-	v_t_1 = vectorinit(0, 0, 0);
-	v_t_2 = vectorscale(cs_angle[1], axis);
-	v_t_1 = vectorproduct(v, v_t_1);
-	v_t_2 = vectorscale(cs_angle[0], v);
-	r_v = vectoradd(v_t_1, vectoradd(v_t_2, v_t_3));
-	return (r_v);
-}*/
-

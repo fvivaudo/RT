@@ -57,7 +57,7 @@ static	int		ft_count_words(const char *s)
 	return (count);
 }
 
-char			**ft_malloc(int *i, int *y, char const *s)
+static char			**ft_malloc(int *i, int *y, char const *s)
 {
 	char	**res;
 

@@ -675,7 +675,7 @@ int		iraytorus(__global t_ray *r, __global t_objgpu *obj, double *t0, t_objcompl
 	double	d = centerToRayOriginDotDirectionSquared + outerRadiusSquared - innerRadiusSquared;
 
 	// Solve quartic equation with coefficients A, B, C, D and E
-	abcdiscr[0] = 1; 
+	abcdiscr[0] = 1;
 	abcdiscr[1] = 4 * centerToRayOriginDotDirection;
 	abcdiscr[2] = 2 * d + abcdiscr[1] * abcdiscr[1] * 0.25f - 4 * outerRadiusSquared * a;
 	abcdiscr[3] = abcdiscr[1] * d - 4 * outerRadiusSquared * b;
@@ -809,6 +809,6 @@ __kernel void actionn(__global t_ray *input, __global t_gpu_out *output, const u
 		output[i].id = finalid;
 		output[i].r = input[i];
 		output[i].t = t;
-		output[i].normal = finalnormal;
+		output[i].normal = data.n;
 	}
 }

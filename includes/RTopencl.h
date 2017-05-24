@@ -10,7 +10,7 @@
 # define KEPSILON				0.0001
 # define FOV					120
 # define MAX_RANGE				20000.0
-# define MAX_DEPTH_LEVEL		5
+# define MAX_DEPTH_LEVEL		60
 # define AMBIANT_SHADING		0.15
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
@@ -106,7 +106,7 @@ typedef struct		s_objgpu
 	double			height;
 	double			alpha;
 	t_quadric		quad;
-	
+
 	bool			isneg;
 
 	double 			rotation; // rotation degree on axis

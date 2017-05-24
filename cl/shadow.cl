@@ -136,7 +136,7 @@ void	checker (t_vec inter_point, t_mat *cmat)
 	if (((int)floor(inter_point.x / (1.0 / cmat->procedural_scale))
 		+ (int)floor(inter_point.y / (1.0 / cmat->procedural_scale))
 		+ (int)floor(inter_point.z / (1.0 / cmat->procedural_scale))) % 2 == 0)
-	{		
+	{
 		cmat->diffuse = cmat->diffuse2;
 	}
 }
@@ -181,10 +181,10 @@ t_color		deal_shadow(__global t_ray *lightray, __global t_objgpu *obj, __global 
 		printf("n.x = %g, n.y = %g, n.z = %g\n", n.x, n.y, n.z);
 		printf("lightpointdist.x = %g, lightpointdist.y = %g, lightpointdist.z = %g\n", lightpointdist.x, lightpointdist.y, lightpointdist.z);
 		printf("e->t = %g\n", e->t);*/
-		
-		
+
+
 		//	printf("Transparency == %g\n",e->transcoef);
-		
+
 		//if the vector dot is negative, then both vectors are going in opposite directions
 		vectornormalize(&lightpointdist);
 		//printf("type == %d\n", cursor->type);
@@ -194,11 +194,11 @@ t_color		deal_shadow(__global t_ray *lightray, __global t_objgpu *obj, __global 
 				continue;
 	//	}
 	//	while (cursor)
-		//{/ 
+		//{/
 		//	if (cursor->type == TYPE_SPHERE)
 		//		printf("Transparency computeshadow 1 == %g\n",cursor->material.transparency);
 		//	cursor = cursor->nextitem;
-		//}	
+		//}
 /*		if (e->transcoef == 0.0)
 		{
 			e->t = vectormagnitude(lightpointdist);
@@ -253,7 +253,7 @@ t_color		deal_shadow(__global t_ray *lightray, __global t_objgpu *obj, __global 
 		//check collision with objects between object and light
 
 		// Blinn Phong model
-//		blinn_phong(&col, lightray->dir, data);
+		blinn_phong(&col, lightray->dir, data);
 	}
 	return (col);
 	//Ambient lighting

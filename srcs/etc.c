@@ -29,7 +29,6 @@ void	back_print_img(unsigned char img[3 * WIDTH * HEIGHT])
 	t_env		e;
 	int			i;
 	int			y;
-
 	i = 0;
 	y = 0;
 	e.mlx = mlx_init();
@@ -79,7 +78,7 @@ void put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel )
     pixels[ ( y * surface->w ) + x ] = pixel;
 }
 
- 	
+
 
 // "BMP"
 // "CUR"

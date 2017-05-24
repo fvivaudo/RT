@@ -12,75 +12,40 @@
 
 #include <rtv1.h>
 
-/*
-**		Simple removal, doesn't free anything
-*/
-
-//t_obj	*RemoveNode(t_obj **alst, int id)
-t_obj	*lstremoveoneobj(t_obj **alst, int id)
+typedef struct 	s_lstobj
 {
 	t_obj *temp;
 	t_obj *current;
 	t_obj *previous;
+}				t_lstobj;
+
+t_obj	*lstremoveoneobj(t_obj **alst, int id)
+{
+	t_lstobj o;
 
 	if (id == ((*alst)->id))
 	{
-		temp = *alst;
-		*alst = (*alst)->nextitem; //set nextchild to null too?
-		temp->nextitem = NULL;
-		return (temp);
+		o.temp = *alst;
+		*alst = (*alst)->nextitem;
+		o.temp->nextitem = NULL;
+		return (o.temp);
 	}
-	current = (*alst)->nextitem;
-	previous = *alst;
-	while (current != NULL && previous != NULL)
+	o.current = (*alst)->nextitem;
+	o.previous = *alst;
+	while (o.current != NULL && o.previous != NULL)
 	{
-		if (id == current->id)
+		if (id == o.current->id)
 		{
-			temp = current;
-			previous->nextitem = current->nextitem;
-			temp->nextitem = NULL;
-			return (temp);
+			o.temp = o.current;
+			o.previous->nextitem = o.current->nextitem;
+			o.temp->nextitem = NULL;
+			return (o.temp);
 		}
-		previous = current;
-		current = current->nextitem;
+		o.previous = o.current;
+		o.current = o.current->nextitem;
 	}
 	return (NULL);
 }
-/*
-t_obj	*lstremoveoneobj(t_obj **alst, int id)
-{
-	t_obj	*prev;
-	t_obj	*next;
-	t_obj	*cursor;
-
-	next = NULL;
-	if (alst && *alst)
-	{
-		cursor = *alst;
-		prev = cursor;
-	//	if (cursor->id == 10)
-	//		printf("ok1\n");
-		if (cursor->id == id)
-		{
-			(*alst = (*alst)->nextitem);
-			cursor->nextitem = NULL;
-			return (cursor);
-		}
-		while (cursor->nextitem && cursor->id != id)
-		{
-			prev = cursor;
-			cursor = cursor->nextitem;
-			if (cursor->nextitem)
-			next = cursor->nextitem;
-		}
-	//	if (cursor->id == 10)
-	//		printf("ok2\n");
-		prev->nextitem = next;
-		cursor->nextitem = NULL;
-		return (cursor);
-	}
-	return (NULL);
-}*/
 
 void	lstaddobj(t_obj **alst, t_obj *new)
 {
@@ -93,7 +58,6 @@ void	lstaddobj(t_obj **alst, t_obj *new)
 		*alst = new;
 }
 
-//lstaddslice not used
 void	lstaddslice(t_obj **alst, t_obj *new)
 {
 	if (alst && *alst && new)

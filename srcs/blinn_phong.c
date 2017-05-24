@@ -11,23 +11,3 @@
 /* ************************************************************************** */
 
 #include <rtv1.h>
-
-void	blinn_phong(t_env *e, t_vec lightray_dir)
-{
-	double			tmp;
-	double			blinnterm;
-	t_vec			blinnDir;
-
-	blinnDir = vectorsub(lightray_dir, e->r.dir);
-	tmp = sqrtf(vectordot(blinnDir, blinnDir));
-	if (tmp)
-	{
-		blinnDir = vectorscale((1 / tmp), blinnDir);
-		tmp = vectordot(blinnDir, e->n);
-		blinnterm = tmp ? tmp : 0;
-		blinnterm = e->cmat.brillance * pow(blinnterm, SPEC_POW) * e->coef;
-		e->col.red += e->cmat.brillance * blinnterm;
-		e->col.green += e->cmat.brillance * blinnterm;
-		e->col.blue += e->cmat.brillance * blinnterm;
-	}
-}

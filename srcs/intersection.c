@@ -25,25 +25,28 @@ t_objcomplement *init_comp(t_objcomplement *comp)
 	return (comp);
 }
 
+#define CU cursor->type
+#define CO cursor
+#define IC init_comp(&tmpcomp)
+
 t_obj	*intersection(t_env *e, t_ray *r, t_objcomplement *comp)
 {
 	t_obj			*cursor;
 	t_obj			*res;
 	t_objcomplement tmpcomp;
+	double t;
 
 	cursor = e->obj;
 	res = NULL;
-	double t = MAX_RANGE;
-	//e->t is the current minimal distance to an object encountered
-
+	t = MAX_RANGE;
 	while (cursor)
 	{
-		if ((cursor->type == TYPE_SPHERE && iraysphere(r, cursor, &t, init_comp(&tmpcomp))) ||
-			(cursor->type == TYPE_PLANE && irayplane(r, cursor, &t, init_comp(&tmpcomp))) ||
-			(cursor->type == TYPE_CYLINDER && iraycylinder(r, cursor, &t, init_comp(&tmpcomp))) ||
-			(cursor->type == TYPE_CONE && iraycone(r, cursor, &t, init_comp(&tmpcomp))) ||
-			(cursor->type == TYPE_QUADRIC && irayquadric(r, cursor, &t, init_comp(&tmpcomp))) ||
-			 (cursor->type == TYPE_TORUS && iraytorus(r, cursor, &t, init_comp(&tmpcomp))))
+		if ((CU == TYPE_SPHERE && iraysphere(r, CO, &t, IC)) ||
+			(CU == TYPE_PLANE && irayplane(r, CO, &t, IC)) ||
+			(CU == TYPE_CYLINDER && iraycylinder(r, CO, &t, IC)) ||
+			(CU == TYPE_CONE && iraycone(r, CO, &t, IC)) ||
+			(CU == TYPE_QUADRIC && irayquadric(r, CO, &t, IC)) ||
+			 (CU == TYPE_TORUS && iraytorus(r, CO, &t, IC)))
 		{
 			*comp = tmpcomp;
 			e->t = t;
@@ -52,7 +55,6 @@ t_obj	*intersection(t_env *e, t_ray *r, t_objcomplement *comp)
 		cursor = cursor->nextitem;
 	}
 	return (res);
-	// if an intersection was found
 }
 
 t_obj	*computeray(t_env *e)
@@ -66,18 +68,12 @@ t_obj	*computeray(t_env *e)
 	if ((res = intersection(e, &e->r, &comp)))
 	{
 		e->id = res->id;
-		//e->scaled = distance between start of ray and object intersection
 		e->scaled = vectorscale(e->t, e->r.dir);
-		//e->newstart = object intersection
 		e->newstart = vectoradd(e->r.start, e->scaled);
 		if (comp.normobj)
-		{
 			comp.normal(e, comp.normobj, &comp);
-		}
 		else
-		{
 			comp.normal(e, res, &comp);
-		}
 	}
 	return (res);
 }

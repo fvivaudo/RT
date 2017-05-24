@@ -145,7 +145,6 @@ int		init_negsphere(t_objconf *obj, char **buffer)
 	}
 	neg.type = TYPE_SPHERE;
 	neg.material = material;
-	//neg.pos = neg.pos;
 	addneg(obj, neg);
 	return (y);
 }

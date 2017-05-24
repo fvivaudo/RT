@@ -24,7 +24,8 @@ SRC = 	srcs/etc.c \
 		srcs/bump_mapping.c \
 		srcs/blinn_phong.c \
 		srcs/shadow.c \
-		srcs/config.c
+		srcs/config.c \
+		srcs/readconfig2.c
 
 
 OBJ  = $(subst srcs/,,$(SRC:.c=.o))
@@ -61,4 +62,3 @@ sdl_install:
 	curl https://dl.dropboxusercontent.com/content_link_zip/TMVqp4Z6JEk2gEO7F57rFVa3aPfzH5RFn6QIhBlCpBrMQ0btchhSCdRw3sty7Mar/file?dl=1 > /tmp/SDL2_image.zip
 	unzip -o /tmp/SDL2_image.zip -d ~/Library/Frameworks/
 	mv ~/Library/Frameworks/SDL2_image-2.0.1 ~/Library/Frameworks/SDL2_image.framework
-

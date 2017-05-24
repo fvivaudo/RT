@@ -16,6 +16,32 @@
 #include <stdio.h>
 #include <math.h>
 
+void readConfig_func(t_env *e, char **buffer_line)
+{
+	if (!(ft_strcmp(buffer_line[0], "SPHERE")))
+		init_sphere(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "CONE")))
+		init_cone(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
+		init_cyl(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "PLANE")))
+		init_plane(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
+		init_quadric(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "TORUS")))
+		init_torus(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
+		init_light(e, buffer_line);
+	else if (!(ft_strcmp(buffer_line[0], "CAMERA")))
+		init_cam(e, buffer_line);
+	else if (!(ft_strcmp(buffer_line[0], "COMPOSE")))
+		init_compose(&e->obj, buffer_line);
+	else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
+		init_object(&e->obj, buffer_line, FALSE);
+	else if (!(ft_strcmp(buffer_line[0], "EFFECT")))
+		init_effect(e, buffer_line);
+}
+
 t_env			*readConfig(int fd)
 {
 	char			*buffer_gnl;
@@ -29,56 +55,9 @@ t_env			*readConfig(int fd)
 	e->id = 0;
 	while (get_next_line(fd, &buffer_gnl) == 1)
 	{
-//		ft_putendl(buffer_gnl);
 		buffer_line = ft_strsplitspace(buffer_gnl);
 		if (buffer_line[0])
-		{
-			if (!(ft_strcmp(buffer_line[0], "SPHERE")))
-			{
-				init_sphere(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "CONE")))
-			{
-				init_cone(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "CYLINDER")))
-			{
-				init_cyl(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "PLANE")))
-			{
-				init_plane(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "QUADRIC")))
-			{
-				init_quadric(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "TORUS")))
-			{
-				init_torus(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "LIGHT")))
-			{
-				init_light(e, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "CAMERA")))
-			{
-				init_cam(e, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "COMPOSE")))
-			{
-				init_compose(&e->obj, buffer_line);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "OBJECT")))
-			{
-				init_object(&e->obj, buffer_line, FALSE);
-			}
-			else if (!(ft_strcmp(buffer_line[0], "EFFECT")))
-			{
-				init_effect(e, buffer_line);
-			//	printf("\neffect %g, red %g , green %g ,  blue %g\n", e->col.effect, e->col.ered, e->col.egreen, e->col.eblue);
-			}
-		}
+			readConfig_func(e, buffer_line);
 		free(buffer_gnl);
 		ft_doubletabfree(&buffer_line);
 		++e->id;
@@ -91,7 +70,7 @@ int 			init_effect(t_env *e, char **buffer)
 {
 	if (buffer[1] && buffer[2] && buffer[3] && buffer[4])
 	{
-		
+
 		e->effect = ft_datoi(buffer[1]);
 		e->ered = ft_datoi(buffer[2]);
 		e->egreen = ft_datoi(buffer[3]);
@@ -108,7 +87,6 @@ int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 
 	obj = init_null();
 	y = 4;
-
 	if (buffer[1] && buffer[2] && buffer[3])
 		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else

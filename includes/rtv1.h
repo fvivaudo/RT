@@ -47,7 +47,7 @@
 # define KEPSILON				0.0001
 # define FOV					120
 # define MAX_RANGE				20000.0
-# define MAX_DEPTH_LEVEL		5
+# define MAX_DEPTH_LEVEL		60
 # define AMBIANT_SHADING		0.15
 # define SPEC_POW				20.0
 # define EXPOSURE				-1
@@ -79,6 +79,9 @@
 
 // if there is only one soluction to an intersection
 # define DOESNOTEXIST			-2147483648.0
+
+# define COSCALC (u.fdensity2 * u.fCosThetaT + u.fdensity1 * u.fCosThetaI)
+# define COSSCALC (u.fdensity1 * u.fCosThetaT - u.fdensity2 * u.fCosThetaI)
 
 struct					s_env;
 
@@ -166,7 +169,7 @@ typedef struct			s_color
 	double				red;
 	double				green;
 	double				blue;
-	
+
 
 }						t_color;
 
@@ -215,7 +218,7 @@ typedef struct			s_obj
 	double				height;
 	double				alpha;
 	t_quadric			quad;
-	
+
 	bool				isneg;
 
 	double 				rotation; // rotation degree on axis
@@ -249,7 +252,7 @@ typedef struct			s_objgpu
 	double				height;
 	double				alpha;
 	t_quadric			quad;
-	
+
 	bool				isneg;
 
 	double 				rotation; // rotation degree on axis
@@ -286,7 +289,7 @@ typedef struct			s_env
 	gpu related
 */	t_ray 				*gpu_in;
 	int 				pix_rendu;
-	
+
 	double 				effect;
 	double				ered;
 	double				egreen;
@@ -320,7 +323,7 @@ typedef struct			s_env
 	t_cam				cam;
 	int					x;
 	int					y;
-	
+
 	pthread_cond_t		cond;
 	pthread_mutex_t		mutex;
 	pthread_mutex_t		mutex2;
