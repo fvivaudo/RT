@@ -86,19 +86,218 @@ typedef struct 	s_init_cyl
 
 }				t_init_cyl;
 
+int 			init_cyl_func(t_init_cyl *u, char **buffer)
+{
+	u->obj = init_null();
+	u->y = 4;
+	if (buffer[1] && buffer[2] && buffer[3])
+		u->obj->pos = vectorinit(ft_datoi(buffer[1]),
+			ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+	else
+		return (1);
+	return (-1234567);
+}
+
+int 			init_cyl_func2(t_init_cyl *u, char **buffer)
+{
+	if (buffer[u->y + 1])
+	{
+		u->obj->id = ft_atoi(buffer[u->y + 1]);
+		u->y += 2;
+	}
+	else
+		return (u->y);
+	return (-1234567);
+}
+
+int 			init_cyl_func3(t_init_cyl *u, char **buffer)
+{
+	if (buffer[u->y + 1])
+	{
+		u->obj->rad = ft_datoi(buffer[u->y + 1]);
+		u->y += 2;
+	}
+	else
+		return (u->y);
+	return (-1234567);
+}
+
+int 			init_cyl_func4(t_init_cyl *u, char **buffer)
+{
+	if (buffer[u->y + 1])
+	{
+		u->obj->height = ft_datoi(buffer[u->y + 1]);
+		u->y += 2;
+	}
+	else
+		return (u->y);
+	return (-1234567);
+}
+
+
+int 			init_cyl_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+				bool neg)
+{
+	int res;
+
+	if (!ft_strcmp("ID", buffer[u->y]) &&
+		(res = init_cyl_func2(u, buffer)) != -1234567 )
+		return (res);
+	else if (setmat(buffer, &u->y, &u->material));
+	else if (!ft_strcmp("RADIUS", buffer[u->y]))
+	{
+		if ((res = init_cyl_func3(u, buffer)) != -1234567)
+			return (res);
+	}
+	else if (setorient(buffer, &u->y, u->obj));
+	else if (setslice(buffer, &u->y, u->obj));
+	else if (neg == FALSE && setnegative(buffer, &u->y,
+		u->obj, &u->obj->nextneg));
+	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
+	else if (!ft_strcmp("HEIGHT", buffer[u->y]))
+	{
+		if ((res = init_cyl_func4(u, buffer)) != -1234567)
+			return (res);
+	}
+	else
+		++u->y;
+	return (-1234567);
+}
 
 
 int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 {
 	t_init_cyl u;
+	int res;
+
+	if (init_cyl_func(&u, buffer) != -1234567)
+		return (1);
+	while (buffer[u.y] != NULL)
+		if ((res = init_cyl_func1(&u, buffer, lstobj, neg)) != -1234567)
+			return (res);
+	u.obj->type = TYPE_CYLINDER;
+	u.obj->material = u.material;
+	u.obj->nextitem = NULL;
+	lstaddobj(lstobj, u.obj);
+	return (u.y);
+}
+
+int 			init_cone_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+				bool neg)
+{
+	int res;
+
+	if (!ft_strcmp("ID", buffer[u->y]) &&
+		(res = init_cyl_func2(u, buffer)) != -1234567 )
+		return (res);
+	else if (setmat(buffer, &u->y, &u->material));
+	else if (!ft_strcmp("ANGLE", buffer[u->y]))
+	{
+		if (buffer[u->y + 1])
+		{
+			u->obj->rad = ft_datoi(buffer[u->y + 1]);
+			u->obj->alpha = u->obj->rad * (M_PI / 180);
+			u->y += 2;
+		}
+		else
+			return (u->y);
+	}
+	else if (setorient(buffer, &u->y, u->obj));
+	else if (setslice(buffer, &u->y, u->obj));
+	else if (neg == FALSE && setnegative(buffer, &u->y,
+		u->obj, &u->obj->nextneg));
+	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
+	else
+		++u->y;
+	return (-1234567);
+}
+
+
+
+
+int		init_cone(t_obj **lstobj, char **buffer, bool neg)
+{
+	t_init_cyl u;
+	int res;
 
 	u.obj = init_null();
 	u.y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
 		u.obj->pos = vectorinit(ft_datoi(buffer[1]),
-			ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
 		return (1);
+	while (buffer[u.y] != NULL)
+		if ((res = init_cone_func1(&u, buffer, lstobj, neg)) != -1234567)
+			return (res);
+	u.obj->type = TYPE_CONE;
+	u.obj->material = u.material;
+	u.obj->nextitem = NULL;
+	lstaddobj(lstobj, u.obj);
+	return (u.y);
+}
+
+int 			init_sphere_func1(t_init_cyl *u, char **buffer, t_obj **lstobj,
+	bool neg)
+{
+	int res;
+
+	if (!ft_strcmp("ID", buffer[u->y]) &&
+		(res = init_cyl_func2(u, buffer)) != -1234567)
+		return (res);
+	else if (setmat(buffer, &u->y, &u->material));
+	else if (setslice(buffer, &u->y, u->obj));
+	else if (neg == FALSE && setnegative(buffer, &u->y, u->obj, &u->obj->nextneg));
+	else if (neg == TRUE && setnegative(buffer, &u->y, NULL, lstobj));
+	else if (!ft_strcmp("RADIUS", buffer[u->y]))
+	{
+		if (buffer[u->y + 1])
+		{
+			u->obj->rad = ft_datoi(buffer[u->y + 1]);
+			u->y += 2;
+		}
+		else
+			return (u->y);
+	}
+	else
+		++u->y;
+	return (-1234567);
+}
+
+int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
+{
+	t_init_cyl u;
+	int res;
+
+	u.obj = init_null();
+	u.y = 4;
+	if (buffer[1] && buffer[2] && buffer[3])
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+	else
+		return (1);
+	while (buffer[u.y] != NULL)
+	if ((res = init_sphere_func1(&u, buffer, lstobj, neg)) != -1234567)
+		return (res);
+	u.obj->type = TYPE_SPHERE;
+	u.obj->material = u.material;
+	u.obj->nextitem = NULL;
+	lstaddobj(lstobj, u.obj);
+	return (u.y);
+}
+
+int		init_plane(t_obj **lstobj, char **buffer, bool neg)
+{
+	t_init_cyl u;
+	int res;
+
+	u.obj = init_null();
+	u.y = 4;
+	if (buffer[1] && buffer[2] && buffer[3])
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+	else
+	{
+		return (0);
+	}
 	while (buffer[u.y] != NULL)
 	{
 		if (!ft_strcmp("ID", buffer[u.y]))
@@ -112,185 +311,20 @@ int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
 				return (u.y);
 		}
 		else if (setmat(buffer, &u.y, &u.material));
-		else if (!ft_strcmp("RADIUS", buffer[u.y]))
-		{
-			if (buffer[u.y + 1])
-			{
-				u.obj->rad = ft_datoi(buffer[u.y + 1]);
-				u.y += 2;
-			}
-			else
-				return (u.y);
-		}
 		else if (setorient(buffer, &u.y, u.obj));
 		else if (setslice(buffer, &u.y, u.obj));
 		else if (neg == FALSE && setnegative(buffer, &u.y, u.obj, &u.obj->nextneg));
 		else if (neg == TRUE && setnegative(buffer, &u.y, NULL, lstobj));
-		else if (!ft_strcmp("HEIGHT", buffer[u.y]))
-		{
-			if (buffer[u.y + 1])
-			{
-				u.obj->height = ft_datoi(buffer[u.y + 1]);
-				u.y += 2;
-			}
-			else
-				return (u.y);
-		}
 		else
+		{
 			++u.y;
+		}
 	}
-	u.obj->type = TYPE_CYLINDER;
+	u.obj->type = TYPE_PLANE;
 	u.obj->material = u.material;
 	u.obj->nextitem = NULL;
 	lstaddobj(lstobj, u.obj);
 	return (u.y);
-}
-
-int		init_cone(t_obj **lstobj, char **buffer, bool neg)
-{
-	int			y;
-	t_obj		*obj;
-	t_mat		material;
-
-	obj = init_null();
-
-	y = 4;
-	if (buffer[1] && buffer[2] && buffer[3])
-		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
-	else
-		return (1);
-	while (buffer[y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-				return (y);
-		}
-		else if (setmat(buffer, &y, &material));
-		else if (!ft_strcmp("ANGLE", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->rad = ft_datoi(buffer[y + 1]);
-				obj->alpha = obj->rad * (M_PI / 180);
-				y += 2;
-			}
-			else
-				return (y);
-		}
-		else if (setorient(buffer, &y, obj));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else
-			++y;
-	}
-	obj->type = TYPE_CONE;
-	obj->material = material;
-	obj->nextitem = NULL;
-	lstaddobj(lstobj, obj);
-	return (y);
-}
-
-int		init_sphere(t_obj **lstobj, char **buffer, bool neg)
-{
-	int			y;
-	t_obj		*obj;
-	t_mat		material;
-
-	obj = init_null();
-	y = 4;
-	if (buffer[1] && buffer[2] && buffer[3])
-		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
-	else
-		return (1);
-	while (buffer[y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-			{
-				return (y);
-			}
-		}
-		else if (setmat(buffer, &y, &material));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else if (!ft_strcmp("RADIUS", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->rad = ft_datoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-			{
-				return (y);
-			}
-		}
-		else
-			++y;
-	}
-	obj->type = TYPE_SPHERE;
-	obj->material = material;
-	obj->nextitem = NULL;
-	lstaddobj(lstobj, obj);
-	return (y);
-}
-
-int		init_plane(t_obj **lstobj, char **buffer, bool neg)
-{
-	int			y;
-	t_obj		*obj;
-	t_mat		material;
-
-
-	obj = init_null();
-	y = 4;
-	if (buffer[1] && buffer[2] && buffer[3])
-		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
-	else
-	{
-		return (0);
-	}
-	while (buffer[y] != NULL)
-	{
-		if (!ft_strcmp("ID", buffer[y]))
-		{
-			if (buffer[y + 1])
-			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
-			}
-			else
-				return (y);
-		}
-		else if (setmat(buffer, &y, &material));
-		else if (setorient(buffer, &y, obj));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else
-		{
-			++y;
-		}
-	}
-	obj->type = TYPE_PLANE;
-	obj->material = material;
-	obj->nextitem = NULL;
-	lstaddobj(lstobj, obj);
-	return (y);
 }
 
 int		init_quadric(t_obj **lstobj, char **buffer, bool neg)
