@@ -70,7 +70,6 @@ int 			init_effect(t_env *e, char **buffer)
 {
 	if (buffer[1] && buffer[2] && buffer[3] && buffer[4])
 	{
-
 		e->effect = ft_datoi(buffer[1]);
 		e->ered = ft_datoi(buffer[2]);
 		e->egreen = ft_datoi(buffer[3]);
@@ -79,64 +78,72 @@ int 			init_effect(t_env *e, char **buffer)
 	return (0);
 }
 
-int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
+typedef struct 	s_init_cyl
 {
 	int			y;
 	t_obj		*obj;
 	t_mat		material;
 
-	obj = init_null();
-	y = 4;
+}				t_init_cyl;
+
+
+
+int				init_cyl(t_obj **lstobj, char **buffer, bool neg)
+{
+	t_init_cyl u;
+
+	u.obj = init_null();
+	u.y = 4;
 	if (buffer[1] && buffer[2] && buffer[3])
-		obj->pos = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
+		u.obj->pos = vectorinit(ft_datoi(buffer[1]),
+			ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
 		return (1);
-	while (buffer[y] != NULL)
+	while (buffer[u.y] != NULL)
 	{
-		if (!ft_strcmp("ID", buffer[y]))
+		if (!ft_strcmp("ID", buffer[u.y]))
 		{
-			if (buffer[y + 1])
+			if (buffer[u.y + 1])
 			{
-				obj->id = ft_atoi(buffer[y + 1]);
-				y += 2;
+				u.obj->id = ft_atoi(buffer[u.y + 1]);
+				u.y += 2;
 			}
 			else
-				return (y);
+				return (u.y);
 		}
-		else if (setmat(buffer, &y, &material));
-		else if (!ft_strcmp("RADIUS", buffer[y]))
+		else if (setmat(buffer, &u.y, &u.material));
+		else if (!ft_strcmp("RADIUS", buffer[u.y]))
 		{
-			if (buffer[y + 1])
+			if (buffer[u.y + 1])
 			{
-				obj->rad = ft_datoi(buffer[y + 1]);
-				y += 2;
+				u.obj->rad = ft_datoi(buffer[u.y + 1]);
+				u.y += 2;
 			}
 			else
-				return (y);
+				return (u.y);
 		}
-		else if (setorient(buffer, &y, obj));
-		else if (setslice(buffer, &y, obj));
-		else if (neg == FALSE && setnegative(buffer, &y, obj, &obj->nextneg));
-		else if (neg == TRUE && setnegative(buffer, &y, NULL, lstobj));
-		else if (!ft_strcmp("HEIGHT", buffer[y]))
+		else if (setorient(buffer, &u.y, u.obj));
+		else if (setslice(buffer, &u.y, u.obj));
+		else if (neg == FALSE && setnegative(buffer, &u.y, u.obj, &u.obj->nextneg));
+		else if (neg == TRUE && setnegative(buffer, &u.y, NULL, lstobj));
+		else if (!ft_strcmp("HEIGHT", buffer[u.y]))
 		{
-			if (buffer[y + 1])
+			if (buffer[u.y + 1])
 			{
-				obj->height = ft_datoi(buffer[y + 1]);
-				y += 2;
+				u.obj->height = ft_datoi(buffer[u.y + 1]);
+				u.y += 2;
 			}
 			else
-				return (y);
+				return (u.y);
 		}
 		else
-			++y;
+			++u.y;
 	}
-	obj->type = TYPE_CYLINDER;
-	obj->material = material;
-	obj->nextitem = NULL;
-	//obj->id = e->id;
-	lstaddobj(lstobj, obj);
-	return (y);
+	u.obj->type = TYPE_CYLINDER;
+	u.obj->material = u.material;
+	u.obj->nextitem = NULL;
+	lstaddobj(lstobj, u.obj);
+	return (u.y);
 }
 
 int		init_cone(t_obj **lstobj, char **buffer, bool neg)
@@ -442,7 +449,6 @@ t_quadric initquad(double param[10])
 	quad.q = param[7];
 	quad.r = param[8];
 	quad.d = param[9];
-
 	return (quad);
 }
 
@@ -455,9 +461,7 @@ void		init_compose(t_obj **lstobj, char **buffer)
 	t_obj		*tmp;
 
 	y = 1;
-	//create new parent
 	obj = init_null();
-
 	while (buffer[y] != NULL)
 	{
 		if (!ft_strcmp("ID", buffer[y]))
@@ -468,26 +472,12 @@ void		init_compose(t_obj **lstobj, char **buffer)
 				y += 2;
 			}
 			else
-			{
 				return;
-			}
 		}
 		else
 		{
-			//remove from object list and add to composed object
-			//printf("ID = %d\n", ft_atoi(buffer[y]));
-
 			while (*lstobj && (tmp = lstremoveoneobj(lstobj, ft_atoi(buffer[y]))))
-			{
 				lstaddobj(&obj->nextchild, tmp);
-			}
-			/*t_obj *cursor = (obj->nextchild);
-			printf("reset\n");
-			while (cursor)
-			{
-				printf("cursor->id = %d\n", cursor->id);
-				cursor = cursor->nextitem;
-			}*/
 			++y;
 		}
 	}
@@ -588,34 +578,17 @@ bool				setnegative(char **buffer, int *y, t_obj *parent, t_obj **lstobj)
 	if (!ft_strcmp("NEGATIVE", buffer[*y]))
 	{
 		if (!(ft_strcmp(buffer[*y + 1], "SPHERE")))
-		{
 			*y += init_sphere(lstobj, &(*(buffer + *y + 1)), TRUE);
-		//	(*lstobj)->normal = normalsphere;
-		}
 		else if (!(ft_strcmp(buffer[*y + 1], "CONE")))
-		{
 			*y += init_cone(lstobj, &(*(buffer + *y + 1)), TRUE);
-		//	(*lstobj)->normal = normalcone;
-		}
 		else if (!(ft_strcmp(buffer[*y + 1], "CYLINDER")))
-		{
 			*y += init_cyl(lstobj, &(*(buffer + *y + 1)), TRUE);
-		//	(*lstobj)->normal = normalcylinder;
-		}
 		else if (!(ft_strcmp(buffer[*y + 1], "PLANE")))
-		{
 			*y += init_plane(lstobj, &(*(buffer + *y + 1)), TRUE);
-		//	(*lstobj)->normal = normalplane;
-		}
 		else if (!(ft_strcmp(buffer[*y + 1], "QUADRIC")))
-		{
 			*y += init_quadric(lstobj, &(*(buffer + *y + 1)), TRUE);
-		//	(*lstobj)->normal = normalquadric;
-		}
 		else if (!(ft_strcmp(buffer[*y + 1], "OBJECT")))
-		{
 			*y += init_object(lstobj, &(*(buffer + *y + 1)), TRUE);
-		}
 		(*lstobj)->pos = vectoradd(parentsave->pos, (*lstobj)->pos); // add something for direction too?
 		(*lstobj)->type_obj = TYPE_NEGATIVE;
 		(*lstobj)->isneg = TRUE;
@@ -632,8 +605,7 @@ void		init_cam(t_env *e, char **buffer)
 
 	t_vec	tmp_up;
 	t_vec	tmp_vdir;
-//	t_vec	rot_axis;
-//	double	rot_angle;
+
 	if (buffer[1] && buffer[2] && buffer[3])
 		e->cam.eyepoint = vectorinit(ft_datoi(buffer[1]), ft_datoi(buffer[2]), ft_datoi(buffer[3]));
 	else
@@ -652,67 +624,25 @@ void		init_cam(t_env *e, char **buffer)
 	}
 	else
 		return;
-/*	if (buffer)
-	{
-	e->cam.lookat = vectorinit(0, 0, -900);
-	e->cam.eyepoint = vectorinit(0, 0, -1000);
-	}*/
-
-	//printf("e->cam.vdir.x = %g, e->cam.vdir.y = %g, e->cam.vdir.z = %g\n", e->cam.vdir.x, e->cam.vdir.y, e->cam.vdir.z);
 	e->cam.lookat = vectorscale(SCREEN_EYE_DIST, e->cam.vdir); //temporary I hope
-
-	//the tmp value represent an ordinary camera, that we'll rotate to fit the actual camera position and direction
 	tmp_vdir = vectorinit(0, 0, 1);
 	tmp_up = vectorinit(0, -1, 0); // why -1? Dunno, it works for now.
-
-	/*rot_angle = acos(vectordot(tmp_vdir,  e->cam.vdir));
-	rot_axis = vectorproduct(tmp_vdir,  e->cam.vdir);
-
-	vectornormalize(&rot_axis);
-
-	if (rot_axis.x || rot_axis.y || rot_axis.z)
-	{
-		up = vectorrotate(tmp_up, rot_axis, rot_angle);
-	}
-	else
-	{
-		up = tmp_up;
-	}*/
 	up = vectorinit(0, -1, 0);
-//	rot_axis = vectorproduct(e->cam.vdir, up);
-	//up = vectorrotate(e->cam.vdir, rot_axis, 90);
-	//vectornormalize(&up);
-//	printf("up.x = %g, up.y = %g, up.z = %g\n", up.x, up.y, up.z);
 	u = vectorproduct(e->cam.vdir, up);
 	printf("up.x = %g, up.y = %g, up.z = %g\n", up.x, up.y, up.z);
 	v = vectorproduct(u, e->cam.vdir);
-
 	u = vectornormalize(&u);
 	v = vectornormalize(&v);
-
-//viewPlaneUpLeft = camPos + ((vecDir*viewplaneDist)+(upVec*(viewplaneHeight/2.0f))) - (rightVec*(viewplaneWidth/2.0f))
-//	e->cam.viewplanebottomleftpoint = vectorsub(
-//	vectorsub(e->cam.lookat, vectorscale(HEIGHT / 2, v)), vectorscale(WIDTH / 2, u));
 	e->cam.viewplanebottomleftpoint = vectorsub(
 	vectorsub(e->cam.lookat, vectorscale(HEIGHT / 2, v)), vectorscale(WIDTH / 2, u));
 	e->cam.viewplanebottomleftpoint = vectoradd (e->cam.viewplanebottomleftpoint, e->cam.eyepoint);
 	e->cam.viewplanebottomleftpoint = vectoradd (e->cam.viewplanebottomleftpoint, e->cam.lookat);
-//	t_vec tmp = vectoradd(vectorscale(SCREEN_EYE_DIST, e->cam.vdir), e->cam.eyepoint);
-//	printf("e->cam.lookat.x = %g, e->cam.lookat.y = %g, e->cam.lookat.z = %g\n", e->cam.lookat.x, e->cam.lookat.y, e->cam.lookat.z);
-//	printf("tmp.x = %g, tmp.y = %g, tmp.z = %g\n", tmp.x, tmp.y, tmp.z);
-	/*e->cam.viewplanebottomleftpoint = vectorsub(
-	vectorsub(vectoradd(vectorscale(200, e->cam.vdir), e->cam.eyepoint), vectorscale(HEIGHT / 2, v)),
-	vectorscale(WIDTH / 2, u));*/ //200 is arbitrary
-//	e->cam.viewplanebottomleftpoint = vectorsub(vectorscale(HEIGHT / 2, v),
-//	vectorscale(WIDTH / 2, u));
-//	printf("e->cam.viewplanebottomleftpoint.x = %g, e->cam.viewplanebottomleftpoint.y = %g, e->cam.viewplanebottomleftpoint.z = %g\n", e->cam.viewplanebottomleftpoint.x, e->cam.viewplanebottomleftpoint.y, e->cam.viewplanebottomleftpoint.z);
 	e->cam.xincvector = vectorscale(1 / (double)WIDTH,
 	(vectorscale(2 * WIDTH / 2, u)));
 	e->cam.yincvector = vectorscale(1 / (double)HEIGHT,
 	(vectorscale(2 * HEIGHT / 2, v)));
 }
-//init object will set up the composed object rotation and position and allow it to be rendered
-// by copying its component into the scene
+
 int			init_object(t_obj **lstobj, char **buffer, bool neg)
 {
 	int 		y;
@@ -833,46 +763,18 @@ t_obj	*copyobj(t_obj *obj)
 
 	copy = (t_obj*)malloc(sizeof(t_obj));
 	ft_memcpy(copy, obj, sizeof(t_obj));
-	/*
-	copy->id = obj->id;
-	//copy->id = obj->id;
-	//copy->parent = obj->parent;
-	copy->type = obj->type;
-	copy->material = obj->material;
-	copy->pos = obj->pos;
-	copy->dir = obj->dir;
-	copy->rad = obj->rad;
-	copy->rad2 = obj->rad2;
-	copy->height = obj->height;
-	copy->alpha = obj->alpha;
-	copy->quad = obj->quad;
-	copy->isneg = obj->isneg;
-	copy->rotation = obj->rotation;
-	copy->type_obj = obj->type_obj;*/
 	if (obj->nextneg)
-	{
 		copy->nextneg = copyobj(obj->nextneg);
-	}
 	else
-	{
 		copy->nextneg = NULL;
-	}
 	if (obj->nextslice)
-	{
 		copy->nextslice = copyobj(obj->nextslice);
-	}
 	else
-	{
 		copy->nextslice = NULL;
-	}
 	if (obj->nextitem)
-	{
 		copy->nextitem = copyobj(obj->nextitem);
-	}
 	else
-	{
 		copy->nextitem = NULL;
-	}
 	return (copy);
 }
 
@@ -881,9 +783,6 @@ void 		rotateinnercomponents(t_obj *obj, t_obj *child)
 	t_obj *cursor;
 
 	cursor = child->nextneg;
-	/*
-	not taking into accound complex negative objects (need extra levels of recursion for this)
-	*/
 	while (cursor)
 	{
 		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
@@ -891,11 +790,9 @@ void 		rotateinnercomponents(t_obj *obj, t_obj *child)
 		cursor->dir = vectorsub(cursor->dir, cursor->pos);
 		cursor = cursor->nextitem;
 	}
-
 	cursor = child->nextslice;
 	while (cursor)
 	{
-		printf("obj->rotation2 = %g\n", obj->rotation);
 		cursor->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(cursor->dir, cursor->pos), obj->rotation);
 		cursor->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, cursor->pos), obj->rotation);
 		cursor->dir = vectorsub(cursor->dir, cursor->pos);
@@ -912,21 +809,10 @@ void		extractobj(t_obj **lstobj, t_obj *obj, int id)
 	cursor = obj->nextchild;
 	while (cursor)
 	{
-	//	printf("cursor->id = %d\n", cursor->id);
-	//	printf("cursor->type =%d\n", cursor->type);
 		if (cursor->nextchild)
 		{
 			if (cursor->type == 0)// if there is a child of another object containing children, add their coordinates
-			{
 				cursor->pos = vectoradd(cursor->pos, obj->pos);
-			}
-		//	printf("cursor->dir.x = %g, cursor->dir.y = %g, cursor->dir.z = %g\n", cursor->dir.x, cursor->dir.y, cursor->dir.z);
-		//	cursor->rotation = obj->rotation;
-		//	cursor->pos = obj->pos;
-		//	cursor->dir = obj->dir;
-			//sub composed objects inherit rotation, position and attributes for now, needs to be changed
-			// Im using assigning parent values, but shouldn't I combine them with child values?
-//			printf("innerextractobj\n");
 			extractobj(lstobj, cursor, id);
 		}
 		else if (cursor->type > 0) //if type == 0, it only contains chidren
@@ -934,49 +820,24 @@ void		extractobj(t_obj **lstobj, t_obj *obj, int id)
 			tmp = copyobj(cursor);
 			tmp->id = id;
 			t_vec worldfd = vectorinit(0, 0, -1); //forward of world, forward of object is dir
-
 			double rot_angle;
 			t_vec rot_axis;
-			//get rotation between world and object direction
 			vectornormalize(&rot_axis);
-
-//			printf("tmp->id = %d\n", tmp->id);
-//			printf("obj->rotation = %g\n", obj->rotation);
-
 			tmp->dir = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(tmp->dir, tmp->pos), obj->rotation);
-//rotating the point (x,y,z) about the line through (a,b,c) with direction vector ⟨u,v,w⟩ (where u2 + v2 + w2 = 1) by the angle θ.
 			tmp->pos = vectorpointrotatearoundaxis(obj->pos, obj->dir, vectoradd(obj->pos, tmp->pos), obj->rotation);
 			tmp->dir = vectorsub(tmp->dir, tmp->pos);
-
 			if (obj->rotation && (tmp->nextneg || tmp->nextslice))
-			{
-				printf("obj->rotation1 = %g\n", obj->rotation);
 				rotateinnercomponents(obj, tmp);
-			}
-
 			vectornormalize(&tmp->dir);
-			//tmp->dir = vectorrotate(tmp->pos, rot_axis, rot_angle);
-
 			rot_angle = acos(vectordot(worldfd, obj->dir));
 			rot_axis = vectorproduct(worldfd, obj->dir);
-		//	tmp->dir = vectorrotate(tmp->dir, rot_axis, rot_angle);
-
 			if (rot_axis.x || rot_axis.y || rot_axis.z) // if ROTATE
 			{
-				//	printf("ok\n");
-				/*if (tmp->nextneg || tmp->nextslice)
-				{
-					printf("ok1\n");
-					rotateinnercomponents(tmp, rot_axis, rot_angle);
-				}*/
 				tmp->pos = vectorrotate(tmp->pos, rot_axis, rot_angle);
 				tmp->pos = vectoradd(tmp->pos, obj->pos);
 			}
 			else
-			{
 				tmp->pos = vectoradd(tmp->pos, obj->pos);
-			}
-	//		printf("obj->pos.x = %g, obj->pos.y = %g, obj->pos.z = %g\n", obj->pos.x, obj->pos.y, obj->pos.z);
 			lstaddobj(lstobj, tmp);
 		}
 		cursor = cursor->nextitem;

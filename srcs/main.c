@@ -770,7 +770,6 @@ void			*cast_ray_thread(void *e)
 	}
 	return (NULL);
 }
-
 int				main(int ac, char **av)
 {
 
